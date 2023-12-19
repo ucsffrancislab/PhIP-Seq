@@ -32,14 +32,11 @@ cat ${INPUT} \
 	-i orf_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	-o orf_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
 	-c 0.95 -G 0 -A 100 -M 0 -T 1 -d 0
-#	no difference with 56/28
-#	-c 0.95 -G 0 -A 50 -M 0 -T 1 -d 0
 
 ~/.local/cd-hit-v4.8.1-2019-0228/cd-hit \
 	-i cterm_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	-o cterm_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
 	-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0
-
 
 cat orf_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
 	cterm_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
@@ -75,9 +72,9 @@ pepsyn clip \
 	oligos-ref-${TILESIZE}-${OVERLAP}.fasta
 
 
-#	bowtie-build -q oligos-ref.fasta bowtie_index/mylibrary
+bowtie-build -q oligos-ref-${TILESIZE}-${OVERLAP}.fasta oligos-ref-${TILESIZE}-${OVERLAP}
 
 
-
+#	Send the oligos.fasta file to a DNA synthesis company for manufacture of the oligonucleotide library.
 
 
