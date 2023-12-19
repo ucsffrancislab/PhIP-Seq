@@ -13,9 +13,7 @@ Collection of scripts and references on the subject from multiple sources.
 
 ###	Pre
 
-Based on Larman paper's instructions
-
-
+[Based on Larman paper's instructions](scripts/larman_prep_sequences.bash)
 
 
 ###	Post
