@@ -1,0 +1,3 @@
+replicate_1,replicate_2,sample,protocol,IP_reagent,library,sample
+S148,S154,sample_1,standard single IP,Protein AG,vir3,0.2 uL human sera
+S150,S156,sample_2,standard single IP,Protein AG,vir3,0.2 uL human sera
