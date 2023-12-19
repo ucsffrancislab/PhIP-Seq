@@ -25,7 +25,7 @@ Collection of scripts and references on the subject from multiple sources.
 
 ##	References
 
-###	VirScan
+###	Elledge
  
 Bio Protocol
 Published: Jul 05, 2022
