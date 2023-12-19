@@ -54,4 +54,8 @@ PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded pept
 Nat Protoc. 2018 September ; 13(9): 1958–1978. doi:10.1038/s41596-018-0025-6
 
 
+https://github.com/lasersonlab/phip-stat
+
+https://github.com/lasersonlab/pepsyn
+
 
