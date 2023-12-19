@@ -13,7 +13,13 @@ Collection of scripts and references on the subject from multiple sources.
 
 ###	Pre
 
-[Based on Larman paper's instructions](scripts/larman_prep_sequences.bash)
+[Script based on Larman paper's instructions](scripts/larman_prep_sequences.bash)
+
+Script takes 3 required positional arguments
+
+1. TILESIZE (56)
+2. OVERLAP (28)
+3. INPUT (PATH TO FASTA FILE CONTAINING ALL AMINO ACID SEQUENCES)
 
 
 ###	Post
