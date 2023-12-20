@@ -2,16 +2,28 @@
 
 #	From section "Data analysis" A of "VirScan: High-throughput Profiling of Antiviral Antibody Epitopes"
 
-module load bowtie	#/1.2.2
-module load samtools	#/1.3.1
+#set -e	#	exit if any command fails
+#set -u	#	Error on usage of unset variables
+#set -o pipefail
+if [ -n "$( declare -F module )" ] ; then
+	echo "Loading required modules"
+	#module load CBI samtools
+	module load bowtie	#/1.2.2
+	module load samtools	#/1.3.1
+fi
+#set -x
+
 
 fq=$1
 
 
 #	Not sure why the `samtools view -u` is needed. `bowtie --sam` shouldn't be compressed.
 
+#	-x /francislab/data1/refs/refseq/phipSeq-20221116/bowtie_index/mylibrary \
+
 bowtie -3 25 -n 3 -l 30 -e 1000 --tryhard --nomaqround --norc --best --sam --quiet \
-	-x /francislab/data1/refs/refseq/phipSeq-20221116/bowtie_index/mylibrary $fq \
+	-x ~/github/ucsffrancislab/PhIP-Seq/Elledge/vir3 \
+	$fq \
 	| samtools view -u - \
 	| samtools sort -T ${fq%.fastq.gz}.2.temp.bam -o ${fq%.fastq.gz}.bam
 
