@@ -97,7 +97,7 @@ datZ = virScanR::vs.convert(
 	)
 
 
-output_base = paste( inbase, "hits_combined_vir3_3.5_cutoff", "csv", sep=".")
+output_base = paste( inbase, "Zscores", "csv", sep=".")
 
 mmR::mm.fastwrite(datZ$out, path = output_base )
 
