@@ -58,7 +58,8 @@ done
 
 
 ```
-sum_counts_files.py --output Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_2_3_4_R1.count.combined.csv.gz Elledge/fastq_files/LIB044174_GEN00168483_S148_L00*_R1.count.csv.gz`
+sum_counts_files.py --output Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_2_3_4_R1.count.combined.csv.gz \
+  Elledge/fastq_files/LIB044174_GEN00168483_S148_L00*_R1.count.csv.gz`
 ```
 
 ```
@@ -84,7 +85,7 @@ merge_all_combined_counts_files.py Elledge/count.combined_files/LIB044174_GEN001
 
 
 
-No no-serum control sample data was provided, but the counts were so extracting them.
+No no-serum control sample data was provided, but the counts were, so extracting them.
 ```
 awk 'BEGIN{FS=OFS=","}{print $1,$6}' Elledge/counts_vir3_Bio_Protocol.csv | gzip > Elledge/fastq_files/input.count.csv.gz
 ```
@@ -99,7 +100,8 @@ done
 ```
 
 ```
-merge_all_combined_counts_files.py --output Elledge/fastq_files/merged.combined.count.csv Elledge/fastq_files/S???.count.csv.gz Elledge/fastq_files/input.count.csv.gz 
+merge_all_combined_counts_files.py --output Elledge/fastq_files/merged.combined.count.csv \
+  Elledge/fastq_files/S???.count.csv.gz Elledge/fastq_files/input.count.csv.gz 
 ```
 
 
@@ -217,7 +219,8 @@ booleanize_Zscore_replicates.py S150 S156 Elledge/fastq_files/merged.combined.co
 #####	[Merge booleanized Z-scores](scripts/merge_booleanized_replicates.py)
 
 ```
-merge_booleanized_replicates.py --output merged.combined.count.Zscores.booleanized_replicates.csv Elledge/fastq_files/merged.combined.count.Zscores.S???.csv
+merge_booleanized_replicates.py --output merged.combined.count.Zscores.booleanized_replicates.csv \
+  Elledge/fastq_files/merged.combined.count.Zscores.S???.csv
 ```
 
 ```
@@ -272,13 +275,84 @@ Dengue virus,6  					      |	Dengue virus,7
 A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
 Note: Public epitope annotations are available upon request.
 
-Based on the above, I think that the following is accurate.
+Based on the above line from the paper, I think that the following is accurate.
+
 
 ```
 awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv
-awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv
+
+Species,S148
+Betacoronavirus 1,4
+Dengue virus,8
+Enterovirus B,5
+Hepatitis B virus,10
+Hepatitis C virus,8
+Hepatitis E virus,6
+Human adenovirus C,9
+Human adenovirus F,4
+Human herpesvirus 1,13
+Human herpesvirus 2,11
+Human herpesvirus 3,9
+Human herpesvirus 4,42
+Human herpesvirus 5,21
+Human immunodeficiency virus 1,5
+Human respiratory syncytial virus,4
+Influenza A virus,10
+Influenza B virus,6
+Lassa mammarenavirus,4
+Macacine herpesvirus 1,9
+Middle East respiratory syndrome coronavirus,4
+Molluscum contagiosum virus,17
+Orf virus,12
+Papiine herpesvirus 2,11
+Pegivirus A,6
+Streptococcus pneumoniae,11
+Vaccinia virus,5
+deleted (mostly T. cruzi),10
 ```
 
+
+```
+awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv
+
+Species,S150
+Dengue virus,7
+Enterovirus B,6
+Hepatitis B virus,12
+Hepatitis C virus,8
+Hepatitis E virus,5
+Human adenovirus D,5
+Human adenovirus F,4
+Human coronavirus HKU1,4
+Human herpesvirus 1,29
+Human herpesvirus 2,12
+Human herpesvirus 3,8
+Human herpesvirus 4,8
+Human herpesvirus 5,18
+Human herpesvirus 8,9
+Human immunodeficiency virus 1,6
+Human immunodeficiency virus 2,4
+Human respiratory syncytial virus,5
+Influenza A virus,17
+Influenza B virus,7
+Macacine herpesvirus 1,10
+Molluscum contagiosum virus,12
+Norwalk virus,4
+Orf virus,20
+Papiine herpesvirus 2,7
+Pegivirus A,5
+Pseudocowpox virus,4
+Rhinovirus A,4
+Rotavirus A,6
+Rotavirus B,4
+Saimiriine herpesvirus 2 (SaHV-2) (Herpesvirus saimiri),4
+Staphylococcus aureus,6
+Streptococcus pneumoniae,10
+Zika virus (strain Mr 766) (ZIKV),4
+deleted (mostly T. cruzi),7
+```
+
+Reasonable results?
 
 
 
