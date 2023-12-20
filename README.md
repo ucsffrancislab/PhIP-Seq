@@ -25,9 +25,12 @@ Script takes 3 required positional arguments
 ###	Post
 
 
-Scripts based on Elledge paper's instructions.
+Scripts based on Elledge paper's scripts or instructions.
 
-[For each FASTQ file](scripts/elledge_process_sample.bash)
+
+####	Individual
+
+#####	[Align and extract counts for each FASTQ file](scripts/elledge_process_sample.bash)
 
 1. INPUT (FASTQ FILE)
 
@@ -47,7 +50,7 @@ done
 
 ####	Aggregation
 
-[sum all counts files for each sample](scripts/sum_counts_files.py)
+#####	[sum all counts files for each sample](scripts/sum_counts_files.py)
 
 * --output COMBINED_COUNTS_CSV_FILE
 
@@ -68,7 +71,7 @@ done
 
 
 
-[Merge all combined counts files](scripts/merge_all_combined_counts_files.py)
+#####	[Merge all combined counts files](scripts/merge_all_combined_counts_files.py)
 
 * --output MERGED_COUNTS_CSV_FILE
 
@@ -118,7 +121,7 @@ The same!
 
 
 
-[Calculate Z-scores](scripts/elledge_Zscore_analysis.R)
+#####	[Calculate Z-scores](scripts/elledge_Zscore_analysis.R)
 
 1. Merged combined counts csv file
 
@@ -158,32 +161,34 @@ id,group,S148,S150,S154,S156,input
 ```
 
 
-[Split Z-scores by column](scripts/split_data_frame.py)
+Geno suggests trying something like ...
+```
+x = data.frame(lapply(x, function(y) if(is.numeric(y)) round(y, 2) else y)) 
+```
+but doesn't explain why they are different.
 
-1. Z-scores csv
+
+
 
 ```
-split_data_frame.py Elledge/fastq_files/merged.combined.count.Zscores.csv
+awk 'BEGIN{FS=OFS=","}(NR==1){print $5,$6,$1,$2,$3,$4,$7}(NR>1){printf "%d,%d,%.2g,%.2g,%.2g,%.2g,%d\n",$5,$6,$1,$2,$3,$4,$7}' \
+  Elledge/fastq_files/merged.combined.count.Zscores.csv > Elledge/fastq_files/merged.combined.count.Zscores.reordered.csv
 ```
 
-produces 
-
 ```
-Elledge/fastq_files/merged.combined.count.Zscores.csv.S148.csv
-Elledge/fastq_files/merged.combined.count.Zscores.csv.S150.csv
-Elledge/fastq_files/merged.combined.count.Zscores.csv.S154.csv
-Elledge/fastq_files/merged.combined.count.Zscores.csv.S156.csv
-Elledge/fastq_files/merged.combined.count.Zscores.csv.group.csv
-Elledge/fastq_files/merged.combined.count.Zscores.csv.input.csv
+sdiff -s Elledge/Zscores_vir3.csv Elledge/fastq_files/merged.combined.count.Zscores.reordered.csv
 ```
 
+Even after reordering and rounding / trimming with printf, the numbers are not identical.
+Nearly every row has at least 1 minor difference.
 
 
 
 
-[Booleanize Zscores at threshold of 3.5 for each technical replicate](scripts/booleanize_Zscore_replicate.py)
+#####	[Booleanize Zscores at threshold of 3.5 for each technical replicate](scripts/booleanize_Zscore_replicates.py)
 
-1. List or glob of all Z-scores files for each technical replicate
+1. List of all technical replicate
+2. Z-scores file
 
 
 
@@ -204,24 +209,75 @@ S150,S156,sample_2,standard single IP,Protein AG,vir3,0.2 uL human sera
 
 
 
+```
+booleanize_Zscore_replicates.py S148 S154 Elledge/fastq_files/merged.combined.count.Zscores.csv
+booleanize_Zscore_replicates.py S150 S156 Elledge/fastq_files/merged.combined.count.Zscores.csv
+```
 
-UNDER DEVELOPMENT
+#####	[Merge booleanized Z-scores](scripts/merge_booleanized_replicates.py)
+
+```
+merge_booleanized_replicates.py --output merged.combined.count.Zscores.booleanized_replicates.csv Elledge/fastq_files/merged.combined.count.Zscores.S???.csv
+```
+
+```
+head -1 Elledge/hits_combined_vir3_3.5_cutoff.csv | tr -d '\r' > Elledge/hits_combined_vir3_3.5_cutoff.sorted.csv
+tail -n +2 Elledge/hits_combined_vir3_3.5_cutoff.csv | tr -d '\r' | sort -t, -k1n,1 >> Elledge/hits_combined_vir3_3.5_cutoff.sorted.csv
+```
+
+Only a few differences likely due to the rounding issues 
+```
+sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_combined_vir3_3.5_cutoff.sorted.csv
+39869,True,False					      |	39869,False,False
+57910,True,True						      |	57910,False,True
+86690,False,True					      |	86690,False,False
+89812,True,True						      |	89812,True,False
+```
 
 
-
-
-
-
-Merge booleanized Z-scores
-
-
-
-
-[Calculate virus scores](Elledge/calc_scores_nofilter.py)
+#####	[Calculate virus scores](scripts/elledge_calc_scores_nofilter.py)
 
 1. Booleanized Z-scores csv file
 
 
+```
+for i in Elledge/fastq_files/merged.combined.count.Zscores.S???.csv ; do
+elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
+done
+```
+
+
+A few differences here.
+
+```
+sdiff -sW Elledge/virus_scores/virus_scores_S148.csv Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv
+Species,SAMPLE_ID       				      |	Species,S148
+Alphapapillomavirus 9,1 				      |	Alphapapillomavirus 9,2
+BK polyomavirus (BKPyV),1       			      |	BK polyomavirus (BKPyV),0
+Rhinovirus A,1  					      |	Rhinovirus A,2
+Simian virus 12,0       				      |	Simian virus 12,1
+
+sdiff -sW Elledge/virus_scores/virus_scores_S150.csv Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv
+Species,SAMPLE_ID       				      |	Species,S150
+Dengue virus,6  					      |	Dengue virus,7
+```
+
+
+
+
+
+
+#####	Determining virus seropositivity
+
+A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
+Note: Public epitope annotations are available upon request.
+
+Based on the above, I think that the following is accurate.
+
+```
+awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv
+awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv
+```
 
 
 
