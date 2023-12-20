@@ -32,7 +32,7 @@ Scripts based on Elledge paper's scripts or instructions.
 
 #####	[Align and extract counts for each FASTQ file](scripts/elledge_process_sample.bash)
 
-1. INPUT (FASTQ FILE)
+* INPUT (FASTQ FILE)
 
 ```
 elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_R1.fastq.gz 
@@ -43,7 +43,7 @@ elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L004_
 
 ```
 for f in Elledge/fastq_files/*fastq.gz ; do
-elledge_process_sample.bash ${f}
+  elledge_process_sample.bash ${f}
 done
 ```
 
@@ -53,8 +53,7 @@ done
 #####	[sum all counts files for each sample](scripts/sum_counts_files.py)
 
 * --output COMBINED_COUNTS_CSV_FILE
-
-1. List or glob of all counts files for the sample
+* List or glob of all counts files for the sample
 
 
 ```
@@ -64,9 +63,9 @@ sum_counts_files.py --output Elledge/fastq_files/LIB044174_GEN00168483_S148_L001
 
 ```
 for f in Elledge/fastq_files/LIB0*_L001_R1.count.csv.gz ; do
-i=${f/L001/L00*}
-o=${f/L001/L001_2_3_4}
-sum_counts_files.py --output ${o} ${i}
+  i=${f/L001/L00*}
+  o=${f/L001/L001_2_3_4}
+  sum_counts_files.py --output ${o} ${i}
 done
 ```
 
@@ -75,8 +74,7 @@ done
 #####	[Merge all combined counts files](scripts/merge_all_combined_counts_files.py)
 
 * --output MERGED_COUNTS_CSV_FILE
-
-1. List or glob of all combined counts files
+* List or glob of all combined counts files
 
 
 ```
@@ -93,9 +91,9 @@ awk 'BEGIN{FS=OFS=","}{print $1,$6}' Elledge/counts_vir3_Bio_Protocol.csv | gzip
 Trimming sample names to just the S###.
 ```
 for f in Elledge/fastq_files/*L001_2_3_4_R1.count.csv.gz ; do
-l=${f/_L001_2_3_4_R1/}
-l=${l/LIB*_GEN*_S/S}
-ln -s $(basename $f) $l
+  l=${f/_L001_2_3_4_R1/}
+  l=${l/LIB*_GEN*_S/S}
+  ln -s $(basename $f) $l
 done
 ```
 
@@ -125,7 +123,7 @@ The same!
 
 #####	[Calculate Z-scores](scripts/elledge_Zscore_analysis.R)
 
-1. Merged combined counts csv file
+* Merged combined counts csv file
 
 
 ```
@@ -189,7 +187,7 @@ Nearly every row has at least 1 minor difference.
 
 #####	[Booleanize Zscores at threshold of 3.5 for each technical replicate](scripts/booleanize_Zscore_replicates.py)
 
-1. List of all technical replicate
+1. List of all technical replicates
 2. Z-scores file
 
 
@@ -218,6 +216,10 @@ booleanize_Zscore_replicates.py S150 S156 Elledge/fastq_files/merged.combined.co
 
 #####	[Merge booleanized Z-scores](scripts/merge_booleanized_replicates.py)
 
+* --output MERGED_COMBINED_COUNTS_ZSCORE_BOOLEANIZED_REPLICATES_CSV_FILE
+* List or glob of all replicates zscores combined counts files
+
+
 ```
 merge_booleanized_replicates.py --output merged.combined.count.Zscores.booleanized_replicates.csv \
   Elledge/fastq_files/merged.combined.count.Zscores.S???.csv
@@ -240,12 +242,15 @@ sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_c
 
 #####	[Calculate virus scores](scripts/elledge_calc_scores_nofilter.py)
 
-1. Booleanized Z-scores csv file
+* hits - merged replicate zscores ( merged.combined.count.Zscores.S148.csv )
+* oligo_metadata - Elledge/VIR3_clean.csv.gz ( we'll need to make one of these for our data )
+* level - Species
+* epitope_len - 7
 
 
 ```
 for i in Elledge/fastq_files/merged.combined.count.Zscores.S???.csv ; do
-elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
+  elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
 done
 ```
 
