@@ -1,1 +1,9 @@
 Makefile
+Elledge/fastq_files/*.count.csv.gz
+Elledge/fastq_files/*.bam
+Elledge/fastq_files/*.bam.bai
+Elledge/counts_vir3_Bio_Protocol.sorted.csv
+Elledge/fastq_files/merged.combined.count.Zscores.csv
+Elledge/fastq_files/merged.combined.count.csv
+Elledge/vir3.*.ebwt
+Elledge/fastq_files/merged.combined.count.Zscores.*.csv
