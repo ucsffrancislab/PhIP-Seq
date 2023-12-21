@@ -15,9 +15,10 @@ fi
 
 
 fq=$1
+SAMPLE_ID=${2:-SAMPLE_ID}
 
-
-#	Not sure why the `samtools view -u` is needed. `bowtie --sam` shouldn't be compressed.
+#	Not sure why the `samtools view -u` is needed.
+#	  -u, --uncompressed         Uncompressed BAM output (and default to --bam)
 
 #	-x /francislab/data1/refs/refseq/phipSeq-20221116/bowtie_index/mylibrary \
 
@@ -26,6 +27,7 @@ bowtie -3 25 -n 3 -l 30 -e 1000 --tryhard --nomaqround --norc --best --sam --qui
 	$fq \
 	| samtools view -u - \
 	| samtools sort -T ${fq%.fastq.gz}.2.temp.bam -o ${fq%.fastq.gz}.bam
+
 
 #	  -3/--trim3 <int>   trim <int> bases from 3' (right) end of reads
 #	  -n/--seedmms <int> max mismatches in seed (can be 0-3, default: -n 2)
@@ -50,7 +52,14 @@ samtools index $bam
 
 #5. Count indexes with the following commands. The output is a file that ends in ".count.csv"
 
-samtools idxstats $bam | cut -f 1,3 | sed -e '/^\*\t/d' -e '1 i id\tSAMPLE_ID' | tr "\\t" "," > ${bam%.bam}.count.csv
+
+
+#	perhaps add SAMPLE_ID as an incoming parameter
+
+
+
+#samtools idxstats $bam | cut -f 1,3 | sed -e '/^\*\t/d' -e '1 i id\tSAMPLE_ID' | tr "\\t" "," > ${bam%.bam}.count.csv
+samtools idxstats $bam | cut -f 1,3 | sed -e '/^\*\t/d' -e "1 i id\t${SAMPLE_ID}" | tr "\\t" "," > ${bam%.bam}.count.csv
 
 
 csv=${bam%.bam}.count.csv
