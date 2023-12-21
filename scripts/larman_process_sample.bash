@@ -14,6 +14,16 @@ bowtie -n 3 -l 100 --best --nomaqround --norc -k 1 -p 4 --quiet \
 	-x bowtie_index/mylibrary workdir/reads/sample1.fastq.gz \
 	workdir/alns/sample1.aln
 
+#	  -n/--seedmms <int> max mismatches in seed (can be 0-3, default: -n 2)
+#	  -l/--seedlen <int> seed length for -n (default: 28)
+#	  --nomaqround       disable Maq-like quality rounding for -n (nearest 10 <= 30)
+#	  --nofw/--norc      do not align to forward/reverse-complement reference strand
+#	  -k <int>           report up to <int> good alignments per read (default: 1)
+#	  --best             hits guaranteed best stratum; ties broken by quality
+#	  --quiet            print nothing but the alignments
+#	  -p/--threads <int> number of alignment threads to launch (default: 1)
+
+
 
 #	57 Aggregate each alignment file into a sample count vector using the following command:
 

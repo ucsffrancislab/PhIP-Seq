@@ -27,6 +27,18 @@ bowtie -3 25 -n 3 -l 30 -e 1000 --tryhard --nomaqround --norc --best --sam --qui
 	| samtools view -u - \
 	| samtools sort -T ${fq%.fastq.gz}.2.temp.bam -o ${fq%.fastq.gz}.bam
 
+#	  -3/--trim3 <int>   trim <int> bases from 3' (right) end of reads
+#	  -n/--seedmms <int> max mismatches in seed (can be 0-3, default: -n 2)
+#	  -e/--maqerr <int>  max sum of mismatch quals across alignment for -n (def: 70)
+#	  -l/--seedlen <int> seed length for -n (default: 28)
+#	  --nomaqround       disable Maq-like quality rounding for -n (nearest 10 <= 30)
+#	  --nofw/--norc      do not align to forward/reverse-complement reference strand
+#	  -y/--tryhard       try hard to find valid alignments, at the expense of speed
+#	  --best             hits guaranteed best stratum; ties broken by quality
+#	  --quiet            print nothing but the alignments
+#	  -S/--sam           write hits in SAM format
+#	  -p/--threads <int> number of alignment threads to launch (default: 1)
+
 
 #3. Check the alignment report file that ends in ".out"
 #Note: Typically, >85% of the reads align to the reference file.
