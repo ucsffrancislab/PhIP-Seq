@@ -1,7 +1,7 @@
 
 #	PhIP-Seq
 
-phage immunoprecipitation sequencing
+Phage ImmunoPrecipitation Sequencing
 
 Collection of scripts and references on the subject from multiple sources.
 
@@ -11,9 +11,9 @@ Collection of scripts and references on the subject from multiple sources.
 ##	Methods
 
 
-###	Pre
+###	Prepare sequences to be synthesized
 
-[Script based on Larman paper's instructions](scripts/larman_prep_sequences.bash)
+####	[Script based on Larman paper's instructions](scripts/larman_prep_sequences.bash)
 
 Script takes 3 required positional arguments
 
@@ -22,35 +22,205 @@ Script takes 3 required positional arguments
 3. INPUT (PATH TO FASTA FILE CONTAINING ALL AMINO ACID SEQUENCES)
 
 
+Send the `oligos-56-28.fasta` file to a DNA synthesis company for manufacture of the oligonucleotide library.
+
+
+#### Create reference
+
+Larman creates a reference from entire oligo. Elledge trims it to just the first 50bp.
+
+Which should we do?
+
+
+Elledge's post processing uses numbered reference reads whose metadata is in a csv.
+
+
+The oligo fasta file uses reads with just a simple number as the name.
+```
+>1
+atgcgcagcttgctgtttgtggtcggtgcttgggtcgctgctctcgtcac
+>2
+actacaaccaccgctgccgcagggaacacatctgcaacagcttctccagg
+>3
+attaccgctgccgctcctccaggtcattcaacaccttggcctgcactccc
+```
+
+This is the "id" which is carried through the whole process.
+
+These 5 columns are referenced in the virus score calculation at the end.
+Not sure if all of them are used or needed.
+The default output only shows the Species, as that is a given parameter.
+
+```
+zcat Elledge/VIR3_clean.csv.gz | awk 'BEGIN{FS=OFS=","}{print $17,$12,$9,$4,$21}' | head
+id,Species,Organism,Entry,peptide
+1,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A126,MRSLLFVVGAWVAALVTNLTPDAALASGTTTTAAAGNTSATASPGDNATSIDAGST
+2,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A126,TTTTAAAGNTSATASPGDNATSIDAGSTITAAAPPGHSTPWPALPTDLALPLVIGG
+3,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A126,ITAAAPPGHSTPWPALPTDLALPLVIGGLCALTLAAMGAGALLHRCCRRCARRRQN
+4,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A126,LCALTLAAMGAGALLHRCCRRCARRRQNVSSVSA
+5,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A130,RDRGPSRSRVRYTRLAASEA
+6,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A132,MGFGAAAALLALAVALARVPAGGGAYVPVDRALTRVSPNRFRGSSLPPPEQKTDPP
+7,Papiine herpesvirus 2,Cercopithecine herpesvirus 16 (CeHV-16) (Herpesvirus papio 2),A0A132,VDRALTRVSPNRFRGSSLPPPEQKTDPPDVRRVYH
+8,Vaccinia virus,Vaccinia virus,A0ERK8,MHYPKYYINITKINPHLANQFRAWKKRIAGRDYITNLSKDTGIQQSKLTETIRNCQ
+9,Vaccinia virus,Vaccinia virus,A0ERK8,AGRDYITNLSKDTGIQQSKLTETIRNCQKNRNIYGLYIHYNLVINWITDVIINQY
+```
+
+
+
+
+
+
+
+
+
+Since we're using Elledge's technique, we'll need to do this.
+
+move the read and read name into a metadata file and replace it with just a number
+
+Try to build a metadata file from these fasta files.
+
+Not sure what to do with the CTERM sequences that are in the ref but not in the tiles.
+
+```
+~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/orf_tiles-56-28.fasta
+>NP_000468.1_albumin_preproprotein|0-56
+MKWVTFISLLFLFSSAYSRGVFRRDAHKSEVAHRFKDLGEENFKALVLIAFAQYLQ
+
+~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta 
+>NP_000468.1_albumin_preproprotein|0-56
+ATGAAATGGGTTACATTTATTAGTTTGCTTTTCCTGTTCTCTTCAGCGTATTCTCGTGGGGTTTTCCGTCGTGATGCACATAAATCAGAGGTAGCCCATCGCTTCAAGGATTTAGGGGAAGAAAACTTTAAAGCGCTGGTTCTGATTGCGTTTGCCCAATATTTGCAG
+```
+
+NOTE : these tiles do not go to the end of the amino acid. It may be in the CTERM|STOP nucleotides (I believe it is)
+
+```
+pepsyn translate ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.faa
+
+echo "id,accession,Species,Organism,Entry,peptide" > our_vir3.csv
+id=0
+while read name aa ; do
+id=$[id+1]
+name=${name#>}
+accession=$( echo $name | cut -d. -f1 )
+region=$( echo $name | cut -d\| -f2- )
+desc=$( echo $name | cut -d\| -f1 | cut -d_ -f3- )
+echo ${id},${accession},${desc},${desc},${region},${aa}
+done < <( cat ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.faa | paste - - ) >> our_vir3.csv
+
+head our_vir3.csv
+
+id,accession,Species,Organism,Entry,peptide
+1,NP_000468,albumin_preproprotein,albumin_preproprotein,0-56,MKWVTFISLLFLFSSAYSRGVFRRDAHKSEVAHRFKDLGEENFKALVLIAFAQYLQ
+2,NP_000468,albumin_preproprotein,albumin_preproprotein,28-84,SEVAHRFKDLGEENFKALVLIAFAQYLQQCPFEDHVKLVNEVTEFAKTCVADESAE
+3,NP_000468,albumin_preproprotein,albumin_preproprotein,56-112,QCPFEDHVKLVNEVTEFAKTCVADESAENCDKSLHTLFGDKLCTVATLRETYGEMA
+4,NP_000468,albumin_preproprotein,albumin_preproprotein,84-140,NCDKSLHTLFGDKLCTVATLRETYGEMADCCAKQEPERNECFLQHKDDNPNLPRLV
+5,NP_000468,albumin_preproprotein,albumin_preproprotein,112-168,DCCAKQEPERNECFLQHKDDNPNLPRLVRPEVDVMCTAFHDNEETFLKKYLYEIAR
+6,NP_000468,albumin_preproprotein,albumin_preproprotein,140-196,RPEVDVMCTAFHDNEETFLKKYLYEIARRHPYFYAPELLFFAKRYKAAFTECCQAA
+7,NP_000468,albumin_preproprotein,albumin_preproprotein,168-224,RHPYFYAPELLFFAKRYKAAFTECCQAADKAACLLPKLDELRDEGKASSAKQRLKC
+8,NP_000468,albumin_preproprotein,albumin_preproprotein,196-252,DKAACLLPKLDELRDEGKASSAKQRLKCASLQKFGERAFKAWAVARLSQRFPKAEF
+9,NP_000468,albumin_preproprotein,albumin_preproprotein,224-280,ASLQKFGERAFKAWAVARLSQRFPKAEFAEVSKLVTDLTKVHTECCHGDLLECADD
+```
+
+```
+cat ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta | paste - - | awk '{print ">"NR;print $2}' > our_vir3.fna
+
+head our_vir3.fna
+
+>1
+ATGAAATGGGTTACATTTATTAGTTTGCTTTTCCTGTTCTCTTCAGCGTATTCTCGTGGGGTTTTCCGTCGTGATGCACATAAATCAGAGGTAGCCCATCGCTTCAAGGATTTAGGGGAAGAAAACTTTAAAGCGCTGGTTCTGATTGCGTTTGCCCAATATTTGCAG
+>2
+TCAGAAGTAGCACATCGTTTCAAAGACCTTGGTGAAGAAAATTTTAAAGCTCTTGTTCTGATAGCTTTTGCTCAGTATCTGCAGCAGTGCCCGTTTGAAGATCATGTGAAACTGGTTAATGAAGTGACCGAATTTGCGAAAACCTGCGTCGCTGATGAGAGTGCCGAA
+>3
+CAGTGCCCGTTCGAAGACCATGTAAAATTAGTGAACGAAGTTACAGAGTTTGCCAAAACCTGCGTCGCGGATGAGTCAGCAGAAAATTGTGACAAGAGCCTGCATACCCTGTTTGGCGACAAACTGTGTACAGTCGCAACATTGCGCGAAACATATGGTGAGATGGCA
+>4
+AATTGCGATAAGAGCCTGCATACGTTGTTTGGTGACAAACTGTGCACCGTGGCAACGCTGCGTGAGACGTATGGGGAAATGGCTGATTGTTGTGCGAAACAAGAACCGGAGCGTAATGAGTGCTTTTTACAACATAAAGACGACAATCCGAATCTTCCGCGTTTAGTA
+>5
+GACTGTTGTGCTAAACAGGAACCGGAACGTAACGAATGCTTTCTGCAACATAAGGATGATAACCCGAACCTTCCGCGTTTAGTTCGTCCGGAAGTTGATGTGATGTGCACTGCATTCCATGACAATGAAGAGACTTTCCTGAAAAAGTATCTGTACGAAATAGCGCGC
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ###	Post
 
+
+
+
+
+####	Post (Larman method)
+
+Scripts based on Larman paper's scripts or instructions.
+
+Still just Pseudocode
+
+#####	[Individual](scripts/larman_process_sample.bash)
+
+#####	[Aggregation](scripts/larman_aggregate_samples.bash)
+
+
+
+
+
+
+
+####	Post (Elledge method)
 
 Scripts based on Elledge paper's scripts or instructions.
 
 
-####	Individual
 
-#####	[Align and extract counts for each FASTQ file](scripts/elledge_process_sample.bash)
+
+
+
+
+In “script.align.sh”, “bowtie -3 25” trims 25 nucleotides off the 3’ end of each sequencing read. This is done if sequencing reads are 75 nucleotides in length. The reference file only includes the first 50 nucleotides of each member of the library, so the sequencing reads must be trimmed down to 50 nucleotides to align correctly to the reference.
+
+...
+
+Note: The “VIR3_clean” file provides the annotations for the oligos” ( Supplementary materials ). There are 115,753 oligos in the Vir3 library. Some protein fragments are identical in different viruses, and in these case there are multiple rows in the “VIR3_clean” file that correspond to a single oligo. To identify the viral source of a given peptide, look for the row(s) in the VIR3_clean file with the "id" value of the given peptide.
+
+
+
+
+
+#####	Individual
+
+######	[Align and extract counts for each FASTQ file](scripts/elledge_process_sample.bash)
 
 * INPUT (FASTQ FILE)
 
 ```
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_R1.fastq.gz 
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L002_R1.fastq.gz 
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L003_R1.fastq.gz 
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L004_R1.fastq.gz 
+elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_R1.fastq.gz S148
+elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L002_R1.fastq.gz S148
+elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L003_R1.fastq.gz S148
+elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L004_R1.fastq.gz S148
 ```
+
 
 ```
 for f in Elledge/fastq_files/*fastq.gz ; do
-  elledge_process_sample.bash ${f}
+  s=$( echo $(basename $f .fastq.gz)| cut -d_ -f3 )
+  elledge_process_sample.bash ${f} ${s}
 done
 ```
 
 
-####	Aggregation
+#####	Aggregation
 
-#####	[sum all counts files for each sample](scripts/sum_counts_files.py)
+######	[sum all counts files for each sample](scripts/sum_counts_files.py)
 
 * --output COMBINED_COUNTS_CSV_FILE
 * List or glob of all counts files for the sample
@@ -71,7 +241,7 @@ done
 
 
 
-#####	[Merge all combined counts files](scripts/merge_all_combined_counts_files.py)
+######	[Merge all combined counts files](scripts/merge_all_combined_counts_files.py)
 
 * --output MERGED_COUNTS_CSV_FILE
 * List or glob of all combined counts files
@@ -121,7 +291,7 @@ The same!
 
 
 
-#####	[Calculate Z-scores](scripts/elledge_Zscore_analysis.R)
+######	[Calculate Z-scores](scripts/elledge_Zscore_analysis.R)
 
 * Merged combined counts csv file
 
@@ -185,7 +355,7 @@ Nearly every row has at least 1 minor difference.
 
 
 
-#####	[Booleanize Zscores at threshold of 3.5 for each technical replicate](scripts/booleanize_Zscore_replicates.py)
+######	[Booleanize Zscores at threshold of 3.5 for each technical replicate](scripts/booleanize_Zscore_replicates.py)
 
 1. List of all technical replicates
 2. Z-scores file
@@ -214,7 +384,7 @@ booleanize_Zscore_replicates.py S148 S154 Elledge/fastq_files/merged.combined.co
 booleanize_Zscore_replicates.py S150 S156 Elledge/fastq_files/merged.combined.count.Zscores.csv
 ```
 
-#####	[Merge booleanized Z-scores](scripts/merge_booleanized_replicates.py)
+######	[Merge booleanized Z-scores](scripts/merge_booleanized_replicates.py)
 
 * --output MERGED_COMBINED_COUNTS_ZSCORE_BOOLEANIZED_REPLICATES_CSV_FILE
 * List or glob of all replicates zscores combined counts files
@@ -240,7 +410,7 @@ sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_c
 ```
 
 
-#####	[Calculate virus scores](scripts/elledge_calc_scores_nofilter.py)
+######	[Calculate virus scores](scripts/elledge_calc_scores_nofilter.py)
 
 * hits - merged replicate zscores ( merged.combined.count.Zscores.S148.csv )
 * oligo_metadata - Elledge/VIR3_clean.csv.gz ( we'll need to make one of these for our data )
@@ -275,7 +445,7 @@ Dengue virus,6  					      |	Dengue virus,7
 
 
 
-#####	Determining virus seropositivity
+######	Determining virus seropositivity
 
 A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
 Note: Public epitope annotations are available upon request.
@@ -361,13 +531,15 @@ Reasonable results?
 
 
 
-##	References
+##	References, Papers & Resources
 
-###	Elledge
- 
-VirScan: High-throughput Profiling of Antiviral Antibody Epitopes
+###	[PhIP-Seq: PHAGE DISPLAY IMMUNOPRECIPITATION SEQUENCING](https://cdi.bio/phip-seq/)
 
-https://pubmed.ncbi.nlm.nih.gov/35937932/
+###	[2022 - VirScan: High-throughput Profiling of Antiviral Antibody Epitopes
+](https://en.bio-protocol.org/en/bpdetail?id=4464&type=0)
+
+###	[Elledge 2020 - Viral epitope profiling of COVID-19 patients reveals cross-reactivity and correlates of severity
+](https://www.science.org/doi/10.1126/science.abd4250)
 
 https://doi.org/10.21769/BioProtoc.4464
 
@@ -378,28 +550,18 @@ https://os.bio-protocol.org/attached/file/20220629/Supplementary%20materials.doc
 3) Example data: https://www.dropbox.com/sh/7hnqnx4yiskabgo/AAAeRE70EScRIzusqGX2HndUa?dl=0
 4) Liquid handling robot protocol: https://www.dropbox.com/sh/guguiqgrmviqk9u/AABPoVam-Xsgg82su-IibDS_a?dl=0
 
-
-Shrock EL, Shrock CL, Elledge SJ. VirScan: High-throughput Profiling of Antiviral Antibody Epitopes. Bio Protoc. 2022 Jul 5;12(13):e4464. doi: 10.21769/BioProtoc.4464. PMID: 35937932; PMCID: PMC9303818.
-
 This repo includes these analysis script, input files and example data.
 
 
-###	Larman
-
-PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded peptidomes
-
-https://www.nature.com/articles/s41596-018-0025-6
+###	[Larman 2018 - PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded peptidomes
+](https://www.nature.com/articles/s41596-018-0025-6)
 
 https://doi.org/10.1038/s41596-018-0025-6
-
-Nat Protoc. 2018 September ; 13(9): 1958–1978. doi:10.1038/s41596-018-0025-6
 
 https://github.com/lasersonlab/phip-stat
 
 https://github.com/lasersonlab/pepsyn
 
 The Larman paper did not include any specific code or data that isn't already easily accessible.
-
-Mohan, D., Wansley, D.L., Sie, B.M. et al. PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded peptidomes. Nat Protoc 13, 1958–1978 (2018). https://doi.org/10.1038/s41596-018-0025-6
 
 
