@@ -535,11 +535,9 @@ Reasonable results?
 
 ###	[PhIP-Seq: PHAGE DISPLAY IMMUNOPRECIPITATION SEQUENCING](https://cdi.bio/phip-seq/)
 
-###	[2022 - VirScan: High-throughput Profiling of Antiviral Antibody Epitopes
-](https://en.bio-protocol.org/en/bpdetail?id=4464&type=0)
+###	[2022 - VirScan: High-throughput Profiling of Antiviral Antibody Epitopes](https://en.bio-protocol.org/en/bpdetail?id=4464&type=0)
 
-###	[Elledge 2020 - Viral epitope profiling of COVID-19 patients reveals cross-reactivity and correlates of severity
-](https://www.science.org/doi/10.1126/science.abd4250)
+###	[Elledge 2020 - Viral epitope profiling of COVID-19 patients reveals cross-reactivity and correlates of severity](https://www.science.org/doi/10.1126/science.abd4250)
 
 https://doi.org/10.21769/BioProtoc.4464
 
@@ -553,8 +551,7 @@ https://os.bio-protocol.org/attached/file/20220629/Supplementary%20materials.doc
 This repo includes these analysis script, input files and example data.
 
 
-###	[Larman 2018 - PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded peptidomes
-](https://www.nature.com/articles/s41596-018-0025-6)
+###	[Larman 2018 - PhIP-Seq characterization of serum antibodies using oligonucleotide-encoded peptidomes](https://www.nature.com/articles/s41596-018-0025-6)
 
 https://doi.org/10.1038/s41596-018-0025-6
 
