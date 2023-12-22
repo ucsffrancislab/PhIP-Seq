@@ -1,1 +1,207 @@
-,thresholdAfrican green monkey simian foamy virus,1Aichivirus A,1Alphacoronavirus 1,1Alphapapillomavirus 1,1Alphapapillomavirus 10,1Alphapapillomavirus 11,1Alphapapillomavirus 13,1Alphapapillomavirus 2,1Alphapapillomavirus 3,1Alphapapillomavirus 4,1Alphapapillomavirus 5,1Alphapapillomavirus 6,1Alphapapillomavirus 7,1Alphapapillomavirus 8,1Alphapapillomavirus 9,1Aravan virus,1Australian bat lyssavirus,1BK polyomavirus,1Banna virus,1Barmah Forest virus,1Bat coronavirus 1B,1Betacoronavirus 1,1Betapapillomavirus 1,1Betapapillomavirus 2,1Betapapillomavirus 3,1Bovine papular stomatitis virus,1Bovine respiratory syncytial virus,1Bunyamwera virus,1California encephalitis virus,1Camelpox virus,1Canine adenovirus A,1Cercopithecine herpesvirus 2,1Chandipura virus,1Chapare virus,1Chikungunya virus,1Colorado tick fever virus,1Cowpox virus,1.613518806Crimean-Congo hemorrhagic fever virus,1Dengue virus,1Dhori virus,1Dugbe virus,1Duvenhage virus,1Eastern equine encephalitis virus,1Ectromelia virus,1Encephalomyocarditis virus,1Enterobacteria phage P1,1Enterovirus A,1Enterovirus B,1Enterovirus C,1Enterovirus D,1Equine rotavirus,1Equine torovirus,1Escherichia coli,1European bat lyssavirus 1,1Feline rotavirus,1Gammapapillomavirus 1,1Gammapapillomavirus 2,1Gammapapillomavirus 3,1Gammapapillomavirus 4,1Getah virus,1Guanarito virus,1Hantaan virus,1Hantavirus NFG357,1Hendra virus,1Hepatitis A virus,1Hepatitis B virus,1Hepatitis C virus,1Hepatitis E virus,1Hepatitis delta virus,1Human adenovirus A,1Human adenovirus B,1Human adenovirus C,1Human adenovirus D,1Human adenovirus E,1Human adenovirus F,1Human coronavirus 229E,1Human coronavirus HKU1,1Human coronavirus NL63,1Human erythrovirus V9,1Human herpesvirus 1,2.954080914Human herpesvirus 2,2.633299984Human herpesvirus 3,2.562639888Human herpesvirus 4,2.995824612Human herpesvirus 5,5.485330838Human herpesvirus 6,1Human herpesvirus 6A,2.716506417Human herpesvirus 6B,1.344059842Human herpesvirus 7,2.924871431Human herpesvirus 8,2.837298795Human immunodeficiency virus 1,1Human immunodeficiency virus 2,1Human metapneumovirus,1Human papillomavirus,1Human papillomavirus type 64,1Human papillomavirus type me180,1Human parainfluenza virus 1,1Human parainfluenza virus 2,1Human parainfluenza virus 3,1Human parainfluenza virus 4,1Human parechovirus,1Human parvovirus B19,1Human picobirnavirus,1Human respiratory syncytial virus,1Human rotavirus B219,1Human torovirus,1Influenza A virus,1Influenza B virus,1Influenza C virus,1Isfahan virus,1JC polyomavirus,1Japanese encephalitis virus,1Junin virus,1KI polyomavirus,1Kyasanur forest disease virus,1Lagos bat virus,1Langat virus,1Lassa virus,1Louping ill virus,1Lymphocytic choriomeningitis virus,1Macacine herpesvirus 1,2.164826461Macaque simian foamy virus,1Machupo virus,1Mamastrovirus 1,1Marburg marburgvirus,1Mayaro virus,1Measles virus,1Mokola virus,1Molluscum contagiosum virus,3.859539813Monkeypox virus,1Mumps virus,1Mupapillomavirus 1,1Mupapillomavirus 2,1Murine leukemia virus,1Murine leukemia-related retroviruses,1Murray Valley encephalitis virus,1Mus musculus,1New York virus,1Nipah virus,1"Non-A, non-B hepatitis virus",1Norwalk virus,1Nupapillomavirus 1,1O'nyong-nyong virus,1Orf virus,3.846913593Panine herpesvirus 2,1Papiine herpesvirus 2,1.933811245Parainfluenza virus 5,1Pichinde virus,1Porcine adenovirus A,1Porcine picobirnavirus 1,1Porcine picobirnavirus strain D4,1Porcine picobirnavirus strain E4,1Powassan virus,1Primate T-lymphotropic virus 1,1Primate T-lymphotropic virus 2,1Primate T-lymphotropic virus 3,1Pseudocowpox virus,1.120803941Punta Toro virus,1Puumala virus,1Rabies virus,1Respiratory syncytial virus,1Reston ebolavirus,1Rhinovirus A,1Rhinovirus B,1Rift Valley fever virus,1Ross River virus,1Rotavirus A,1Rotavirus B,1Rotavirus C,1Rotavirus H,1Rubella virus,1Sabia virus,1Sandfly fever Naples virus,1Sandfly fever Sicilian virus,1Sapporo virus,1Semliki forest virus,1Seoul virus,1Severe acute respiratory syndrome-related coronavirus,1Simian T-cell lymphotropic virus 5,1Simian T-cell lymphotropic virus 6,1Simian foamy virus,1Simian virus 12,1Sindbis virus,1St. Louis encephalitis virus,1Sudan ebolavirus,1Tai Forest ebolavirus,1Tanapox virus,2.929043651Taterapox virus,1Torque teno midi virus 1,1Torque teno mini virus 1,1Torque teno virus,1Torque teno virus 1,1Uukuniemi virus,1Vaccinia virus,3.931113011Variola virus,1.169403034Venezuelan equine encephalitis virus,1Vesicular stomatitis Indiana virus,1Vesicular stomatitis New Jersey virus,1WU Polyomavirus,1West Nile virus,1Western equine encephalitis virus,1Wyeomyia virus,1Yaba monkey tumor virus,2.334464985Yellow fever virus,1Zaire ebolavirus,1uncultured phage WW-nAnB,1uncultured picobirnavirus,1
+,threshold
+African green monkey simian foamy virus,1
+Aichivirus A,1
+Alphacoronavirus 1,1
+Alphapapillomavirus 1,1
+Alphapapillomavirus 10,1
+Alphapapillomavirus 11,1
+Alphapapillomavirus 13,1
+Alphapapillomavirus 2,1
+Alphapapillomavirus 3,1
+Alphapapillomavirus 4,1
+Alphapapillomavirus 5,1
+Alphapapillomavirus 6,1
+Alphapapillomavirus 7,1
+Alphapapillomavirus 8,1
+Alphapapillomavirus 9,1
+Aravan virus,1
+Australian bat lyssavirus,1
+BK polyomavirus,1
+Banna virus,1
+Barmah Forest virus,1
+Bat coronavirus 1B,1
+Betacoronavirus 1,1
+Betapapillomavirus 1,1
+Betapapillomavirus 2,1
+Betapapillomavirus 3,1
+Bovine papular stomatitis virus,1
+Bovine respiratory syncytial virus,1
+Bunyamwera virus,1
+California encephalitis virus,1
+Camelpox virus,1
+Canine adenovirus A,1
+Cercopithecine herpesvirus 2,1
+Chandipura virus,1
+Chapare virus,1
+Chikungunya virus,1
+Colorado tick fever virus,1
+Cowpox virus,1.613518806
+Crimean-Congo hemorrhagic fever virus,1
+Dengue virus,1
+Dhori virus,1
+Dugbe virus,1
+Duvenhage virus,1
+Eastern equine encephalitis virus,1
+Ectromelia virus,1
+Encephalomyocarditis virus,1
+Enterobacteria phage P1,1
+Enterovirus A,1
+Enterovirus B,1
+Enterovirus C,1
+Enterovirus D,1
+Equine rotavirus,1
+Equine torovirus,1
+Escherichia coli,1
+European bat lyssavirus 1,1
+Feline rotavirus,1
+Gammapapillomavirus 1,1
+Gammapapillomavirus 2,1
+Gammapapillomavirus 3,1
+Gammapapillomavirus 4,1
+Getah virus,1
+Guanarito virus,1
+Hantaan virus,1
+Hantavirus NFG357,1
+Hendra virus,1
+Hepatitis A virus,1
+Hepatitis B virus,1
+Hepatitis C virus,1
+Hepatitis E virus,1
+Hepatitis delta virus,1
+Human adenovirus A,1
+Human adenovirus B,1
+Human adenovirus C,1
+Human adenovirus D,1
+Human adenovirus E,1
+Human adenovirus F,1
+Human coronavirus 229E,1
+Human coronavirus HKU1,1
+Human coronavirus NL63,1
+Human erythrovirus V9,1
+Human herpesvirus 1,2.954080914
+Human herpesvirus 2,2.633299984
+Human herpesvirus 3,2.562639888
+Human herpesvirus 4,2.995824612
+Human herpesvirus 5,5.485330838
+Human herpesvirus 6,1
+Human herpesvirus 6A,2.716506417
+Human herpesvirus 6B,1.344059842
+Human herpesvirus 7,2.924871431
+Human herpesvirus 8,2.837298795
+Human immunodeficiency virus 1,1
+Human immunodeficiency virus 2,1
+Human metapneumovirus,1
+Human papillomavirus,1
+Human papillomavirus type 64,1
+Human papillomavirus type me180,1
+Human parainfluenza virus 1,1
+Human parainfluenza virus 2,1
+Human parainfluenza virus 3,1
+Human parainfluenza virus 4,1
+Human parechovirus,1
+Human parvovirus B19,1
+Human picobirnavirus,1
+Human respiratory syncytial virus,1
+Human rotavirus B219,1
+Human torovirus,1
+Influenza A virus,1
+Influenza B virus,1
+Influenza C virus,1
+Isfahan virus,1
+JC polyomavirus,1
+Japanese encephalitis virus,1
+Junin virus,1
+KI polyomavirus,1
+Kyasanur forest disease virus,1
+Lagos bat virus,1
+Langat virus,1
+Lassa virus,1
+Louping ill virus,1
+Lymphocytic choriomeningitis virus,1
+Macacine herpesvirus 1,2.164826461
+Macaque simian foamy virus,1
+Machupo virus,1
+Mamastrovirus 1,1
+Marburg marburgvirus,1
+Mayaro virus,1
+Measles virus,1
+Mokola virus,1
+Molluscum contagiosum virus,3.859539813
+Monkeypox virus,1
+Mumps virus,1
+Mupapillomavirus 1,1
+Mupapillomavirus 2,1
+Murine leukemia virus,1
+Murine leukemia-related retroviruses,1
+Murray Valley encephalitis virus,1
+Mus musculus,1
+New York virus,1
+Nipah virus,1
+Non-A/non-B hepatitis virus,1
+Norwalk virus,1
+Nupapillomavirus 1,1
+O'nyong-nyong virus,1
+Orf virus,3.846913593
+Panine herpesvirus 2,1
+Papiine herpesvirus 2,1.933811245
+Parainfluenza virus 5,1
+Pichinde virus,1
+Porcine adenovirus A,1
+Porcine picobirnavirus 1,1
+Porcine picobirnavirus strain D4,1
+Porcine picobirnavirus strain E4,1
+Powassan virus,1
+Primate T-lymphotropic virus 1,1
+Primate T-lymphotropic virus 2,1
+Primate T-lymphotropic virus 3,1
+Pseudocowpox virus,1.120803941
+Punta Toro virus,1
+Puumala virus,1
+Rabies virus,1
+Respiratory syncytial virus,1
+Reston ebolavirus,1
+Rhinovirus A,1
+Rhinovirus B,1
+Rift Valley fever virus,1
+Ross River virus,1
+Rotavirus A,1
+Rotavirus B,1
+Rotavirus C,1
+Rotavirus H,1
+Rubella virus,1
+Sabia virus,1
+Sandfly fever Naples virus,1
+Sandfly fever Sicilian virus,1
+Sapporo virus,1
+Semliki forest virus,1
+Seoul virus,1
+Severe acute respiratory syndrome-related coronavirus,1
+Simian T-cell lymphotropic virus 5,1
+Simian T-cell lymphotropic virus 6,1
+Simian foamy virus,1
+Simian virus 12,1
+Sindbis virus,1
+St. Louis encephalitis virus,1
+Sudan ebolavirus,1
+Tai Forest ebolavirus,1
+Tanapox virus,2.929043651
+Taterapox virus,1
+Torque teno midi virus 1,1
+Torque teno mini virus 1,1
+Torque teno virus,1
+Torque teno virus 1,1
+Uukuniemi virus,1
+Vaccinia virus,3.931113011
+Variola virus,1.169403034
+Venezuelan equine encephalitis virus,1
+Vesicular stomatitis Indiana virus,1
+Vesicular stomatitis New Jersey virus,1
+WU Polyomavirus,1
+West Nile virus,1
+Western equine encephalitis virus,1
+Wyeomyia virus,1
+Yaba monkey tumor virus,2.334464985
+Yellow fever virus,1
+Zaire ebolavirus,1
+uncultured phage WW-nAnB,1
+uncultured picobirnavirus,1

@@ -166,9 +166,13 @@ Scripts based on Larman paper's scripts or instructions.
 
 Still just Pseudocode
 
-#####	[Individual](scripts/larman_process_sample.bash)
+#####	[Individual sample](scripts/larman_process_sample.bash)
 
-#####	[Aggregation](scripts/larman_aggregate_samples.bash)
+PENDING
+
+#####	[Aggregation of all samples](scripts/larman_aggregate_samples.bash)
+
+PENDING
 
 
 
@@ -361,6 +365,8 @@ Nearly every row has at least 1 minor difference.
 2. Z-scores file
 
 
+Not sure why the threshold of 3.5 is used
+
 
 The example data has only 148 and 150.
 
@@ -420,7 +426,7 @@ sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_c
 
 ```
 for i in Elledge/fastq_files/merged.combined.count.Zscores.S???.csv ; do
-  elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
+  elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.mod.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
 done
 ```
 
@@ -453,81 +459,198 @@ Note: Public epitope annotations are available upon request.
 Based on the above line from the paper, I think that the following is accurate.
 
 
-```
-awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv
 
-Species,S148
-Betacoronavirus 1,4
-Dengue virus,8
-Enterovirus B,5
-Hepatitis B virus,10
-Hepatitis C virus,8
-Hepatitis E virus,6
-Human adenovirus C,9
-Human adenovirus F,4
-Human herpesvirus 1,13
-Human herpesvirus 2,11
-Human herpesvirus 3,9
-Human herpesvirus 4,42
-Human herpesvirus 5,21
-Human immunodeficiency virus 1,5
-Human respiratory syncytial virus,4
-Influenza A virus,10
-Influenza B virus,6
-Lassa mammarenavirus,4
-Macacine herpesvirus 1,9
-Middle East respiratory syndrome coronavirus,4
-Molluscum contagiosum virus,17
-Orf virus,12
-Papiine herpesvirus 2,11
-Pegivirus A,6
-Streptococcus pneumoniae,11
-Vaccinia virus,5
-deleted (mostly T. cruzi),10
-```
 
+
+
+The virus score is the number of "novel" peptides for a given virus Species marked TRUE.
+Novel determined by the longest match being less than the passed epitope_len (7)
+Larger epitope_len would create higher virus scores.
+
+This means that each virus score is dependent on the number of "novel" peptides.
+
+
+This is why they use a separate threshold for each virus. 
+Not sure where these treshold came from.
+
+NOTE : This threshold file only has thresholds for 206 viruses while the reference contains more than 440.
+
+
+
+
+Join with threshold and select 
+
+
+FIX : Not sorted? Virus names in metadata contain commas
 
 ```
-awk -F, '((NR==1)||($2>3.5))' Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3)'
 
-Species,S150
-Dengue virus,7
-Enterovirus B,6
-Hepatitis B virus,12
-Hepatitis C virus,8
-Hepatitis E virus,5
-Human adenovirus D,5
-Human adenovirus F,4
-Human coronavirus HKU1,4
-Human herpesvirus 1,29
-Human herpesvirus 2,12
-Human herpesvirus 3,8
-Human herpesvirus 4,8
-Human herpesvirus 5,18
-Human herpesvirus 8,9
-Human immunodeficiency virus 1,6
-Human immunodeficiency virus 2,4
-Human respiratory syncytial virus,5
-Influenza A virus,17
-Influenza B virus,7
-Macacine herpesvirus 1,10
-Molluscum contagiosum virus,12
-Norwalk virus,4
-Orf virus,20
-Papiine herpesvirus 2,7
-Pegivirus A,5
-Pseudocowpox virus,4
-Rhinovirus A,4
-Rotavirus A,6
-Rotavirus B,4
-Saimiriine herpesvirus 2 (SaHV-2) (Herpesvirus saimiri),4
-Staphylococcus aureus,6
-Streptococcus pneumoniae,10
-Zika virus (strain Mr 766) (ZIKV),4
-deleted (mostly T. cruzi),7
+
+Alphapapillomavirus 5,2,1
+Alphapapillomavirus 9,2,1
+Betacoronavirus 1,4,1
+Chikungunya virus,2,1
+Cowpox virus,3,1.613518806
+Dengue virus,8,1
+Enterovirus B,5,1
+Enterovirus C,2,1
+Hepatitis B virus,10,1
+Hepatitis C virus,8,1
+Hepatitis E virus,6,1
+Human adenovirus A,2,1
+Human adenovirus B,2,1
+Human adenovirus C,9,1
+Human adenovirus F,4,1
+Human coronavirus HKU1,3,1
+Human herpesvirus 1,13,2.954080914
+Human herpesvirus 2,11,2.633299984
+Human herpesvirus 3,9,2.562639888
+Human herpesvirus 4,42,2.995824612
+Human herpesvirus 5,21,5.485330838
+Human herpesvirus 6A,3,2.716506417
+Human immunodeficiency virus 1,5,1
+Human respiratory syncytial virus,4,1
+Human rotavirus B219,2,1
+Influenza A virus,10,1
+Influenza B virus,6,1
+Influenza C virus,3,1
+KI polyomavirus,2,1
+Lagos bat virus,2,1
+Louping ill virus,2,1
+Macacine herpesvirus 1,9,2.164826461
+Marburg marburgvirus,3,1
+Molluscum contagiosum virus,17,3.859539813
+Monkeypox virus,2,1
+Mumps virus,2,1
+Orf virus,12,3.846913593
+Papiine herpesvirus 2,11,1.933811245
+Rhinovirus A,2,1
+Rhinovirus B,2,1
+Rotavirus A,3,1
+Rotavirus B,2,1
+Rubella virus,3,1
+Sandfly fever Naples virus,2,1
+Torque teno virus,2,1
+Vaccinia virus,5,3.931113011
+Yellow fever virus,3,1
+
+
 ```
 
-Reasonable results?
+
+
+
+```
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3)'
+
+Aichivirus A,2,1
+Alphacoronavirus 1,3,1
+Alphapapillomavirus 1,2,1
+Alphapapillomavirus 2,2,1
+Alphapapillomavirus 7,3,1
+Australian bat lyssavirus,2,1
+Banna virus,2,1
+Betacoronavirus 1,2,1
+Betapapillomavirus 1,2,1
+Bunyamwera virus,2,1
+Chikungunya virus,2,1
+Cowpox virus,2,1.613518806
+Dengue virus,7,1
+Eastern equine encephalitis virus,3,1
+Enterovirus B,6,1
+Enterovirus C,3,1
+Hepatitis B virus,12,1
+Hepatitis C virus,8,1
+Hepatitis E virus,5,1
+Human adenovirus B,2,1
+Human adenovirus C,2,1
+Human adenovirus D,5,1
+Human adenovirus E,3,1
+Human adenovirus F,4,1
+Human coronavirus HKU1,4,1
+Human herpesvirus 1,29,2.954080914
+Human herpesvirus 2,12,2.633299984
+Human herpesvirus 3,8,2.562639888
+Human herpesvirus 4,8,2.995824612
+Human herpesvirus 5,18,5.485330838
+Human herpesvirus 6B,3,1.344059842
+Human herpesvirus 8,9,2.837298795
+Human immunodeficiency virus 1,6,1
+Human immunodeficiency virus 2,4,1
+Human respiratory syncytial virus,5,1
+Influenza A virus,17,1
+Influenza B virus,7,1
+Influenza C virus,2,1
+Macacine herpesvirus 1,10,2.164826461
+Mamastrovirus 1,3,1
+Molluscum contagiosum virus,12,3.859539813
+Mumps virus,2,1
+Norwalk virus,4,1
+Orf virus,20,3.846913593
+Papiine herpesvirus 2,7,1.933811245
+Parainfluenza virus 5,3,1
+Primate T-lymphotropic virus 1,2,1
+Pseudocowpox virus,4,1.120803941
+Puumala virus,3,1
+Rhinovirus A,4,1
+Rhinovirus B,3,1
+Rotavirus A,6,1
+Rotavirus B,4,1
+Rubella virus,3,1
+Venezuelan equine encephalitis virus,3,1
+Yellow fever virus,2,1
+Zaire ebolavirus,2,1
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+######	Max virus scores
+
+The virus score is the number of "novel" peptides for a given virus Species marked TRUE.
+Novel determined by the longest match being less than the passed epitope_len (7)
+Larger epitope_len would create higher virus scores.
+
+This means that each virus score is dependent on the number of "novel" peptides.
+
+
+
+``` 
+tail -n 2 Elledge/vir3.fasta
+
+>128287
+ATTATGACAAGTTCAAAATTTGGCGGGGTCAATGTTTGGAATCGCTACTA
+```
+
+
+```
+echo "id,test" > max_virus_scores.csv
+for i in $( seq 128287 ) ; do
+ echo "${i},True" >> max_virus_scores.csv
+done
+
+elledge_calc_scores_nofilter.py max_virus_scores.csv Elledge/VIR3_clean.csv.gz Species 7 > max_virus_scores.virus_scores.csv
+
+```
+
+
+
+
+
+
+
+
+
 
 
 
