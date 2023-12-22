@@ -29,8 +29,9 @@ Send the `oligos-56-28.fasta` file to a DNA synthesis company for manufacture of
 
 Larman creates a reference from entire oligo. Elledge trims it to just the first 50bp.
 
-Which should we do?
+QUESTION : Which should we do? Test them both?
 
+QUESTION : Why bowtie and not bowtie2 or bwa?
 
 Elledge's post processing uses numbered reference reads whose metadata is in a csv.
 
@@ -75,23 +76,17 @@ id,Species,Organism,Entry,peptide
 
 Since we're using Elledge's technique, we'll need to do this.
 
-move the read and read name into a metadata file and replace it with just a number
+Move the read and read name into a metadata file and replace it with just a number
 
-Try to build a metadata file from these fasta files.
+Build a metadata file from the fasta.
 
-Not sure what to do with the CTERM sequences that are in the ref but not in the tiles.
 
 ```
-~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/orf_tiles-56-28.fasta
->NP_000468.1_albumin_preproprotein|0-56
-MKWVTFISLLFLFSSAYSRGVFRRDAHKSEVAHRFKDLGEENFKALVLIAFAQYLQ
-
 ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta 
 >NP_000468.1_albumin_preproprotein|0-56
 ATGAAATGGGTTACATTTATTAGTTTGCTTTTCCTGTTCTCTTCAGCGTATTCTCGTGGGGTTTTCCGTCGTGATGCACATAAATCAGAGGTAGCCCATCGCTTCAAGGATTTAGGGGAAGAAAACTTTAAAGCGCTGGTTCTGATTGCGTTTGCCCAATATTTGCAG
 ```
 
-NOTE : these tiles do not go to the end of the amino acid. It may be in the CTERM|STOP nucleotides (I believe it is)
 
 ```
 pepsyn translate ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.faa
@@ -138,6 +133,13 @@ AATTGCGATAAGAGCCTGCATACGTTGTTTGGTGACAAACTGTGCACCGTGGCAACGCTGCGTGAGACGTATGGGGAAAT
 GACTGTTGTGCTAAACAGGAACCGGAACGTAACGAATGCTTTCTGCAACATAAGGATGATAACCCGAACCTTCCGCGTTTAGTTCGTCCGGAAGTTGATGTGATGTGCACTGCATTCCATGACAATGAAGAGACTTTCCTGAAAAAGTATCTGTACGAAATAGCGCGC
 ```
 
+
+
+
+```
+bowtie-build our_vir3.fna our_vir3
+
+```
 
 
 
@@ -206,13 +208,6 @@ Note: The “VIR3_clean” file provides the annotations for the oligos” ( Sup
 
 * INPUT (FASTQ FILE)
 
-```
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_R1.fastq.gz S148
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L002_R1.fastq.gz S148
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L003_R1.fastq.gz S148
-elledge_process_sample.bash Elledge/fastq_files/LIB044174_GEN00168483_S148_L004_R1.fastq.gz S148
-```
-
 
 ```
 for f in Elledge/fastq_files/*fastq.gz ; do
@@ -231,11 +226,6 @@ done
 
 
 ```
-sum_counts_files.py --output Elledge/fastq_files/LIB044174_GEN00168483_S148_L001_2_3_4_R1.count.combined.csv.gz \
-  Elledge/fastq_files/LIB044174_GEN00168483_S148_L00*_R1.count.csv.gz`
-```
-
-```
 for f in Elledge/fastq_files/LIB0*_L001_R1.count.csv.gz ; do
   i=${f/L001/L00*}
   o=${f/L001/L001_2_3_4}
@@ -249,11 +239,6 @@ done
 
 * --output MERGED_COUNTS_CSV_FILE
 * List or glob of all combined counts files
-
-
-```
-merge_all_combined_counts_files.py Elledge/count.combined_files/LIB044174_GEN001684*.count.combined.csv.gz
-```
 
 
 
@@ -365,7 +350,8 @@ Nearly every row has at least 1 minor difference.
 2. Z-scores file
 
 
-Not sure why the threshold of 3.5 is used
+
+QUESTION : Why is a threshold of 3.5 is used?
 
 
 The example data has only 148 and 150.
@@ -415,6 +401,8 @@ sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_c
 89812,True,True						      |	89812,True,False
 ```
 
+This output file doesn't seem to be used elsewhere or usefull.
+
 
 ######	[Calculate virus scores](scripts/elledge_calc_scores_nofilter.py)
 
@@ -426,7 +414,7 @@ sdiff -s merged.combined.count.Zscores.booleanized_replicates.csv Elledge/hits_c
 
 ```
 for i in Elledge/fastq_files/merged.combined.count.Zscores.S???.csv ; do
-  elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.mod.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
+  elledge_calc_scores_nofilter.py $i Elledge/VIR3_clean.csv.gz Species 7 > ${i%.csv}.virus_scores.csv
 done
 ```
 
@@ -445,10 +433,6 @@ sdiff -sW Elledge/virus_scores/virus_scores_S150.csv Elledge/fastq_files/merged.
 Species,SAMPLE_ID       				      |	Species,S150
 Dengue virus,6  					      |	Dengue virus,7
 ```
-
-
-
-
 
 
 ######	Determining virus seropositivity
@@ -476,12 +460,15 @@ Not sure where these treshold came from.
 NOTE : This threshold file only has thresholds for 206 viruses while the reference contains more than 440.
 
 
+QUESTION : Why only have of the viruses in thresholds? Other irrelevant?
+
+QUESTION : How were the thresholds computed?
 
 
 Join with threshold and select 
 
+Changed "Non-A, non-B hepatitis virus" to "Non-A/non-B hepatitis virus" in both files
 
-FIX : Not sorted? Virus names in metadata contain commas
 
 ```
 join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3)'
@@ -534,8 +521,6 @@ Sandfly fever Naples virus,2,1
 Torque teno virus,2,1
 Vaccinia virus,5,3.931113011
 Yellow fever virus,3,1
-
-
 ```
 
 
@@ -601,15 +586,7 @@ Rubella virus,3,1
 Venezuelan equine encephalitis virus,3,1
 Yellow fever virus,2,1
 Zaire ebolavirus,2,1
-
-
 ```
-
-
-
-
-
-
 
 
 
