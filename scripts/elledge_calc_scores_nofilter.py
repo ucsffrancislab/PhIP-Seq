@@ -72,6 +72,13 @@ def calc_virus_scores(series, level, epitope_len):
         score = 0
         peptides = virus_hits.index.get_level_values('peptide')
 
+        # I feel like the assigned_peptides needs to be reset otherwise it compounds.
+        # This would change the resulting virus score based on the order in which it were processed.
+        # The viruses are processed sorted from highest to lowest count.
+        #assigned_peptides.clear()
+
+        #print(len(assigned_peptides))
+
         #print(peptides[0:2])
         #Index(['PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP', 
         #  'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP'], dtype='object', name='peptide')

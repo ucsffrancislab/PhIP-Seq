@@ -444,9 +444,6 @@ Based on the above line from the paper, I think that the following is accurate.
 
 
 
-
-
-
 The virus score is the number of "novel" peptides for a given virus Species marked TRUE.
 Novel determined by the longest match being less than the passed epitope_len (7)
 Larger epitope_len would create higher virus scores.
@@ -462,7 +459,7 @@ NOTE : This threshold file only has thresholds for 206 viruses while the referen
 
 QUESTION : Why only have of the viruses in thresholds? Other irrelevant?
 
-QUESTION : How were the thresholds computed?
+QUESTION : How were the thresholds computed? They appear to be in a ratio of 250 peptides to threshold of 1
 
 
 Join with threshold and select 
@@ -600,15 +597,12 @@ Larger epitope_len would create higher virus scores.
 
 This means that each virus score is dependent on the number of "novel" peptides.
 
-
-
 ``` 
 tail -n 2 Elledge/vir3.fasta
 
 >128287
 ATTATGACAAGTTCAAAATTTGGCGGGGTCAATGTTTGGAATCGCTACTA
 ```
-
 
 ```
 echo "id,test" > max_virus_scores.csv
@@ -617,10 +611,74 @@ for i in $( seq 128287 ) ; do
 done
 
 elledge_calc_scores_nofilter.py max_virus_scores.csv Elledge/VIR3_clean.csv.gz Species 7 > max_virus_scores.virus_scores.csv
+```
 
+58 viruses have a 0 max virus score? Something is off here.
+```
+awk -F, '($2==0)' max_virus_scores.virus_scores.csv  | wc -l
+58
+
+grep "^Adeno-associated virus," max_virus_scores.virus_scores.csv
+Adeno-associated virus,0
 ```
 
 
+```
+echo "id,test" > test_virus_scores.csv
+zgrep ",Adeno-associated virus," Elledge/VIR3_clean.csv.gz | awk -F, '{print $1",True"}' >> test_virus_scores.csv
+elledge_calc_scores_nofilter.py test_virus_scores.csv Elledge/VIR3_clean.csv.gz Species 7 > test_virus_scores.virus_scores.csv
+
+cat test_virus_scores.virus_scores.csv
+Species,test
+Adeno-associated virus,13
+```
+Hmm. Confused.
+
+
+```
+paste -d, original_max_virus_scores.virus_scores.csv <( cut -d, -f2 modified_max_virus_scores.virus_scores.csv ) > merged_max_virus_scores.virus_scores.csv
+
+join --header -t, modified_max_virus_scores.virus_scores.csv Elledge/VirScan_viral_thresholds.csv > modified_max_virus_scores.virus_scores_with_thresholds.csv 
+```
+
+After discussion, this appears to be an intended bias as it is processed by the number of Species hits.
+
+
+
+
+
+
+
+
+
+
+
+Additionally, I think that the order of comparison of the peptide can impact the virus score as well.
+Thinking that one peptide "matches" several.
+For example ...
+```
+id,peptide
+1,ABCDEFGHIJKLMNOPQRSTUVWXYZ
+2,ABCDEFGABCDEFGBCDEFGABCDEF
+3,HIJKLMNHIJKLMNHIJKLMNHIJKL
+4,OPQRSTUOPQRSTUOPQRSTUOPQRS
+5,TUVWXYZTUVWXYZTUVWXYZTUVWX
+```
+If we found all 4, in this order we get a virus score of 1.
+If we move 1 to last, we would get a virus score of 4.
+
+
+
+```
+
+echo "virus,count" > peptides_in_vir3_clean.csv 
+zcat Elledge/VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")";}{print $12}' | sort | uniq -c | sed -e 's/^ *//' -e 's/ /,/' | awk -F, '{print $2","$1}' | sort -t, -k1,1 >> peptides_in_vir3_clean.csv &
+
+sort -t, -k1,1 modified_max_virus_scores.virus_scores_with_thresholds.csv > modified_max_virus_scores.virus_scores_with_thresholds.sorted.csv 
+
+join --nocheck --header -t, peptides_in_vir3_clean.csv modified_max_virus_scores.virus_scores_with_thresholds.csv | awk 'BEGIN{FS=OFS=","}(NR==1){print $0,"mythreshold"}(NR>1){m=$3/250;m=(m<1)?1:m;print $0,m}' > modified_max_virus_scores.virus_scores_with_thresholds.peptides.csv
+
+```
 
 
 

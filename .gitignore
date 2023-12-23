@@ -9,4 +9,5 @@ Elledge/vir3.*.ebwt
 Elledge/fastq_files/merged.combined.count.Zscores.*.csv
 Elledge/hits_combined_vir3_3.5_cutoff.sorted.csv
 our_vir3*
-max_virus_scores.*
+/*_virus_scores.*
+peptides_in_vir3_clean.csv
