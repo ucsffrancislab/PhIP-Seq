@@ -29,9 +29,9 @@ Send the `oligos-56-28.fasta` file to a DNA synthesis company for manufacture of
 
 Larman creates a reference from entire oligo. Elledge trims it to just the first 50bp.
 
-QUESTION : Which should we do? Test them both?
+*QUESTION : Which should we do? Test them both?*
 
-QUESTION : Why bowtie and not bowtie2 or bwa?
+*QUESTION : Why bowtie and not bowtie2 or bwa?*
 
 Elledge's post processing uses numbered reference reads whose metadata is in a csv.
 
@@ -71,7 +71,11 @@ id,Species,Organism,Entry,peptide
 
 
 
+#####	Our
 
+
+
+######	Create Our Metadata file ( Elledge method )
 
 
 Since we're using Elledge's technique, we'll need to do this.
@@ -114,7 +118,22 @@ id,accession,Species,Organism,Entry,peptide
 7,NP_000468,albumin_preproprotein,albumin_preproprotein,168-224,RHPYFYAPELLFFAKRYKAAFTECCQAADKAACLLPKLDELRDEGKASSAKQRLKC
 8,NP_000468,albumin_preproprotein,albumin_preproprotein,196-252,DKAACLLPKLDELRDEGKASSAKQRLKCASLQKFGERAFKAWAVARLSQRFPKAEF
 9,NP_000468,albumin_preproprotein,albumin_preproprotein,224-280,ASLQKFGERAFKAWAVARLSQRFPKAEFAEVSKLVTDLTKVHTECCHGDLLECADD
+
+sed -i -e 's/albumin_preproprotein/Human/' -e 's/envelope_glycoprotein_E_Human_alphaherpesvirus_3/VZV/' -e 's/Envelope_surface_glycoprotein_gp120_Human_immunodeficiency_virus_1/HIV/' our_vir3.csv
+
+head our_vir3.csv
+id,accession,Species,Organism,Entry,peptide
+1,NP_000468,Human,albumin_preproprotein,0-56,MKWVTFISLLFLFSSAYSRGVFRRDAHKSEVAHRFKDLGEENFKALVLIAFAQYLQ
+2,NP_000468,Human,albumin_preproprotein,28-84,SEVAHRFKDLGEENFKALVLIAFAQYLQQCPFEDHVKLVNEVTEFAKTCVADESAE
+3,NP_000468,Human,albumin_preproprotein,56-112,QCPFEDHVKLVNEVTEFAKTCVADESAENCDKSLHTLFGDKLCTVATLRETYGEMA
+4,NP_000468,Human,albumin_preproprotein,84-140,NCDKSLHTLFGDKLCTVATLRETYGEMADCCAKQEPERNECFLQHKDDNPNLPRLV
+5,NP_000468,Human,albumin_preproprotein,112-168,DCCAKQEPERNECFLQHKDDNPNLPRLVRPEVDVMCTAFHDNEETFLKKYLYEIAR
+6,NP_000468,Human,albumin_preproprotein,140-196,RPEVDVMCTAFHDNEETFLKKYLYEIARRHPYFYAPELLFFAKRYKAAFTECCQAA
+7,NP_000468,Human,albumin_preproprotein,168-224,RHPYFYAPELLFFAKRYKAAFTECCQAADKAACLLPKLDELRDEGKASSAKQRLKC
+8,NP_000468,Human,albumin_preproprotein,196-252,DKAACLLPKLDELRDEGKASSAKQRLKCASLQKFGERAFKAWAVARLSQRFPKAEF
+9,NP_000468,Human,albumin_preproprotein,224-280,ASLQKFGERAFKAWAVARLSQRFPKAEFAEVSKLVTDLTKVHTECCHGDLLECADD
 ```
+
 
 ```
 cat ~/github/ucsffrancislab/genomics/refs/phipSeq-20221116/oligos-ref-56-28.fasta | paste - - | awk '{print ">"NR;print $2}' > our_vir3.fna
@@ -135,10 +154,52 @@ GACTGTTGTGCTAAACAGGAACCGGAACGTAACGAATGCTTTCTGCAACATAAGGATGATAACCCGAACCTTCCGCGTTT
 
 
 
+######	Create Our Bowtie reference ( Elledge method )
 
 ```
 bowtie-build our_vir3.fna our_vir3
+```
 
+
+Following their method, keep only first 50bp of reference.
+I'm not sure I like this idea, but I'll give it a test.
+
+```
+cut -c1-50 our_vir3.fna > our_vir3.50.fna
+bowtie-build our_vir3.50.fna our_vir3.50
+```
+
+
+
+
+######	Create Our Virus Score thresholds ( Elledge method )
+
+
+Temporarily modify `scripts/elledge_calc_scores_nofilter.py` to reset the assigned peptides after each virus
+
+
+```
+echo "id,test_sample" > our_max_virus_scores.csv
+for i in $( seq $( tail -n +2 our_vir3.csv | wc -l ) ) ; do
+ echo "${i},True" >> our_max_virus_scores.csv
+done
+
+./scripts/elledge_calc_scores_nofilter.py max_virus_scores.csv our_vir3.csv Species 7 > our_max_virus_scores.virus_scores.csv
+```
+
+
+Our dataset is rather simple
+
+```
+echo "virus,count" > peptides_in_our_vir3.csv 
+cat our_vir3.csv | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")";}(NR>1){print $3}' | sort | uniq -c | sed -e 's/^ *//' -e 's/ /,/' | awk -F, '{print $2","$1}' | sort -t, -k1,1 >> peptides_in_our_vir3.csv
+```
+
+
+And the thresholds are all simply 1.
+```
+echo "Virus,threshold" > our_vir3.virus_thresholds.csv
+awk 'BEGIN{FS=OFS=","}(NR>1){m=$2/250;m=(m<1)?1:m;print $1,m}' our_max_virus_scores.virus_scores.csv > our_vir3.virus_thresholds.csv
 ```
 
 
@@ -151,12 +212,7 @@ bowtie-build our_vir3.fna our_vir3
 
 
 
-
-
-
-
-
-###	Post
+###	Post Sequencing Analysis
 
 
 
@@ -194,10 +250,6 @@ Scripts based on Elledge paper's scripts or instructions.
 
 In “script.align.sh”, “bowtie -3 25” trims 25 nucleotides off the 3’ end of each sequencing read. This is done if sequencing reads are 75 nucleotides in length. The reference file only includes the first 50 nucleotides of each member of the library, so the sequencing reads must be trimmed down to 50 nucleotides to align correctly to the reference.
 
-...
-
-Note: The “VIR3_clean” file provides the annotations for the oligos” ( Supplementary materials ). There are 115,753 oligos in the Vir3 library. Some protein fragments are identical in different viruses, and in these case there are multiple rows in the “VIR3_clean” file that correspond to a single oligo. To identify the viral source of a given peptide, look for the row(s) in the VIR3_clean file with the "id" value of the given peptide.
-
 
 
 
@@ -212,7 +264,7 @@ Note: The “VIR3_clean” file provides the annotations for the oligos” ( Sup
 ```
 for f in Elledge/fastq_files/*fastq.gz ; do
   s=$( echo $(basename $f .fastq.gz)| cut -d_ -f3 )
-  elledge_process_sample.bash ${f} ${s}
+  elledge_process_sample.bash --sample_id ${s} --index ~/github/ucsffrancislab/PhIP-Seq/Elledge/vir3 ${f} 
 done
 ```
 
@@ -351,7 +403,7 @@ Nearly every row has at least 1 minor difference.
 
 
 
-QUESTION : Why is a threshold of 3.5 is used?
+*QUESTION : Why is a threshold of 3.5 is used?*
 
 
 The example data has only 148 and 150.
@@ -438,7 +490,7 @@ Dengue virus,6  					      |	Dengue virus,7
 ######	Determining virus seropositivity
 
 A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
-Note: Public epitope annotations are available upon request.
+*NOTE : Public epitope annotations are available upon request.*
 
 Based on the above line from the paper, I think that the following is accurate.
 
@@ -454,12 +506,12 @@ This means that each virus score is dependent on the number of "novel" peptides.
 This is why they use a separate threshold for each virus. 
 Not sure where these treshold came from.
 
-NOTE : This threshold file only has thresholds for 206 viruses while the reference contains more than 440.
+*NOTE : This threshold file only has thresholds for 206 viruses while the reference contains more than 440.*
 
 
-QUESTION : Why only have of the viruses in thresholds? Other irrelevant?
+*QUESTION : Why only have of the viruses in thresholds? Other irrelevant?*
 
-QUESTION : How were the thresholds computed? They appear to be in a ratio of 250 peptides to threshold of 1
+*QUESTION : How were the thresholds computed? They appear to be in a ratio of 250 peptides to threshold of 1*
 
 
 Join with threshold and select 
@@ -672,7 +724,7 @@ If we move 1 to last, we would get a virus score of 4.
 ```
 
 echo "virus,count" > peptides_in_vir3_clean.csv 
-zcat Elledge/VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")";}{print $12}' | sort | uniq -c | sed -e 's/^ *//' -e 's/ /,/' | awk -F, '{print $2","$1}' | sort -t, -k1,1 >> peptides_in_vir3_clean.csv &
+zcat Elledge/VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")";}(NR>1){print $12}' | sort | uniq -c | sed -e 's/^ *//' -e 's/ /,/' | awk -F, '{print $2","$1}' | sort -t, -k1,1 >> peptides_in_vir3_clean.csv &
 
 sort -t, -k1,1 modified_max_virus_scores.virus_scores_with_thresholds.csv > modified_max_virus_scores.virus_scores_with_thresholds.sorted.csv 
 
@@ -681,7 +733,52 @@ join --nocheck --header -t, peptides_in_vir3_clean.csv modified_max_virus_scores
 ```
 
 
+Generate a threshold file for all in the dataset.
+```
+echo "Virus,threshold" > modified_max_virus_scores.thresholds.csv
+awk 'BEGIN{FS=OFS=","}(NR>1){m=$2/250;m=(m<1)?1:m;print $1,m}' modified_max_virus_scores.virus_scores.csv | sort -t, -k1,1 >> modified_max_virus_scores.thresholds.csv
+```
 
+The provided versus my thresholds shows that there are about a dozen additional. Perhaps they were ignoring them on purpose.
+```
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3)' | wc -l
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv modified_max_virus_scores.thresholds.csv | awk -F, '($2>$3)' | wc -l
+
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3)' | wc -l
+join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv modified_max_virus_scores.thresholds.csv | awk -F, '($2>$3)' | wc -l
+```
+
+```
+sdiff -Ws <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3){print $1,$2}' ) <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S148.virus_scores.csv modified_max_virus_scores.thresholds.csv | awk -F, '($2>$3){print $1,$2}' )
+							      >	Bos taurus (Bovine) 2
+							      >	Chikungunya virus (CHIKV) 2
+							      >	Lassa mammarenavirus 4
+							      >	Lipomyces starkeyi (Oleaginous yeast) 3
+							      >	Middle East respiratory syndrome coronavirus 4
+							      >	Pegivirus A 6
+							      >	Saimiriine herpesvirus 2 (SaHV-2) (Herpesvirus saimiri) 3
+							      >	Staphylococcus aureus 2
+							      >	Streptococcus pneumoniae 11
+							      >	Zika virus (strain Mr 766) (ZIKV) 2
+							      >	deleted (mostly T. cruzi) 10
+```
+
+```
+sdiff -Ws <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv Elledge/VirScan_viral_thresholds.csv | awk -F, '($2>$3){print $1,$2}' ) <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores.S150.virus_scores.csv modified_max_virus_scores.thresholds.csv | awk -F, '($2>$3){print $1,$2}' )
+							      >	Bos taurus (Bovine) 3
+							      >	Chikungunya virus (CHIKV) 3
+							      >	Cosavirus A 2
+							      >	Eastern equine encephalitis virus (EEEV) (Eastern equine ence
+							      >	Lassa mammarenavirus 3
+							      >	Lipomyces starkeyi (Oleaginous yeast) 2
+							      >	Middle East respiratory syndrome coronavirus 3
+							      >	Pegivirus A 5
+							      >	Saimiriine herpesvirus 2 (SaHV-2) (Herpesvirus saimiri) 4
+							      >	Staphylococcus aureus 6
+							      >	Streptococcus pneumoniae 10
+							      >	Zika virus (strain Mr 766) (ZIKV) 4
+							      >	deleted (mostly T. cruzi) 7
+```
 
 
 
