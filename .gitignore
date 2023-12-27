@@ -1,4 +1,5 @@
 Makefile
+Elledge/fastq_files.1
 Elledge/fastq_files/*.count.csv.gz
 Elledge/fastq_files/*.bam
 Elledge/fastq_files/*.bam.bai
