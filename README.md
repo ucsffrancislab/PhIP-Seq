@@ -10,6 +10,14 @@ Collection of scripts and references on the subject from multiple sources.
 
 ##	Methods
 
+```
+module load r
+
+R CMD INSTALL mmR_0.1.0.tar.gz 
+R -e "install.packages('VGAM')"
+R CMD INSTALL virScanR_0.1.0.9000.tar.gz
+```
+
 
 ###	Prepare sequences to be synthesized
 
@@ -299,18 +307,9 @@ No no-serum control sample data was provided, but the counts were, so extracting
 awk 'BEGIN{FS=OFS=","}{print $1,$6}' Elledge/counts_vir3_Bio_Protocol.csv | gzip > Elledge/fastq_files/input.count.csv.gz
 ```
 
-Trimming sample names to just the S###.
-```
-for f in Elledge/fastq_files/*L001_2_3_4_R1.count.csv.gz ; do
-  l=${f/_L001_2_3_4_R1/}
-  l=${l/LIB*_GEN*_S/S}
-  ln -s $(basename $f) $l
-done
-```
-
 ```
 merge_all_combined_counts_files.py --output Elledge/fastq_files/merged.combined.count.csv \
-  Elledge/fastq_files/S???.count.csv.gz Elledge/fastq_files/input.count.csv.gz 
+  Elledge/fastq_files/*L001_2_3_4_R1.count.csv.gz Elledge/fastq_files/input.count.csv.gz 
 ```
 
 
@@ -435,7 +434,7 @@ booleanize_Zscore_replicates.py S150 S156 Elledge/fastq_files/merged.combined.co
 
 
 ```
-merge_booleanized_replicates.py --output merged.combined.count.Zscores.booleanized_replicates.csv \
+merge_booleanized_replicates.py --output Elledge/fastq_files/merged.combined.count.Zscores.booleanized_replicates.csv \
   Elledge/fastq_files/merged.combined.count.Zscores.S???.csv
 ```
 
@@ -638,6 +637,7 @@ Zaire ebolavirus,2,1
 ```
 
 
+Most thresholds are 1 making it have minimal effect as a filter.
 
 
 
@@ -779,6 +779,54 @@ sdiff -Ws <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores
 							      >	Zika virus (strain Mr 766) (ZIKV) 4
 							      >	deleted (mostly T. cruzi) 7
 ```
+
+
+
+
+
+##	Misc
+
+
+Sometimes the oligos start with GGAATTCCGCTGCGT and end with CAGGGAAGAGCTCGA
+
+aGGAATTCCGCTGCGT
+aTGAATTCGGAGCGGT
+
+CAGGgaagagctcgaa
+CACTGCACTCGAGACa
+
+```
+zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,0,16);print o}' | sort | uniq -c
+  70798 aGGAATTCCGCTGCGT
+  37805 aTGAATTCGGAGCGGT
+
+   5885 GGAATTCCGCTGCGTA
+   4042 GGAATTCCGCTGCGTC
+   6168 GGAATTCCGCTGCGTG
+   3559 GGAATTCCGCTGCGTT
+
+zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,184);print o}' | sort | uniq -c
+  19654 CAGGGAAGAGCTCGA
+
+   5961 aCACTGCACTCGAGACa
+  11535 aCAGGgaagagctcgaa
+  12958 cCACTGCACTCGAGACa
+  23869 cCAGGgaagagctcgaa
+   7386 gCACTGCACTCGAGACa
+  13852 gCAGGgaagagctcgaa
+  11500 tCACTGCACTCGAGACa
+  21542 tCAGGgaagagctcgaa
+
+```
+
+
+```
+zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,17,168);print ">"$17;print o}' | gzip > VIR3_clean.fna.gz
+
+bowtie-build VIR3_clean.fna.gz VIR3_clean
+bowtie2-build VIR3_clean.fna.gz VIR3_clean
+```
+
 
 
 
