@@ -787,13 +787,11 @@ sdiff -Ws <( join --header -t, Elledge/fastq_files/merged.combined.count.Zscores
 ##	Misc
 
 
-Sometimes the oligos start with GGAATTCCGCTGCGT and end with CAGGGAAGAGCTCGA
+Make a reference from the entire oligo instead of just the first 50bp.
 
-aGGAATTCCGCTGCGT
-aTGAATTCGGAGCGGT
+Trim the adapters.
 
-CAGGgaagagctcgaa
-CACTGCACTCGAGACa
+They aren't always the same.
 
 ```
 zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,0,16);print o}' | sort | uniq -c
@@ -816,15 +814,23 @@ zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr(
   13852 gCAGGgaagagctcgaa
   11500 tCACTGCACTCGAGACa
   21542 tCAGGgaagagctcgaa
-
 ```
+
 
 
 ```
 zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,17,168);print ">"$17;print o}' | gzip > VIR3_clean.fna.gz
+```
 
-bowtie-build VIR3_clean.fna.gz VIR3_clean
-bowtie2-build VIR3_clean.fna.gz VIR3_clean
+Not sure why, but some of these are repeated, hence the uniq/sort/uniq
+
+```
+zcat VIR3_clean.csv.gz | awk 'BEGIN{FPAT="([^,]*)|(\"[^\"]+\")"}(NR>1){o=substr($18,17,168);print $17","o}' | uniq | sort -t, -k1n,1 | uniq | awk -F, '{print ">"$1;print $2}' | gzip > VIR3_clean.uniq.fna.gz
+```
+
+```
+bowtie-build VIR3_clean.uniq.fna.gz VIR3_clean
+bowtie2-build VIR3_clean.uniq.fna.gz VIR3_clean
 ```
 
 
