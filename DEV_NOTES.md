@@ -508,7 +508,7 @@ Not sure where these treshold came from.
 *NOTE : This threshold file only has thresholds for 206 viruses while the reference contains more than 440.*
 
 
-*QUESTION : Why only have of the viruses in thresholds? Other irrelevant?*
+*QUESTION : Why only half of the viruses in thresholds? Other irrelevant?*
 
 *QUESTION : How were the thresholds computed? They appear to be in a ratio of 250 peptides to threshold of 1*
 
