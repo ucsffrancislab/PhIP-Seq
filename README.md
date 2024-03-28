@@ -58,10 +58,12 @@ This paper was made using a 50bp reference sequences, rather than the entire 168
 
 This paper uses example single-ended reads that are 75bp then trims 25bp. Why?
 Just to match the reference? 
+Should we always use a reference of the exact same length of the sequences?
 
 
 
-This paper assumes that you have SOME NUMBER (4?) blank no-serum controls to be used as "input" in Z-score computation.
+This paper assumes that you have SOME NUMBER of blank no-serum controls to be used as "input" in Z-score computation.
+Is the specific number important?
 Are they needed?
 Does the R script require this specific number?
 Does it need this column at all?
@@ -69,10 +71,13 @@ Is there a value that can be used in place of this?
 
 
 
+
+
 This paper assumes that you always have 2 technical replicates. Why?
 I think that you can get away with having different numbers so long as they are merged properly.
 
 A Z-score of at least 3.5 in both technical replicates of a sample is required to call a peptide a "hit". Why 3.5?
+
 
 
 
