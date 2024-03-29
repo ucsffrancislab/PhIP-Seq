@@ -31,6 +31,17 @@ done
 fq=$1
 
 
+
+
+
+# aligning with bowtie like this effective requires a near exact, end-to-end forward match.
+#	bowtie2 could do this as well. not sure if it would be better or faster. just different.
+
+
+
+
+
+
 #	Not sure why the `samtools view -u` is needed.
 #	  -u, --uncompressed         Uncompressed BAM output (and default to --bam)
 
