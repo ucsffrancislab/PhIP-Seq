@@ -16,7 +16,6 @@ Alphapapillomavirus 8,1
 Alphapapillomavirus 9,1
 Aravan virus,1
 Australian bat lyssavirus,1
-BK polyomavirus,1
 Banna virus,1
 Barmah Forest virus,1
 Bat coronavirus 1B,1
@@ -24,6 +23,7 @@ Betacoronavirus 1,1
 Betapapillomavirus 1,1
 Betapapillomavirus 2,1
 Betapapillomavirus 3,1
+BK polyomavirus,1
 Bovine papular stomatitis virus,1
 Bovine respiratory syncytial virus,1
 Bunyamwera virus,1
@@ -66,8 +66,8 @@ Hendra virus,1
 Hepatitis A virus,1
 Hepatitis B virus,1
 Hepatitis C virus,1
-Hepatitis E virus,1
 Hepatitis delta virus,1
+Hepatitis E virus,1
 Human adenovirus A,1
 Human adenovirus B,1
 Human adenovirus C,1
@@ -108,8 +108,8 @@ Influenza A virus,1
 Influenza B virus,1
 Influenza C virus,1
 Isfahan virus,1
-JC polyomavirus,1
 Japanese encephalitis virus,1
+JC polyomavirus,1
 Junin virus,1
 KI polyomavirus,1
 Kyasanur forest disease virus,1
@@ -131,8 +131,8 @@ Monkeypox virus,1
 Mumps virus,1
 Mupapillomavirus 1,1
 Mupapillomavirus 2,1
-Murine leukemia virus,1
 Murine leukemia-related retroviruses,1
+Murine leukemia virus,1
 Murray Valley encephalitis virus,1
 Mus musculus,1
 New York virus,1
@@ -176,9 +176,9 @@ Sapporo virus,1
 Semliki forest virus,1
 Seoul virus,1
 Severe acute respiratory syndrome-related coronavirus,1
+Simian foamy virus,1
 Simian T-cell lymphotropic virus 5,1
 Simian T-cell lymphotropic virus 6,1
-Simian foamy virus,1
 Simian virus 12,1
 Sindbis virus,1
 St. Louis encephalitis virus,1
@@ -190,18 +190,18 @@ Torque teno midi virus 1,1
 Torque teno mini virus 1,1
 Torque teno virus,1
 Torque teno virus 1,1
+uncultured phage WW-nAnB,1
+uncultured picobirnavirus,1
 Uukuniemi virus,1
 Vaccinia virus,3.931113011
 Variola virus,1.169403034
 Venezuelan equine encephalitis virus,1
 Vesicular stomatitis Indiana virus,1
 Vesicular stomatitis New Jersey virus,1
-WU Polyomavirus,1
-West Nile virus,1
 Western equine encephalitis virus,1
+West Nile virus,1
+WU Polyomavirus,1
 Wyeomyia virus,1
 Yaba monkey tumor virus,2.334464985
 Yellow fever virus,1
 Zaire ebolavirus,1
-uncultured phage WW-nAnB,1
-uncultured picobirnavirus,1
