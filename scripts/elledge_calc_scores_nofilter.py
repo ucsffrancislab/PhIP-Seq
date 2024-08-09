@@ -57,6 +57,7 @@ def calc_virus_scores(series, level, epitope_len):
     grouped = series[series].groupby(level=level)
     #for virus in nhits_per_virus[nhits_per_virus > 0].order(ascending=False).index:
 
+    #print(nhits_per_virus[nhits_per_virus > 0].sort_values(ascending=False))
     #print(nhits_per_virus[nhits_per_virus > 0].sort_values(ascending=False).head())
     #Species
     #Influenza A virus           100
@@ -69,8 +70,33 @@ def calc_virus_scores(series, level, epitope_len):
     for virus in nhits_per_virus[nhits_per_virus > 0].sort_values(ascending=False).index:
         virus_hits = grouped.get_group(virus)
 
+        #   These the True tiles
+
+        #print(virus_hits.head())
+        # id    Species            Organism                                               Entry   peptide                                                 
+        # 359   Influenza A virus  Influenza A virus (strain A/USA:Memphis/10/1996 H1N1)  A3DRP0  WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR    True
+        # 535   Influenza A virus  Influenza A virus (strain A/USA:Iowa/1943 H1N1)        A4GCK9  HGLKRGPSTEGVPESMREEYRKEQQSAVDADDSHFVNIELE                   True
+        # 553   Influenza A virus  Influenza A virus (strain A/USA:Phila/1935 H1N1)       A4GCL9  IGNGCFEFYHKCDNECMESVRNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILA    True
+        # 1133  Influenza A virus  Influenza A virus (A/swine/Nebraska/123/1977(H1N1))    A6M6P1  DAPFLDRLRRDQKSLKGRGSTLGLNIETATLAGKQIVEWILKEESNETLKMSIASV    True
+        # 1135  Influenza A virus  Influenza A virus (A/swine/Nebraska/123/1977(H1N1))    A6M6P1  PSSRYLADMTLEEMSRDWFMLMPRQKVAGSLCVRMDQAIMEKNIVLKANFSVIFDR    True
+        # Name: S1, dtype: bool
+
         score = 0
         peptides = virus_hits.index.get_level_values('peptide')
+
+        #print(peptides.shape)
+        # (341,) 
+
+        #print(peptides)
+        # Index(['WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR',
+        #        'HGLKRGPSTEGVPESMREEYRKEQQSAVDADDSHFVNIELE',
+        #        'IGNGCFEFYHKCDNECMESVRNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILA',
+        #        'DAPFLDRLRRDQKSLKGRGSTLGLNIETATLAGKQIVEWILKEESNETLKMSIASV',
+        #        'PSSRYLADMTLEEMSRDWFMLMPRQKVAGSLCVRMDQAIMEKNIVLKANFSVIFDR',
+        #        'IDLADSEMNKLYERVKRQLRENAEEDGTGCFEIFHKCDDDCMASIRNNTYDHSKYR',
+        #        'DIWVTREPYVSCDTSKCYQFALGQGTTLNNKHSN',
+        #        'DGWYGYHHSNEQGSGYAADQESTQKAIDGVTNKVNSIINKMNTQFEAVGREFNNLE',
+
 
         # I feel like the assigned_peptides needs to be reset otherwise it compounds.
         # This would change the resulting virus score based on the order in which it were processed.
@@ -119,11 +145,20 @@ if __name__ == '__main__':
     hits = pd.read_csv(args.hits, index_col=0)
 
     lib = pd.read_csv(args.oligo_metadata,low_memory=False)
+    #print(lib.columns)
+    #Index(['Unnamed: 0', 'Aclstr50', 'Bclstr50', 'Entry', 'Gene names',
+    #       'Gene ontology (GO)', 'Gene ontology IDs', 'Genus', 'Organism',
+    #       'Protein names', 'Sequence', 'Species', 'Subcellular location',
+    #       'Version (entry)', 'Version (sequence)', 'end', 'id', 'oligo', 'source',
+    #       'start', 'peptide'],
+    #      dtype='object')
     # DtypeWarning: Columns (7) have mixed types. Specify dtype option on import or set low_memory=False.
 
     #beads_nhits = pd.read_csv(gzip.open(args.beads_nhits), index_col=0, squeeze=True)
     #samps_nhits = pd.read_csv(gzip.open(args.samps_nhits), index_col=0, squeeze=True)
     #hits[(beads_nhits > 2) | (samps_nhits < 2)] = 0
+
+    #  Only id, Species, and peptide are actually used so could probably remove Organism and Entry.
 
     columns = ['id', 'Species', 'Organism', 'Entry', 'peptide']
     hits2 = pd.merge(lib[columns], hits.reset_index(), on='id').set_index(columns)
@@ -142,6 +177,7 @@ if __name__ == '__main__':
 
     # virus_scores = calc_virus_scores(hits2[hits.name], args.level, args.epitope_len, args.max_mismatch)
     #virus_scores = calc_virus_scores(hits2[hits.name], args.level, args.epitope_len)
+
     virus_scores = calc_virus_scores(hits2[hits.columns[0]], args.level, args.epitope_len)
     virus_scores.to_csv(sys.stdout, header=True)
 
