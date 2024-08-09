@@ -110,8 +110,8 @@ def calc_virus_scores(series, level, epitope_len):
         #  'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP'], dtype='object', name='peptide')
 
         for peptide in peptides:
-            if is_novel_peptide(peptide, assigned_peptides, epitope_len):
             # if is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
+            if is_novel_peptide(peptide, assigned_peptides, epitope_len):
                 score += 1
                 assigned_peptides.add(peptide)
         #print(score)
