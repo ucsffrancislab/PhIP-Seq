@@ -54,6 +54,7 @@ def calc_virus_scores(series, level, epitope_len):
     #Name: S148, dtype: int64
 
     assigned_peptides = set()
+    peptides_for_export = []
     grouped = series[series].groupby(level=level)
     #for virus in nhits_per_virus[nhits_per_virus > 0].order(ascending=False).index:
 
@@ -72,17 +73,27 @@ def calc_virus_scores(series, level, epitope_len):
 
         #   These the True tiles
 
+        #print(type(virus_hits))
+        #<class 'pandas.core.series.Series'>
+
+        #print(virus_hits.index[0:4])
+        #MultiIndex([(  42, 'Human herpesvirus 5', ...),
+        #    (2858, 'Human herpesvirus 5', ...),
+        #    (2870, 'Human herpesvirus 5', ...),
+        #    (2905, 'Human herpesvirus 5', ...)],
+        #   names=['id', 'Species', 'peptide'])
+
         #print(virus_hits.head())
-        # id    Species            Organism                                               Entry   peptide                                                 
-        # 359   Influenza A virus  Influenza A virus (strain A/USA:Memphis/10/1996 H1N1)  A3DRP0  WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR    True
-        # 535   Influenza A virus  Influenza A virus (strain A/USA:Iowa/1943 H1N1)        A4GCK9  HGLKRGPSTEGVPESMREEYRKEQQSAVDADDSHFVNIELE                   True
-        # 553   Influenza A virus  Influenza A virus (strain A/USA:Phila/1935 H1N1)       A4GCL9  IGNGCFEFYHKCDNECMESVRNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILA    True
-        # 1133  Influenza A virus  Influenza A virus (A/swine/Nebraska/123/1977(H1N1))    A6M6P1  DAPFLDRLRRDQKSLKGRGSTLGLNIETATLAGKQIVEWILKEESNETLKMSIASV    True
-        # 1135  Influenza A virus  Influenza A virus (A/swine/Nebraska/123/1977(H1N1))    A6M6P1  PSSRYLADMTLEEMSRDWFMLMPRQKVAGSLCVRMDQAIMEKNIVLKANFSVIFDR    True
+        # id    Species            peptide                                                 
+        # 359   Influenza A virus  WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR    True
+        # 535   Influenza A virus  HGLKRGPSTEGVPESMREEYRKEQQSAVDADDSHFVNIELE                   True
+        # 553   Influenza A virus  IGNGCFEFYHKCDNECMESVRNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILA    True
+        # 1133  Influenza A virus  DAPFLDRLRRDQKSLKGRGSTLGLNIETATLAGKQIVEWILKEESNETLKMSIASV    True
+        # 1135  Influenza A virus  PSSRYLADMTLEEMSRDWFMLMPRQKVAGSLCVRMDQAIMEKNIVLKANFSVIFDR    True
         # Name: S1, dtype: bool
 
         score = 0
-        peptides = virus_hits.index.get_level_values('peptide')
+        #peptides = virus_hits.index.get_level_values('peptide')
 
         #print(peptides.shape)
         # (341,) 
@@ -109,11 +120,16 @@ def calc_virus_scores(series, level, epitope_len):
         #Index(['PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP', 
         #  'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP'], dtype='object', name='peptide')
 
-        for peptide in peptides:
-            # if is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
+        #for peptide in peptides:
+        for virus_hit in virus_hits.index:
+            #print(virus_hit)
+            #(42, 'Human herpesvirus 5', 'TIKNTKPQCRPEDYATRLQDLRVTFHRVKPTLQREDDYSVWLDGDHVYPGLKTELH')
+            peptide=virus_hit[2]
             if is_novel_peptide(peptide, assigned_peptides, epitope_len):
+            # if is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
                 score += 1
                 assigned_peptides.add(peptide)
+                peptides_for_export.append([virus_hit[0],virus_hit[1],virus_hit[2]])
         #print(score)
         #10
         #42
@@ -128,6 +144,9 @@ def calc_virus_scores(series, level, epitope_len):
         # 'PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP', 'SILNTSQRGILEDGQMYQKCCNLFEKFFPSSSYRRPVGISSMVEAMVSRARIDARI'}
 
         virus_scores[virus] = score
+
+    pd.DataFrame(peptides_for_export, columns=['id', 'species', 'peptide']).sort_values(by=['id']).to_csv(args.hits+'.'+args.epitope_len+'.peptides.txt',index=False)
+
     return virus_scores
 
 
@@ -158,9 +177,8 @@ if __name__ == '__main__':
     #samps_nhits = pd.read_csv(gzip.open(args.samps_nhits), index_col=0, squeeze=True)
     #hits[(beads_nhits > 2) | (samps_nhits < 2)] = 0
 
-    #  Only id, Species, and peptide are actually used so could probably remove Organism and Entry.
-
-    columns = ['id', 'Species', 'Organism', 'Entry', 'peptide']
+    #columns = ['id', 'Species', 'Organism', 'Entry', 'peptide']
+    columns = ['id', 'Species', 'peptide']
     hits2 = pd.merge(lib[columns], hits.reset_index(), on='id').set_index(columns)
     #print(hits.head())
     #print(hits2[hits.columns[0]])
@@ -180,5 +198,6 @@ if __name__ == '__main__':
 
     virus_scores = calc_virus_scores(hits2[hits.columns[0]], args.level, args.epitope_len)
     virus_scores.to_csv(sys.stdout, header=True)
+
 
 
