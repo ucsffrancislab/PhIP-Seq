@@ -23,46 +23,25 @@ parser = argparse.ArgumentParser(prog=os.path.basename(__file__))
 #parser.add_argument('files', nargs='*', help='files help') #	list of samples name not files. really columns
 parser.add_argument('columns', nargs='*', help='columns help. the column in the matrix to be treated as technical replicates')
 parser.add_argument('-V','--version', action='version', version='%(prog)s 1.1')
-#parser.add_argument('-o', '--output', nargs=1, type=str, default=['merged.csv.gz'], help='output csv filename %(prog)s (default: %(default)s)')
-parser.add_argument('-s', '--sample', nargs=1, type=str, help='output sample name to use %(prog)s (default: %(default)s)')
-parser.add_argument('-m', '--matrix', nargs=1, type=str, help='zscore matrix filename to use %(prog)s (default: %(default)s)')
+parser.add_argument('-s', '--sample', nargs=1, type=str,
+	help='output sample name to use %(prog)s (default: %(default)s)',required=True)
+parser.add_argument('-m', '--matrix', nargs=1, type=str,
+	help='zscore matrix filename to use %(prog)s (default: %(default)s)',required=True)
+parser.add_argument('-o', '--output', nargs=1, type=str, default=['output.csv'],
+	help='output csv filename %(prog)s (default: %(default)s)',required=True)
 
 # read arguments from the command line
 args = parser.parse_args()
 
-#sample=args.sample[0]
-#print( "Using sample name: ", sample )
-
-columns=args.columns
-infile=args.matrix[0]
 
 
-#from pathlib import Path
-#p = Path(infile)
-#extensions = "".join(p.suffixes)
+if( len(args.columns) > 0 ):
 
-df = pd.read_csv(infile,index_col="id")
+	df = pd.read_csv(args.matrix[0],index_col="id")
 
-#	not sure if necessary
-#df.drop(["group","input"],axis="columns",inplace=True)
+	df[args.columns].gt(threshold).all(axis=1).rename(args.sample[0]).to_csv(args.output[0])
 
+else:
+	print("No columns requested")
 
-first_column=columns[0]
-
-import re
-#outfile = infile.replace(".gz$", "")
-#outfile = infile.replace(".csv$", "")
-outfile = re.sub('.gz$', '', infile)
-outfile = re.sub('.csv$', '', infile)
-outfile = outfile + "." + args.sample[0] + ".csv"
-
-if( len(columns) > 0 ):
-	out=df[[first_column]]>threshold
-	print(out)
-
-	if( len(columns) > 1 ):
-		for column in columns[1:]:
-			out=( ( out[first_column] ) & ( df[column]>threshold ) )
-			print(outfile)
-			pd.DataFrame( data=out, columns=[first_column]).to_csv(outfile)
 
