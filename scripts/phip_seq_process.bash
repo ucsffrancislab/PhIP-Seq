@@ -19,8 +19,6 @@ set -v
 
 #	initially based on /francislab/data1/working/20240925-Illumina-PhIP/20241009-PhIP/phip_seq_process.bash
 
-#	move this script into the phip-seq repo
-#	create a phip_seq_merge.py
 
 function usage(){
 	set +x
@@ -270,7 +268,7 @@ while read subject do
 	head -1 tmp > ${OUTPUT}/${subject}.count.Zscores.hits.virus_scores.csv
 	tail -n +2 tmp | sort -t, -k1,1 >> ${OUTPUT}/${subject}.count.Zscores.hits.virus_scores.csv
 done < <( awk -F, '(NR>1){print $2}' ${MANIFEST} | sort | uniq )
-#	./merge.py --int -o ${OUTPUT}/merged.virus_scores.csv ${OUTPUT}/*.hits.virus_scores.csv
+merge_results.py --int -o ${OUTPUT}/merged.virus_scores.csv ${OUTPUT}/*.hits.virus_scores.csv
 
 
 
@@ -333,6 +331,8 @@ done
 
 echo "Filter with join to public epitopes AFTER"
 
+#	*.7.peptides.txt files created during my version of the calc_virus_score scripts
+
 for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
 	echo ${peptides}
 	join -t, <( sort -t, -k1,1 ${peptides} ) \
@@ -348,13 +348,12 @@ done
 
 
 
-#	7.peptides created during my version of the virus_score scripts
 
 for scoring in ${OUTPUT}/*.count.Zscores.hits.found_public_epitopes.*_scoring.txt ; do
 	echo ${scoring}
 	join --header -t, ${scoring} ${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv \
 		> ${scoring%.txt}.seropositive.csv
 done 
-#	./merge.py --int -o ${OUTPUT}/merged.seropositive.csv ${OUTPUT}/*_scoring.seropositive.csv
+merge_results.py --int -o ${OUTPUT}/merged.seropositive.csv ${OUTPUT}/*_scoring.seropositive.csv
 
 
