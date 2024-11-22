@@ -4,10 +4,10 @@ import os
 import sys
 import pandas as pd
 
-print(sys.argv)
-print(sys.argv[1:3])
-print(len(sys.argv))
-print(sys.argv[1:len(sys.argv)-1])
+#print(sys.argv)
+#print(sys.argv[1:3])
+#print(len(sys.argv))
+#print(sys.argv[1:len(sys.argv)-1])
 
 threshold=3.5
 
