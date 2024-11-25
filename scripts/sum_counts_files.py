@@ -60,6 +60,10 @@ if len(data_frames) > 0:
 	sum = df.sum(axis='columns')
 	sum.name="sum"
 
+	if args.int:
+		print("Converting all counts back to integers")
+		sum = pd.DataFrame(sum, dtype=int)
+
 	print("Writing CSV")
 	sum.to_csv(output)	#	,index_label=['id'])
 
