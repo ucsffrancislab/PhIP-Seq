@@ -39,6 +39,7 @@ MANIFEST="/francislab/data1/raw/20240925-Illumina-PhIP/manifest.csv"
 #	subject,sample,bam_file,input
 
 OUTPUT="out"
+Q=40
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -46,6 +47,8 @@ while [ $# -gt 0 ] ; do
 			shift; MANIFEST=$1; shift;;
 		-o|--output)
 			shift; OUTPUT=$1; shift;;
+		-q)
+			shift; Q=$1; shift;;
 		*)
 			echo "Unknown param :${1}:"; usage ;;
 	esac
@@ -64,20 +67,20 @@ while read sample bam type ; do
 	echo ":${sample}:${bam}:${type}:"
 
 	if [ "${type}" == "input" ] ; then
-		echo "true"
-		f=${OUTPUT}/counts/input/${sample}.q40.count.csv.gz
+	#	echo "true"
+		f=${OUTPUT}/counts/input/${sample}.q${Q}.count.csv.gz
 	else
-		echo "false"
-		f=${OUTPUT}/counts/${sample}.q40.count.csv.gz
+	#	echo "false"
+		f=${OUTPUT}/counts/${sample}.q${Q}.count.csv.gz
 	fi
 
-	echo "after"
+	#echo "after"
 
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		if [ -f $bam ] ; then
-			samtools view -F SECONDARY,SUPPLEMENTARY -q 40 ${bam} \
+			samtools view -F UNMAP,SECONDARY,SUPPLEMENTARY -q ${Q} ${bam} \
 				| awk '( $4 < 10 ){print $3}' | sort -k1n | uniq -c \
 				| awk '{print $2","$1}' | sed -e "1 i id,${sample}" \
 				| gzip > ${f}
@@ -127,7 +130,7 @@ f=${OUTPUT}/counts/input/All.count.csv.gz
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
-	sum_counts_files.py -o ${OUTPUT}/counts/input/All.count.csv ${OUTPUT}/counts/input/*.q40.count.csv.gz
+	sum_counts_files.py --int -o ${OUTPUT}/counts/input/All.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
 	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.count.csv
 	gzip ${OUTPUT}/counts/input/All.count.csv
 	chmod -w ${f}
@@ -148,7 +151,7 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 	merge_all_combined_counts_files.py --int -o ${f} \
-		${OUTPUT}/counts/*.q40.count.csv.gz ${OUTPUT}/counts/input/All.count.csv.gz
+		${OUTPUT}/counts/*.q${Q}.count.csv.gz ${OUTPUT}/counts/input/All.count.csv.gz
 	chmod -w ${f}
 fi
 
@@ -258,6 +261,8 @@ while read subject ; do
 	echo $all_samples
 
 	f=${OUTPUT}/${subject}.count.Zscores.hits.csv
+
+
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
@@ -267,7 +272,7 @@ while read subject ; do
 		chmod -w ${f}
 	fi
 
-done < <( awk -F, '( NR>1 ){print $1}' ${MANIFEST} | sort | uniq )
+done < <( awk -F, '( NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
 
 
 
@@ -285,7 +290,7 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 
-	tail -n +2 ${OUTPUT}/?.count.Zscores.hits.csv | sort -t, -k1,1 \
+	tail -n +2 ${OUTPUT}/*.count.Zscores.hits.csv | sort -t, -k1,1 \
 		| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.merged_trues.csv
 
 	sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.merged_trues.csv
@@ -335,7 +340,7 @@ while read subject ; do
 		chmod -w ${f}
 	fi
 
-done < <( awk -F, '(NR>1){print $1}' ${MANIFEST} | sort | uniq )
+done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
 
 
 
