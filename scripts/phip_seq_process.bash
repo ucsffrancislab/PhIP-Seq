@@ -40,6 +40,8 @@ MANIFEST="/francislab/data1/raw/20240925-Illumina-PhIP/manifest.csv"
 
 OUTPUT="out"
 Q=40
+SPECIES_ORDER=""
+STOP_AFTER_ZSCORE=false
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -47,6 +49,10 @@ while [ $# -gt 0 ] ; do
 			shift; MANIFEST=$1; shift;;
 		-o|--output)
 			shift; OUTPUT=$1; shift;;
+		-s|--species|--species_order)
+			shift; SPECIES_ORDER=$1; shift;;
+		--stop_after_zscore)
+			STOP_AFTER_ZSCORE=true; shift;;
 		-q)
 			shift; Q=$1; shift;;
 		*)
@@ -276,6 +282,10 @@ done < <( awk -F, '( NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uni
 
 
 
+if ${STOP_AFTER_ZSCORE} ; then
+	exit
+fi
+
 
 
 #	**Account for public epitopes BEFORE virus score**
@@ -283,26 +293,32 @@ done < <( awk -F, '( NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uni
 
 #	Create a list of viral species sorted by number of hits for all samples
 
-echo "Creating a fixed species order"
 
-f=${OUTPUT}/species_order.txt
-if [ -f ${f} ] && [ ! -w ${f} ] ; then
-	echo "Write-protected ${f} exists. Skipping."
-else
+if [ -z "${SPECIES_ORDER}" ] ; then
 
-	tail -n +2 ${OUTPUT}/*.count.Zscores.hits.csv | sort -t, -k1,1 \
-		| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.merged_trues.csv
+	echo "Creating a fixed species order"
 
-	sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.merged_trues.csv
+	f=${OUTPUT}/species_order.txt
+	SPECIES_ORDER=${f}
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
 
-	join --header -t, ${OUTPUT}/All.count.Zscores.merged_trues.csv \
-		/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
+		tail -q -n +2 ${OUTPUT}/*.count.Zscores.hits.csv | sort -t, -k1,1 \
+			| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.merged_trues.csv
 
-	awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
-		| cut -d' ' -f2- > ${f}
-	\rm ${OUTPUT}/tmp
+		sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.merged_trues.csv
 
-	chmod -w ${f}
+		join --header -t, ${OUTPUT}/All.count.Zscores.merged_trues.csv \
+			/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
+
+		awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
+			| cut -d' ' -f2- > ${f}
+		\rm ${OUTPUT}/tmp
+
+		chmod -w ${f}
+	fi
+
 fi
 
 
@@ -332,7 +348,7 @@ while read subject ; do
 	else
 		elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.hits.csv \
 			--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
-			--species_order ${OUTPUT}/species_order.txt > ${OUTPUT}/tmp 
+			--species_order ${SPECIES_ORDER} > ${OUTPUT}/tmp 
 		head -1 ${OUTPUT}/tmp > ${f}
 		tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${f}
 		\rm ${OUTPUT}/tmp
@@ -482,6 +498,7 @@ for scoring in ${OUTPUT}/*.count.Zscores.hits.found_public_epitopes.*_scoring.tx
 		join --header -t, ${scoring} \
 			${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv > ${f}
 
+#	merging gets its name from the filename, not the column name. Should I change that?
 		if [[ "${scoring}" =~ "BEFORE" ]]; then
 			sed -i '1s/$/_B/' ${f}
 		elif [[ "${scoring}" =~ "AFTER" ]]; then
