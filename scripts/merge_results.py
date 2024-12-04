@@ -73,7 +73,7 @@ for filename in args.files:
 
 		#d.columns = [basename]
 
-		d.columns = [sample]
+		#d.columns = [sample]
 
 		print(d.head())
 
