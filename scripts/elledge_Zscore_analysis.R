@@ -90,11 +90,14 @@ convert_params1 <- virScanR::vs.set_params_convert(stat  = "Z_score",
 		coresAcrossGroups = parallel::detectCores()-2,
 		returnAs = "data.table", 
 		returnParams = TRUE)
+print(convert_params1)
 
 datZ = virScanR::vs.convert(
 		data = counts, 
 		paramsList = convert_params1
 	)
+
+print(datZ)
 
 
 output_base = paste( inbase, "Zscores", "csv", sep=".")
