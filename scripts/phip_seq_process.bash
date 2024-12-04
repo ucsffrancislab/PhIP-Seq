@@ -199,17 +199,17 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 	#	This depends on the number of samples.
-	#awk 'BEGIN{FS=OFS=","}{print $13,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12}' ${OUTPUT}/All.count.Zscores.csv > tmp
-	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-2;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > tmp
+	#awk 'BEGIN{FS=OFS=","}{print $13,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
+	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-2;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
 	#	L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9,id,group,input
 	#	id,L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9
 
-	head -1 tmp > ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
-	tail -n +2 tmp | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
+	head -1 ${OUTPUT}/tmp > ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
+	tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
 	join --header -t, /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.join_sorted.csv \
 		${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv > ${f}
 
-	\rm tmp
+	\rm ${OUTPUT}/tmp
 	
 	chmod -w ${f}
 fi
@@ -296,11 +296,11 @@ else
 	sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.merged_trues.csv
 
 	join --header -t, ${OUTPUT}/All.count.Zscores.merged_trues.csv \
-		/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > tmp
+		/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
 
-	awk -F, '(NR>1){print $3}' tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
+	awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
 		| cut -d' ' -f2- > ${f}
-	\rm tmp
+	\rm ${OUTPUT}/tmp
 
 	chmod -w ${f}
 fi
@@ -332,10 +332,10 @@ while read subject ; do
 	else
 		elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.hits.csv \
 			--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
-			--species_order ${OUTPUT}/species_order.txt > tmp 
-		head -1 tmp > ${f}
-		tail -n +2 tmp | sort -t, -k1,1 >> ${f}
-		\rm tmp
+			--species_order ${OUTPUT}/species_order.txt > ${OUTPUT}/tmp 
+		head -1 ${OUTPUT}/tmp > ${f}
+		tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${f}
+		\rm ${OUTPUT}/tmp
 
 		chmod -w ${f}
 	fi
@@ -481,6 +481,13 @@ for scoring in ${OUTPUT}/*.count.Zscores.hits.found_public_epitopes.*_scoring.tx
 	else
 		join --header -t, ${scoring} \
 			${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv > ${f}
+
+		if [[ "${scoring}" =~ "BEFORE" ]]; then
+			sed -i '1s/$/_B/' ${f}
+		elif [[ "${scoring}" =~ "AFTER" ]]; then
+			sed -i '1s/$/_A/' ${f}
+		fi
+
 		chmod -w ${f}
 	fi
 
