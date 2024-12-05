@@ -206,7 +206,8 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 else
 	#	This depends on the number of samples.
 	#awk 'BEGIN{FS=OFS=","}{print $13,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
-	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-2;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
+	#awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-2;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
+	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-3;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
 	#	L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9,id,group,input
 	#	id,L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9
 
