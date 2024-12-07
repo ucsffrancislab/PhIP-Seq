@@ -411,7 +411,12 @@ done
 
 echo "Filter with join to public epitopes BEFORE"
 
-for hits in ${OUTPUT}/*.count.Zscores.hits.csv ; do
+while read subject ; do
+	echo $subject
+
+	hits=${OUTPUT}/${subject}.count.Zscores.hits.csv
+
+#for hits in ${OUTPUT}/*.count.Zscores.hits.csv ; do
 	echo ${hits}
 
 	f=${hits%.csv}.found_public_epitopes.BEFORE_scoring.txt
@@ -440,8 +445,33 @@ for hits in ${OUTPUT}/*.count.Zscores.hits.csv ; do
 		chmod -w ${f}
 	fi
 
-done
 
+
+	f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.test.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+
+		join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
+			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+			| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
+			| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
+		sed -i "1iSpecies,${subject}" ${f}
+
+		chmod -w ${f}
+	fi
+
+#done
+done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
+
+
+f=${OUTPUT}/merged.public_epitopes_BEFORE.csv
+if [ -f ${f} ] && [ ! -w ${f} ] ; then
+	echo "Write-protected ${f} exists. Skipping."
+else
+	merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.BEFORE_scoring.test.csv
+	chmod -w ${f}
+fi
 
 
 
@@ -451,7 +481,11 @@ echo "Filter with join to public epitopes AFTER"
 #	This is the list of peptides that survive the "novel" test hence the name "AFTER"
 #	The "BEFORE" list would effectively be the hits list, but I need to create something to get the counts for both BEFORE and AFTER.
 
-for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
+while read subject ; do
+	echo $subject
+
+	peptides=${OUTPUT}/${subject}.count.Zscores.hits.7.peptides.txt
+#for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
 	echo ${peptides}
 
 	f=${peptides%.7.peptides.txt}.found_public_epitopes.AFTER_scoring.txt
@@ -480,7 +514,34 @@ for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
 		chmod -w ${f}
 	fi
 
-done
+
+
+	f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.test.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+
+		join -t, <( sort -t, -k1,1 ${peptides} ) \
+			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+			| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
+			| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
+		sed -i "1iSpecies,${subject}" ${f}
+
+		chmod -w ${f}
+	fi
+
+#done
+done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
+
+
+
+f=${OUTPUT}/merged.public_epitopes_AFTER.csv
+if [ -f ${f} ] && [ ! -w ${f} ] ; then
+	echo "Write-protected ${f} exists. Skipping."
+else
+	merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.AFTER_scoring.test.csv
+	chmod -w ${f}
+fi
 
 
 
