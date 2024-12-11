@@ -19,6 +19,8 @@ parser.add_argument('-V','--version', action='version', version='%(prog)s 1.0')
 parser.add_argument('-i', '--input', nargs=1, type=str, default=['All.count.csv'], help='input count csv filename to %(prog)s (default: %(default)s)')
 parser.add_argument('-o', '--output', nargs=1, type=str, default=['output.csv'], help='output zscore csv filename to %(prog)s (default: %(default)s)')
 
+parser.add_argument('--count_threshold', type=int, default=300, help='Tile count minimum threshold to %(prog)s (default: %(default)s)')
+
 #parser.add_argument('-n', '--normal', nargs=1, type=str, required=True, help='normal matrix  filename to %(prog)s (default: %(default)s)')
 #parser.add_argument('-t', '--tumor',  nargs=1, type=str, required=True, help='tumor matrix  filename to %(prog)s (default: %(default)s)')
 #parser.add_argument('-s', '--select', nargs=1, type=str, required=True, help='[GENE,Symbol,RE] select list  filename to %(prog)s (default: %(default)s)')
@@ -48,51 +50,83 @@ print("\nSamples:")
 print(samples)
 
 print("\nExtracting input to list")
-i=df['input'].to_list()
+inputs=df['input'].to_list()
 print("\nFirst 10 input")
-print(i[:10])
+print(inputs[:10])
 #[38, 0, 1170, 197, 0]
 
 print("\nConverting to array")
-j=np.sort(i).tolist()
-print(j[0:5])
+sorted_inputs=np.sort(inputs).tolist()
+print(sorted_inputs[0:5])
 #[0, 0, 0, 0, 0]
-print(j[(len(j)-5):(len(j))])
+print(sorted_inputs[(len(sorted_inputs)-5):(len(sorted_inputs))])
 #[100553, 101219, 124937, 134726, 274421]
 
 print("\nCounting occurences and saving in dict")
-counts=dict((k, j.count(k)) for k in j)
+counts=dict((keys, sorted_inputs.count(keys)) for keys in sorted_inputs)
 #print(d)
 #{0: 16728, 1: 6996, 2: 3479, 3: 2469, 4: 2036, 5: 1898, 6: 1684, 7: 1458, 
 #...
 #, 100553: 1, 101219: 1, 124937: 1, 134726: 1, 274421: 1}
 
-k=counts.keys()
-print(type(k))
+keys=counts.keys()
+print(type(keys))
 #<class 'dict_keys'>
-print(type(list(k)[0]))
+print(type(list(keys)[0]))
 #<class 'int'>
-print(list(k)[0])
+print(list(keys)[0])
 #0
 
 print("\nSorting keys")
-sorted_keys=sorted(list(k),reverse=True)
+sorted_keys=sorted(list(keys),reverse=True)
 print( sorted_keys[0:9] )
 #	[274421, 134726, 124937, 101219, 100553, 99564, 65635, 64566, 63220]
 
 
 #	cut -d, -f46 All.count.csv | tail -n +2 | sort -n | uniq -c | sed 's/^\s*//g' | sort -k2nr,2 | awk '{if(s>=300){print s,list;s=0;list="";}s+=$1;list=list","$2}END{print s,list}'
 
+
+
+#	cut -d, -f46 All.count.csv | tail -n +2 | sort -n | uniq -c | sed 's/^\s*//g' | sort -k2nr,2 | head
+#	1 274421
+#	1 134726
+#	1 124937
+#	1 101219
+#	1 100553
+#	1 99564
+#	1 65635
+#	1 64566
+#	1 63220
+#	1 62560
+#	
+#	cut -d, -f46 All.count.csv | tail -n +2 | sort -n | uniq -c | sed 's/^\s*//g' | sort -k2nr,2 | tail
+#	1353 9
+#	1452 8
+#	1458 7
+#	1684 6
+#	1898 5
+#	2036 4
+#	2469 3
+#	3479 2
+#	6996 1
+#	16728 0
+
+#	If we start at the big end, we run the risk of only having a few in the last bin
+#	If we start at the low end, we can get a VERY broad spread of noise. Preferred.
+#	Does that matter?
+#	Should we consider the spread as well as the count?
+
+
 print("\nBinning")
-s=0
+tile_count=0
 bin=1
 df['bin']=0
 for key in sorted_keys:
-	if( s >= 300 ):
+	if( tile_count >= args.count_threshold ):
 		bin+=1
-		#print( s )
-		s=0
-	s+=counts[key]
+		#print( tile_count )
+		tile_count=0
+	tile_count+=counts[key]
 	df.loc[df['input']==key,'bin']=bin
 	
 
@@ -129,19 +163,47 @@ out['input'] = df['input']
 
 
 def zscore(x,mean,stddev):
-    return ( x - mean ) / stddev
+	return float('nan') if stddev == 0.0 else ( x - mean ) / stddev
+
+#	return ( x - mean ) / stddev
+
+
+#np.set_printoptions(threshold=np.inf)  # Set threshold to infinity
+#pd.set_option('display.max_rows', None)
+#pd.set_option('display.max_columns', None)
+
+
 
 for sample in samples:
+#for sample in ['14627-01dup']:
 	print("Sample:",sample)
 	for i in range(1,bin+1):
+	#for i in [146]:
 		print("i:",i)
-		X = df.loc[df['bin']==i,[sample]].values
+
+		#tmp=df.loc[df['bin']==i,[sample]]
+		#mask=tmp>0
+		#print(tmp[mask.loc[:,sample]])
+
+		X = df.loc[df['bin']==i,[sample]].values.flatten()
+		#	or .explode()
 		#print(X)
 		m = stats.trim_mean(X, 0.05)
 		print("Trimmed mean:",m)
 		std = stats.mstats.trimmed_std(X,0.05)
 		print("Trimmed stddev:",std)
+
 		out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(zscore,args=(m,std))
+		#print(out.loc[out['bin']==i,[sample]])
+
+
+
+		#Do you know why in the Z score files some of the entries are blank and some read "inf"?
+		#	I'm mainly curious because I see one case where your algorithm called a cell "inf" and 
+		#	the virscan put a blank. (14331-01 ID 14 in the out.gbm1 folder)
+		#	bin 146
+		#	its 14627-01dup in 146 man sorry (edited) 
+
 		#print(out.loc[out['bin']==bin,[sample]])
 
 		#df.loc[1:2, ['A', 'B']] = df.loc[1:2, ['A', 'B']].apply(add_one)
@@ -160,6 +222,10 @@ for sample in samples:
 
 
 out.to_csv( args.output[0], index_label=['id'] )
+
+
+
+
 
 
 #	import pandas as pd

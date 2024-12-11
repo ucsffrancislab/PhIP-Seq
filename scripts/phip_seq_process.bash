@@ -181,10 +181,22 @@ f=${OUTPUT}/All.count.Zscores.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
-	elledge_Zscore_analysis.R ${OUTPUT}/All.count.csv
-	chmod -w ${f}
-fi
 
+	#	elledge_Zscore_analysis.R ${OUTPUT}/All.count.csv
+	#	mv ${OUTPUT}/All.count.Zscores.csv ${OUTPUT}/tmp1.csv
+	#	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-3;print x,$0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
+
+
+	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp1.csv #--count_threshold 200
+	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
+
+	head -1 ${OUTPUT}/tmp2.csv > ${OUTPUT}/All.count.Zscores.csv
+	tail -n +2 ${OUTPUT}/tmp2.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.csv
+
+	chmod -w ${f}
+	\rm ${OUTPUT}/tmp1.csv ${OUTPUT}/tmp2.csv
+
+fi
 
 
 
@@ -193,31 +205,15 @@ fi
 
 #	Zscores with public epitopes
 
-
-
-
-
 echo "Selecting public epitopes"
-
-
 f=${OUTPUT}/All.public_epitope_annotations.Zscores.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
-	#	This depends on the number of samples.
-	#awk 'BEGIN{FS=OFS=","}{print $13,$1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
-	#awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-2;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
-	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-3;print x,$0}' ${OUTPUT}/All.count.Zscores.csv > ${OUTPUT}/tmp
-	#	L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9,id,group,input
-	#	id,L13,L14,L15,L19,L1,L20,L21,L2,L3,L7,L8,L9
-
-	head -1 ${OUTPUT}/tmp > ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
-	tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv
 	join --header -t, /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.join_sorted.csv \
-		${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv > ${f}
+		${OUTPUT}/All.count.Zscores.csv > ${f}
+		#${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv > ${f}
 
-	\rm ${OUTPUT}/tmp
-	
 	chmod -w ${f}
 fi
 
@@ -244,20 +240,6 @@ fi
 
 
 #	Determine actual hits by zscore threshold in both replicates
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 echo "Booleanizing"
 
@@ -325,17 +307,6 @@ fi
 
 
 #	Create virus scores in same order for all samples using the previous species order file.
-
-
-
-
-
-
-
-
-
-
-
 
 
 echo "Calculate virus scores"
