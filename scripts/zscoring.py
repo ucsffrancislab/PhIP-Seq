@@ -19,7 +19,7 @@ parser.add_argument('-V','--version', action='version', version='%(prog)s 1.0')
 parser.add_argument('-i', '--input', nargs=1, type=str, default=['All.count.csv'], help='input count csv filename to %(prog)s (default: %(default)s)')
 parser.add_argument('-o', '--output', nargs=1, type=str, default=['output.csv'], help='output zscore csv filename to %(prog)s (default: %(default)s)')
 
-parser.add_argument('--count_threshold', type=int, default=300, help='Tile count minimum threshold to %(prog)s (default: %(default)s)')
+#parser.add_argument('--count_threshold', type=int, default=300, help='Tile count minimum threshold to %(prog)s (default: %(default)s)')
 
 #parser.add_argument('-n', '--normal', nargs=1, type=str, required=True, help='normal matrix  filename to %(prog)s (default: %(default)s)')
 #parser.add_argument('-t', '--tumor',  nargs=1, type=str, required=True, help='tumor matrix  filename to %(prog)s (default: %(default)s)')
@@ -121,14 +121,32 @@ print("\nBinning")
 tile_count=0
 bin=1
 df['bin']=0
+max_input=0
 for key in sorted_keys:
-	if( tile_count >= args.count_threshold ):
+	if max_input == 0:
+		max_input=key
+
+	input_diff = max_input - key
+	if input_diff > 1500:
+		count_threshold=50
+	elif input_diff > 1000:
+		count_threshold=75
+	elif input_diff > 500:
+		count_threshold=150
+	else:
+		count_threshold=300
+			
+	#	if( tile_count >= args.count_threshold ):
+	if( tile_count >= count_threshold ):
+		print("Tile count surpassed progressive count threshold:",count_threshold)
 		bin+=1
 		#print( tile_count )
 		tile_count=0
+		max_input=key
+
 	tile_count+=counts[key]
 	df.loc[df['input']==key,'bin']=bin
-	
+
 
 print("\nDone\n")
 
