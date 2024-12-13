@@ -189,12 +189,14 @@ else
 
 	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp1.csv #--count_threshold 200
 	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
+	mv ${OUTPUT}/tmp1.csv ${OUTPUT}/All.count.Zscores.with_input_and_bin.csv
 
 	head -1 ${OUTPUT}/tmp2.csv > ${OUTPUT}/All.count.Zscores.csv
 	tail -n +2 ${OUTPUT}/tmp2.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.csv
 
 	chmod -w ${f}
-	\rm ${OUTPUT}/tmp1.csv ${OUTPUT}/tmp2.csv
+	#\rm ${OUTPUT}/tmp1.csv ${OUTPUT}/tmp2.csv
+	\rm ${OUTPUT}/tmp2.csv
 
 fi
 
