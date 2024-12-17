@@ -181,9 +181,9 @@ out['input'] = df['input']
 
 
 def zscore(x,mean,stddev):
-	return float('nan') if stddev == 0.0 else ( x - mean ) / stddev
+	return ( x - mean ) / stddev # will return +inf, -inf and NaN
 
-#	return ( x - mean ) / stddev
+#	return float('nan') if stddev == 0.0 else ( x - mean ) / stddev
 
 
 #np.set_printoptions(threshold=np.inf)  # Set threshold to infinity
