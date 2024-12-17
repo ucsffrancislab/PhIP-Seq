@@ -252,12 +252,20 @@ while read subject ; do
 	echo $all_samples
 
 	f=${OUTPUT}/${subject}.count.Zscores.hits.csv
-
-
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		booleanize_Zscore_replicates.py --sample ${subject} \
+			--matrix ${OUTPUT}/All.count.Zscores.csv \
+			--output ${f} ${all_samples}
+		chmod -w ${f}
+	fi
+
+	f=${OUTPUT}/${subject}.count.Zscores.minimums.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+		minimum_Zscore_replicates.py --sample ${subject} \
 			--matrix ${OUTPUT}/All.count.Zscores.csv \
 			--output ${f} ${all_samples}
 		chmod -w ${f}
