@@ -275,6 +275,20 @@ done < <( awk -F, '( NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uni
 
 
 
+f=${OUTPUT}/All.count.Zscores.minimums.csv
+if [ -f ${f} ] && [ ! -w ${f} ] ; then
+	echo "Write-protected ${f} exists. Skipping."
+else
+	#merge_all_combined_counts_files.py -o ${f} \
+	merge_all_combined_counts_files.py -o ${OUTPUT}/tmp.csv \
+		${OUTPUT}/*.count.Zscores.minimums.csv
+	head -1 ${OUTPUT}/tmp.csv > ${f}
+	tail -n +2 ${OUTPUT}/tmp.csv | sort -t, -k1,1 >> ${f}
+	chmod -w ${f}
+fi
+
+
+
 if ${STOP_AFTER_ZSCORE} ; then
 	exit
 fi
