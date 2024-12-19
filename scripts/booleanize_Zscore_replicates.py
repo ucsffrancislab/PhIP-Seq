@@ -9,7 +9,7 @@ import pandas as pd
 #print(len(sys.argv))
 #print(sys.argv[1:len(sys.argv)-1])
 
-threshold=3.5
+#threshold=3.5
 
 #columns=sys.argv[1:len(sys.argv)-1]
 #infile=sys.argv[len(sys.argv)-1]
@@ -27,6 +27,8 @@ parser.add_argument('-s', '--sample', nargs=1, type=str,
 	help='output sample name to use %(prog)s (default: %(default)s)',required=True)
 parser.add_argument('-m', '--matrix', nargs=1, type=str,
 	help='zscore matrix filename to use %(prog)s (default: %(default)s)',required=True)
+parser.add_argument('-t', '--threshold', nargs=1, type=float, default=[3.5],
+	help='threshold for calling hit to use %(prog)s (default: %(default)s)',required=True)
 parser.add_argument('-o', '--output', nargs=1, type=str, default=['output.csv'],
 	help='output csv filename %(prog)s (default: %(default)s)',required=True)
 
@@ -39,7 +41,7 @@ if( len(args.columns) > 0 ):
 
 	df = pd.read_csv(args.matrix[0],index_col="id")
 
-	df[args.columns].gt(threshold).all(axis=1).rename(args.sample[0]).to_csv(args.output[0])
+	df[args.columns].gt(args.threshold[0]).all(axis=1).rename(args.sample[0]).to_csv(args.output[0])
 
 else:
 	print("No columns requested")

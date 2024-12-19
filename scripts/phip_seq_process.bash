@@ -42,6 +42,7 @@ OUTPUT="out"
 Q=40
 SPECIES_ORDER=""
 STOP_AFTER_ZSCORE=false
+THRESHOLD=3.5
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -51,6 +52,8 @@ while [ $# -gt 0 ] ; do
 			shift; OUTPUT=$1; shift;;
 		-s|--species|--species_order)
 			shift; SPECIES_ORDER=$1; shift;;
+		--threshold)
+			shift; THRESHOLD=$1; shift;;
 		--stop_after_zscore)
 			STOP_AFTER_ZSCORE=true; shift;;
 		-q)
@@ -256,6 +259,7 @@ while read subject ; do
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		booleanize_Zscore_replicates.py --sample ${subject} \
+			--threshold ${THRESHOLD} \
 			--matrix ${OUTPUT}/All.count.Zscores.csv \
 			--output ${f} ${all_samples}
 		chmod -w ${f}
