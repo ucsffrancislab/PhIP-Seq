@@ -180,9 +180,56 @@ out['bin'] = df['bin']
 out['input'] = df['input']
 
 
-def zscore(x,mean,stddev):
-	return ( ( x if x > 1 else 0 ) - mean ) / stddev 
+#def zscore(x,mean,stddev):
+#	if x > 1:
+#		return ( x - mean ) / stddev
+#	else:
+#		return ( 0 - mean ) / stddev
+#out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(
 
+
+
+#/c4/home/gwendt/.local/bin/zscoring.py:191: RuntimeWarning: divide by zero encountered in scalar divide
+#  x[x>1].apply( lambda y: ( y - mean ) / stddev )
+#/c4/home/gwendt/.local/bin/zscoring.py:192: RuntimeWarning: invalid value encountered in scalar divide
+#  x[x<=1].apply( lambda y: ( 0 - mean ) / stddev )
+
+np.seterr(divide='ignore', invalid='ignore')
+
+
+#def zscore(series,mean,stddev):	#	untested
+#	return series.apply( lambda cell: ( ( cell if cell > 1 else 0 ) - mean ) / stddev )
+
+#def zscore(series,mean,stddev):	#	works
+#	z=x[x>1].apply( lambda y: ( y - mean ) / stddev )
+#	z=x[x<=1].apply( lambda y: ( 0 - mean ) / stddev )
+#	return z
+
+
+#import pandas as pd
+#
+#df = pd.DataFrame({
+#    'A': [1, 2, 3],
+#    'B': [4, 5, 6]
+#})
+#
+#def inner_apply(row):
+#    return row['A'] * 2
+#
+#def outer_apply(row):
+#    row['C'] = inner_apply(row)
+#    return row
+#
+#df = df.apply(outer_apply, axis=1)
+#
+#print(df)
+
+
+
+
+#lambda x: ( ( x if x > 1 else 0 ) - m ) / std )
+
+#	return ( ( x if x > 1 else 0 ) - mean ) / stddev #	doesn't work!
 
 #	return ( x - mean ) / stddev # will return +inf, -inf and NaN
 
@@ -193,6 +240,29 @@ def zscore(x,mean,stddev):
 #pd.set_option('display.max_rows', None)
 #pd.set_option('display.max_columns', None)
 
+
+#Traceback (most recent call last):
+#  File "/c4/home/gwendt/.local/bin/zscoring.py", line 218, in <module>
+#    out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(
+#                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#  File "/c4/home/gwendt/.local/lib/python3.11/site-packages/pandas/core/frame.py", line 10374, in apply
+#    return op.apply().__finalize__(self, method="apply")
+#           ^^^^^^^^^^
+#  File "/c4/home/gwendt/.local/lib/python3.11/site-packages/pandas/core/apply.py", line 916, in apply
+#    return self.apply_standard()
+#           ^^^^^^^^^^^^^^^^^^^^^
+#  File "/c4/home/gwendt/.local/lib/python3.11/site-packages/pandas/core/apply.py", line 1063, in apply_standard
+#    results, res_index = self.apply_series_generator()
+#                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#  File "/c4/home/gwendt/.local/lib/python3.11/site-packages/pandas/core/apply.py", line 1081, in apply_series_generator
+#    results[i] = self.func(v, *self.args, **self.kwargs)
+#                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+#  File "/c4/home/gwendt/.local/bin/zscoring.py", line 219, in <lambda>
+#    lambda x: ( ( x if x > 1 else 0 ) - m ) / std )
+#                       ^^^^^
+#  File "/c4/home/gwendt/.local/lib/python3.11/site-packages/pandas/core/generic.py", line 1577, in __nonzero__
+#    raise ValueError(
+#ValueError: The truth value of a Series is ambiguous. Use a.empty, a.bool(), a.item(), a.any() or a.all().
 
 
 for sample in samples:
@@ -214,7 +284,17 @@ for sample in samples:
 		std = stats.mstats.trimmed_std(X,0.05)
 		print("Trimmed stddev:",std)
 
-		out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(zscore,args=(m,std))
+		#out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(zscore,args=(m,std))
+
+		#out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(
+		#	lambda x: ( ( x if x > 1 else 0 ) - m ) / std )
+
+		out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(
+			lambda series: series.apply( 
+				lambda cell: ( ( cell if ( cell > 1 ) else 0 ) - m ) / std ) )
+
+		#df['C'] = df['A'].apply(lambda x: x * 2 if x > 1 else x)
+
 		#print(out.loc[out['bin']==i,[sample]])
 
 
