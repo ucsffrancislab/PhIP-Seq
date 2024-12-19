@@ -181,9 +181,12 @@ out['input'] = df['input']
 
 
 def zscore(x,mean,stddev):
-	return ( x - mean ) / stddev # will return +inf, -inf and NaN
+	return ( ( x if x > 1 else 0 ) - mean ) / stddev 
 
-#	return float('nan') if stddev == 0.0 else ( x - mean ) / stddev
+
+#	return ( x - mean ) / stddev # will return +inf, -inf and NaN
+
+#	return float('nan') if stddev == 0.0 else ( x - mean ) / stddev #	remove the +inf / -inf
 
 
 #np.set_printoptions(threshold=np.inf)  # Set threshold to infinity
@@ -215,48 +218,6 @@ for sample in samples:
 		#print(out.loc[out['bin']==i,[sample]])
 
 
-
-		#Do you know why in the Z score files some of the entries are blank and some read "inf"?
-		#	I'm mainly curious because I see one case where your algorithm called a cell "inf" and 
-		#	the virscan put a blank. (14331-01 ID 14 in the out.gbm1 folder)
-		#	bin 146
-		#	its 14627-01dup in 146 man sorry (edited) 
-
-		#print(out.loc[out['bin']==bin,[sample]])
-
-		#df.loc[1:2, ['A', 'B']] = df.loc[1:2, ['A', 'B']].apply(add_one)
-
-		#	df[subset_columns] = df[subset_columns].apply(zscore,args=(m,std))
-		#	df[subset_cols] = df[subset_cols].apply(my_function, args=(2, 1))
-
-		#df.set_value('row', 'col', 10)
-
-		#df.apply(lambda row: sum([ord(c)-33 for c in [*row['qualities']]])/len([*row['qualities']]), axis=1)
-
-		#df.set_value('row', 'col', 10)
-		#df['col']['row'] = 10
-		#df.at['row', 'col'] = 10
-
-
-
 out.to_csv( args.output[0], index_label=['id'] )
-
-
-
-
-
-
-#	import pandas as pd
-#	df = pd.read_csv('All.count.csv',index_col='id')
-#	from scipy import stats
-#	X=df.loc[df['input']==100]['4537'].values
-#	X
-#	X.mean()
-#	stats.trim_mean(X, 0.05)
-#	stats.mstats.trimmed_std(X,0.05)
-
-
-
-
 
 
