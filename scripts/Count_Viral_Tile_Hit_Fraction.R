@@ -1,3 +1,13 @@
+#!/usr/bin/env Rscript
+
+#	Creates a table "Viral_Frac_Hits_Z_*.csv" indicating the fraction of tiles "hit" for each virus, for each sample, for the specified Z. (number tiles hit for viral species/total tiles associated with viral species)
+#	This is a prerequisite to running the below Case_Control_Seropositivity_Frac.R script.
+#	This table is computed for all samples on the plate, so no need to specify anything, if they are in the manifest, their viral fractions are computed.
+#	We are using this ultimately as an alternate way to call a virus present, by thresholding the proportion of tiles present (see next file). This of course comes with many caveats, like tile uniqueness/homology.
+
+
+
+
 # Compute fraction of virus specific tiles hit for each sample
 
 # For each virus, calculate the number of tiles called positive (both reps Z > Z threshold), and divide by the total number of represented tiles for that virus. 

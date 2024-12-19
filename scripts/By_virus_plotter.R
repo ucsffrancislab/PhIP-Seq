@@ -1,3 +1,13 @@
+#!/usr/bin/env Rscript
+
+
+#	Creates manhattan plot pdf file for a given virus for all groups specified (utilizing the "type" column in the manifest file)
+#	User provides name of virus, number of plots you want to have per page, ( I have it as 5 right now), and the groups you want to include (type column)
+#	Indicates Public epitopes (as read from the "All.public_epitope_annotations.Zscores.csv" file) with red triangles.
+#	Draws lines at Z = 3.5 and Z=10, and recodes any super large Z scores as Z = 15 for visualization sake.
+#	Creates a PDF "Manhattan_plots_[VIRUS]" with indication of the groups compared.
+
+
 library(ggplot2)
 library(gridExtra)
 

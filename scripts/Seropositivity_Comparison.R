@@ -1,3 +1,14 @@
+#!/usr/bin/env Rscript
+
+#	Uses the VirScan defined viral calls to assess difference in seropositivity between two user defined groups.
+#	Specifically, it only utilizes the "seropositive.csv" file to make calls.
+#	Currently it is hardcoded to call a virus positive the value in the seropositive.csv file is >1. This may not be exact VirScan threshold, but I recall their thresholds were basically this.
+#	Only uses the "_B" columns, where the Public epitopes were assessed before viral scoring.
+#	Only makes calls for viruses with known public epitopes.
+#	Outputs a file "Seropositivity_Prop_test_results*" which also indicates the two groups compared.
+
+
+
 # Seropositivity Test 
 
 # Input parameters 

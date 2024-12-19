@@ -1,3 +1,11 @@
+#!/usr/bin/env Rscript
+
+#	Assesses differences in the proportion of samples with virus called present between two user specified groups (from the manifest "type" column).
+#	Uses our own definition of seropositivity (Virus present if >"Vir_frac" proportion of tiles are hit at Z > "Z_thresh"). I typically have used Vir_frac = 0.02 or 0.05 based on eyeballing the Viral_Frac_Hits table generated above.
+#	Outputs a file in the same test directory called "Viral_Sero_test_results*" with indicators of the groups and parameters used.
+
+
+
 # For each virus, make a call of positive or negative based on at least 5% of possible tiles hitting, then measure proportion. 
 # Input parameters 
 plate = "gbm"

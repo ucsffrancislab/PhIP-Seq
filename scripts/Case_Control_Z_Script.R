@@ -1,3 +1,10 @@
+#!/usr/bin/env Rscript
+
+#	Assesses differences between epitopes for two groups.
+#	For a user provided Z-score threshold, and two groups (chosen from the manifest "type" column), this will compute a p-value for the difference in proportion of samples with that tile present between the two groups. Writes a file in the same data directory, with name "Tile Comparison*" (this naming is new so it doesnt match the output names in the older test folders.
+#	Output p-values are not adjusted for any multiple testing. NA p values are produced when tile proportion is 1 in both or 0 in both.
+
+
 # For each tile, compares proportion of present in each group using 2-prop test. Reports proportions and associated p-value. 
 
 # Input parameters 
