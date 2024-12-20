@@ -2,7 +2,7 @@
 
 
 #	take an input file like ...
-#	head ~/testing/counts_vir3_Bio_Protocol.csv 
+#	head ~/testing/counts_vir3_Bio_Protocol.csv
 #	id,S148,S150,S154,S156,input
 #	1,0,4,1,0,4
 #	2,39,55,58,41,266
@@ -16,7 +16,7 @@
 
 #	and create a file like ... (where does "group" come from?)
 
-#	head ~/testing/Zscores_vir3.csv 
+#	head ~/testing/Zscores_vir3.csv
 #	id,group,S148,S150,S154,S156,input
 #	1,5,-0.71,2.99,0.21,-0.78,4
 #	2,217,-0.36,0.24,1.24,-1.07,266
@@ -30,7 +30,7 @@
 
 
 
-#	R CMD INSTALL mmR_0.1.0.tar.gz 
+#	R CMD INSTALL mmR_0.1.0.tar.gz
 #	R -e "install.packages('VGAM')"
 #	R CMD INSTALL virScanR_0.1.0.9000.tar.gz
 
@@ -77,23 +77,23 @@ propTrim = .04
 
 #two other pertinent: NLP_nBinom", "NLP_pois"
 
-convert_params1 <- virScanR::vs.set_params_convert(stat  = "Z_score",  
+convert_params1 <- virScanR::vs.set_params_convert(stat  = "Z_score",
 		makeGroups = TRUE,
 		makeGroupSize = 300,
 		idCol = "id",
 		groupTogetherIfGreaterThanGroupSize = TRUE,
 		splitHighVarMeanGrps = TRUE,
 		cols_to_remove = NULL,
-		cols_to_not_evaluate = c("id","input"), 
+		cols_to_not_evaluate = c("id","input"),
 		propExtremesToRemove = propTrim,
 		removeTail = "both",
 		coresAcrossGroups = parallel::detectCores()-2,
-		returnAs = "data.table", 
+		returnAs = "data.table",
 		returnParams = TRUE)
 print(convert_params1)
 
 datZ = virScanR::vs.convert(
-		data = counts, 
+		data = counts,
 		paramsList = convert_params1
 	)
 

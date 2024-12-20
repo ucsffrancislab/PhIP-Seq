@@ -7,45 +7,62 @@
 
 
 
+library("optparse")
+
+option_list = list(
+	make_option(c("-m", "--manifest"), type="character", default=NULL,
+		help="manifest file name", metavar="character"),
+	make_option(c("-d", "--working_dir"), type="character", default="./",
+		help="working dir [default= %default]", metavar="character")
+);
+
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+
+if (is.null(opt$manifest)){
+	print_help(opt_parser)
+	stop("manifest file required.\n", call.=FALSE)
+}
+
+
 
 # Compute fraction of virus specific tiles hit for each sample
 
-# For each virus, calculate the number of tiles called positive (both reps Z > Z threshold), and divide by the total number of represented tiles for that virus. 
+# For each virus, calculate the number of tiles called positive (both reps Z > Z threshold), and divide by the total number of represented tiles for that virus.
 
 
-# Input parameters 
+# Input parameters
 plate = "gbm"
-resdir = paste("out.", plate, ".test4", sep = "")
-manifest_filename = paste(resdir, "/manifest.",plate,".csv", sep = "")
+resdir = paste("out.", plate, ".test6", sep = "")
+
 Zfilename = paste("out.",plate,".test4/Zscores.t", sep = "")
 
-mwd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP"
-Z =3.5
+Z = 3.5
 
+message("Read in the metadata file")
 
-# Read in the metadata file
+meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 
-meta= read.csv(paste(mwd, "/",manifest_filename, sep = ""), sep= ",", header = TRUE)
+message("Read in the Z file")
 
-# Read in the Z file 
-
-Zfile= read.csv(paste(mwd, "/", Zfilename,".csv", sep = ""), sep = ",", header=FALSE)
+Zfile = read.csv(paste(opt$working_dir, "/", Zfilename,".csv", sep = ""), sep = ",", header=FALSE)
 Zfile = data.frame(t(Zfile))
-# If in the format of subject, type species, remove subject and type, and remove second row. 
+
+# If in the format of subject, type species, remove subject and type, and remove second row.
 if("subject" %in% Zfile[2,c(1:3)]){
-  to_remove= which(Zfile[2,c(1:3)]== "subject")
-  Zfile = Zfile[,-to_remove]
+	to_remove= which(Zfile[2,c(1:3)]== "subject")
+	Zfile = Zfile[,-to_remove]
 }
 if("type" %in% Zfile[2,c(1:3)]){
-  to_remove= which(Zfile[2,c(1:3)]== "type")
-  Zfile = Zfile[,-to_remove]
+	to_remove = which(Zfile[2,c(1:3)]== "type")
+	Zfile = Zfile[,-to_remove]
 }
 
 
 
-# Extract the peptide information 
+message("Extract the peptide information")
 
-#read.csv(paste(mwd, "/ID_species.csv", sep = ""), sep = ",", header = TRUE)
 species_id = data.frame(t(Zfile[c(1:2),]))
 colnames(species_id) = species_id[1,]
 species_id = species_id[-1,]
@@ -53,45 +70,41 @@ species_id = species_id[-1,]
 Zfile = Zfile[-2,]
 
 
-# Unique samples to keep 
-uniqid =unique(meta$subject)
+message("Unique samples to keep")
+uniqid = unique(meta$subject)
 
 to_keep = 1
 for(u in uniqid){
-  possible_ids = grep(u, Zfile[,1])
-  mids = Zfile[possible_ids,1]
-  locs =grepl("dup", mids)
-  to_keep = c(to_keep,possible_ids[c(which(locs==FALSE)[1],which(locs==TRUE)[1]) ] )
-  
+	possible_ids = grep(u, Zfile[,1])
+	mids = Zfile[possible_ids,1]
+	locs = grepl("dup", mids)
+	to_keep = c(to_keep,possible_ids[c(which(locs==FALSE)[1],which(locs==TRUE)[1]) ] )
 }
 Zfile1 = Zfile[to_keep,]
 rm(Zfile)
 
 uniq_spec = unique(species_id$species)
-# Shell file for viral fractions 
+
+# Shell file for viral fractions
 virfracs = data.frame(mat.or.vec(length(uniqid), length(unique(species_id$species))+1))
 colnames(virfracs) = c("id", unique(species_id$species))
 virfracs$id = uniqid
 
 for( j in c(2:ncol(virfracs))){
-  sp = colnames(virfracs)[j]
-  vir_ids = species_id$id[which(species_id$species == sp)]
-  sfile = Zfile1[, c(1, which(Zfile1[1,] %in% vir_ids))]
-  
-  for(i in c(1:nrow(virfracs))){
-    vf = sfile[grep(virfracs$id[i], sfile[,1]), ]
-    if(ncol(vf)>2){
-      n_positive = length(which( as.numeric(apply((vf[,-1]),2,min)) >Z))
-    }else{
-      n_positive = ifelse(as.numeric(min(vf[,2])) >Z, 1, 0)
-      
-      
-    }
-    virfracs[i, j] = n_positive/length(vir_ids)
-    
-  }
-  
+	sp = colnames(virfracs)[j]
+	vir_ids = species_id$id[which(species_id$species == sp)]
+	sfile = Zfile1[, c(1, which(Zfile1[1,] %in% vir_ids))]
+
+	for(i in c(1:nrow(virfracs))){
+		vf = sfile[grep(virfracs$id[i], sfile[,1]), ]
+		if(ncol(vf)>2){
+			n_positive = length(which( as.numeric(apply((vf[,-1]),2,min)) >Z))
+		}else{
+			n_positive = ifelse(as.numeric(min(vf[,2])) >Z, 1, 0)
+		}
+		virfracs[i, j] = n_positive/length(vir_ids)
+	}
 }
 
-write.table(virfracs, paste(mwd, "/", resdir, "/Viral_Frac_Hits_Z_", Z, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(virfracs, paste(opt$working_dir, "/", resdir, "/Viral_Frac_Hits_Z_", Z, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
