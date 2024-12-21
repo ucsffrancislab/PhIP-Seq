@@ -9,6 +9,8 @@
 library("optparse")
 
 option_list = list(
+	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+		help="Comma separated list of groups to compare", metavar="character"),
 	make_option(c("-m", "--manifest"), type="character", default=NULL,
 		help="manifest file name", metavar="character"),
 	make_option(c("-d", "--working_dir"), type="character", default="./",
@@ -28,9 +30,11 @@ if (is.null(opt$manifest)){
 # For each virus, make a call of positive or negative based on at least 5% of possible tiles hitting, then measure proportion.
 # Input parameters
 
-groups_to_compare = c("case", "control" )
+#groups_to_compare = c("case", "control" )
 #groups_to_compare=c("PF Patient", "Endemic Control" )
 
+groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+#	groups_to_compare=unlist(strsplit(opt$groups, split = ","))
 
 
 Z_thresh = 3.5
@@ -84,7 +88,9 @@ for(i in c(1:nrow(pvalues))){
 colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
-outfile=paste0(opt$working_dir, "/", "Viral_Sero_test_results_", groups_to_compare[1], "_", groups_to_compare[2],"_Vir_hit_frac_", Vir_frac, "_Z_", Z_thresh, ".csv")
+outfile=paste0(opt$working_dir, "/", 
+	paste("Viral_Sero_test_results", groups_to_compare[1], groups_to_compare[2], "Vir_hit_frac", Vir_frac, "Z", Z_thresh, sep="_"),
+	".csv")
 print(paste0("Writing ",outfile))
 write.table(opvalues, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 

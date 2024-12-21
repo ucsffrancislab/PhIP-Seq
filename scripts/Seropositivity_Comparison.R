@@ -11,6 +11,8 @@
 library("optparse")
 
 option_list = list(
+	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+		help="Comma separated list of groups to compare", metavar="character"),
 	make_option(c("-m", "--manifest"), type="character", default=NULL,
 		help="manifest file name", metavar="character"),
 	make_option(c("-d", "--working_dir"), type="character", default="./",
@@ -32,8 +34,8 @@ if (is.null(opt$manifest)){
 
 # Input parameters
 
-groups_to_compare = c("case", "control" )
-
+#groups_to_compare = c("case", "control" )
+groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 
 posfile = read.csv(paste(opt$working_dir, "seropositive.csv", sep = "/"), header = TRUE, sep = ",")
 
@@ -77,7 +79,8 @@ for(sp in c(1:(nrow(pvalues)))){
 colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
-outfile=paste0(opt$working_dir, "/", "Seropositivity_Prop_test_results_", groups_to_compare[1], "_", groups_to_compare[2], ".csv")
+outfile=paste0(opt$working_dir, "/", 
+	paste("Seropositivity_Prop_test_results", groups_to_compare[1], groups_to_compare[2], sep="_"), ".csv")
 print("Writing ",outfile)
 write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 

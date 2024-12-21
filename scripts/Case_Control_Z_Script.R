@@ -11,6 +11,8 @@
 library("optparse")
 
 option_list = list(
+	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+		help="Comma separated list of groups to compare", metavar="character"),
 	make_option(c("-m", "--manifest"), type="character", default=NULL,
 		help="manifest file name", metavar="character"),
 	make_option(c("-d", "--working_dir"), type="character", default="./",
@@ -34,8 +36,11 @@ if (is.null(opt$manifest)){
 # For each tile, compares proportion of present in each group using 2-prop test. Reports proportions and associated p-value.
 
 # Input parameters
-groups_to_compare = c("case", "control")
+#groups_to_compare = c("case", "control")
 #groups_to_compare=c("PF Patient", "Endemic Control" )
+groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+
+#	groups_to_compare=unlist(strsplit(opt$groups, split = ","))
 
 Z = 3.5
 
@@ -156,7 +161,8 @@ print("close loop over peptides")
 colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 
 
-outfile=paste0(opt$working_dir, "/", "Tile_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv")
+outfile=paste0(opt$working_dir, "/", 
+	paste("Tile_Comparison", groups_to_compare[1], groups_to_compare[2],"Prop_test_results", Z, sep="_"), ".csv")
 print(paste0("Writing ",outfile))
 write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 

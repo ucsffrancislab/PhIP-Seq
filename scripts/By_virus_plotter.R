@@ -10,6 +10,8 @@
 library("optparse")
 
 option_list = list(
+	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+		help="Comma separated list of groups to compare", metavar="character"),
 	make_option(c("-v", "--virus"), type="character", default=NULL,
 		help="virus name", metavar="character"),
 	make_option(c("-m", "--manifest"), type="character", default=NULL,
@@ -41,9 +43,9 @@ library(gridExtra)
 # Input parameters
 
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
-groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
+#groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
+groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 
-#	groups_to_compare=unlist(strsplit(opt$groups, split = ","))
 
 n_plots_per_page = 5
 
