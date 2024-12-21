@@ -27,22 +27,22 @@ if (is.null(opt$manifest)){
 
 # For each virus, make a call of positive or negative based on at least 5% of possible tiles hitting, then measure proportion.
 # Input parameters
-plate = "gbm"
+
 groups_to_compare = c("case", "control" )
 #groups_to_compare=c("PF Patient", "Endemic Control" )
 
-resdir = paste("out.", plate, ".test6", sep = "")
+
 
 Z_thresh = 3.5
 Vir_frac = 0.05
-virfracfilename = paste(resdir,"/Viral_Frac_Hits_Z_",Z_thresh,".csv", sep = "")
+virfracfilename = paste0("Viral_Frac_Hits_Z_",Z_thresh,".csv")
 
-message("Read in the metadata file")
+print("Read in the metadata file")
 
 meta = read.csv( opt$manifest, sep= ",", header = TRUE)
 
-message("Read in the VirFrac file")
-vir_fracs = read.csv(paste(opt$working_dir, "/", virfracfilename, sep = ""), header = TRUE)
+print("Read in the VirFrac file")
+vir_fracs = read.csv(paste(opt$working_dir, virfracfilename, sep = "/"), header = TRUE)
 
 # # Read in the viral score file
 # vs = read.csv(paste(mwd, "/", virfilename, sep =""),sep = ",", header= FALSE )
@@ -51,7 +51,7 @@ vir_fracs = read.csv(paste(opt$working_dir, "/", virfracfilename, sep = ""), hea
 # vir_score = vir_score[-1,]
 
 
-message("Unique samples to keep")
+print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
 #vir_score = vir_score[which(vir_score$id %in% uniqid),]
 vir_fracs = vir_fracs[which(vir_fracs$id %in% uniqid),]
@@ -59,7 +59,7 @@ vir_fracs = vir_fracs[which(vir_fracs$id %in% uniqid),]
 cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
 controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
 
-message("Create a shell file for analysis")
+print("Create a shell file for analysis")
 pvalues = data.frame(mat.or.vec(ncol(vir_fracs)-1, 4))
 colnames(pvalues) = c( "species", "freq_case", "freq_control", "pval")
 pvalues$species = colnames(vir_fracs)[-1]
@@ -81,9 +81,11 @@ for(i in c(1:nrow(pvalues))){
 	pvalues$pval[i] = prop$p.value
 }
 
-colnames(pvalues) = c( "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""), "pval")
+colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
-write.table(opvalues, paste(opt$working_dir, "/", resdir, "/Viral_Sero_test_results_", groups_to_compare[1], "_", groups_to_compare[2],"_Vir_hit_frac_", Vir_frac, "_Z_", Z_thresh, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+outfile=paste0(opt$working_dir, "/", "Viral_Sero_test_results_", groups_to_compare[1], "_", groups_to_compare[2],"_Vir_hit_frac_", Vir_frac, "_Z_", Z_thresh, ".csv")
+print(paste0("Writing ",outfile))
+write.table(opvalues, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 

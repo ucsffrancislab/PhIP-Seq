@@ -31,26 +31,25 @@ if (is.null(opt$manifest)){
 # Seropositivity Test
 
 # Input parameters
-plate = "gbm"
+
 groups_to_compare = c("case", "control" )
 
-resdir = paste("out.", plate, ".test5", sep = "")
 
-posfile = read.csv(paste(opt$working_dir, "/", resdir, "/seropositive.csv", sep =""), header = TRUE, sep = ",")
+posfile = read.csv(paste(opt$working_dir, "seropositive.csv", sep = "/"), header = TRUE, sep = ",")
 
-message("Keep only 'Before' samples")
+print("Keep only 'Before' samples")
 
 posfile1 = posfile[grep("_B", posfile$id), ]
 rm(posfile)
 
-message("Read in the metadata file")
+print("Read in the metadata file")
 
 meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 
-message("Unique samples to keep")
+print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
 
-message("Keep only the first occurrence of each sample name")
+print("Keep only the first occurrence of each sample name")
 posfile2 =  posfile1[which(posfile1$subject %in% uniqid),]
 rm(posfile1)
 
@@ -75,8 +74,10 @@ for(sp in c(1:(nrow(pvalues)))){
 	pvalues$pval[sp] = prop$p.value
 }
 
-colnames(pvalues) = c( "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""), "pval")
+colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(opt$working_dir, "/", resdir, "/Seropositivity_Prop_test_results_", groups_to_compare[1], "_", groups_to_compare[2], ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+outfile=paste0(opt$working_dir, "/", "Seropositivity_Prop_test_results_", groups_to_compare[1], "_", groups_to_compare[2], ".csv")
+print("Writing ",outfile)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 

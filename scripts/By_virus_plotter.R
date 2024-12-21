@@ -39,25 +39,25 @@ library(gridExtra)
 
 
 # Input parameters
-plate = "menpem"
 
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
 groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
 
+#	groups_to_compare=unlist(strsplit(opt$groups, split = ","))
+
 n_plots_per_page = 5
 
 
-resdir = paste("out.", plate, ".test6", sep = "")
 
-Zfilename = paste(resdir, "/Zscores.t", sep = "")
+
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)
 
-Zfile = read.csv(paste(opt$working_dir, "/", Zfilename,".csv", sep = ""), sep = ",", header=FALSE)
+Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 
 Zfile = data.frame(t(Zfile))
 
-message("Read in the metadata file")
+print("Read in the metadata file")
 meta = read.csv( opt$manifest, sep= ",", header = TRUE)
 
 # ## Code to create an id_species file so Jake doesn't need to append it each time
@@ -81,7 +81,7 @@ if("type" %in% Zfile[2,c(1:3)]){
 
 
 
-message("Extract the peptide information")
+print("Extract the peptide information")
 
 #read.csv(paste(mwd, "/ID_species.csv", sep = ""), sep = ",", header = TRUE)
 species_id = data.frame(t(Zfile[c(1:2),]))
@@ -90,7 +90,7 @@ species_id = species_id[-1,]
 
 Zfile = Zfile[-2,]
 
-message("Unique samples to keep")
+print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
 to_keep = 1
 for(u in uniqid){
@@ -105,14 +105,14 @@ rm(Zfile)
 
 
 # This simply needs to be a list of peptides to work. Just need to know which peptides are deemed as "Public Epitopes"
-public_eps = read.csv(paste(opt$working_dir,"/", resdir, "/All.public_epitope_annotations.Zscores.csv", sep = ""), header = TRUE, sep = ",")
+public_eps = read.csv(paste(opt$working_dir, "All.public_epitope_annotations.Zscores.csv", sep = "/"), header = TRUE, sep = ",")
 public_ep_id = public_eps$id
 rm(public_eps)
 
 
 
 
-message("Keep only this virus")
+print("Keep only this virus")
 viral_ids = species_id$id[which(species_id$Species==opt$virus)]
 Zfile2 = Zfile1[,c(1, which(Zfile1[1,] %in% viral_ids))]
 rm(Zfile1)
@@ -132,7 +132,7 @@ for(i in c(1:nrow(plot_df))){
 	plot_df$Public[i] = ifelse(ID %in% public_ep_id, 1, 0)
 }
 
-viral_plotfile = paste(opt$working_dir,"/",resdir, "/Manhattan_plots-",gsub(" ","_",opt$virus), "-", gsub(" ","_",paste(groups_to_compare, collapse = "-")), ".pdf", sep = "")
+viral_plotfile = paste0(opt$working_dir,"/","Manhattan_plots-",gsub(" ","_",opt$virus), "-", gsub(" ","_",paste(groups_to_compare, collapse = "-")), ".pdf")
 pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
 for(stat in cc){
@@ -168,7 +168,7 @@ for(stat in cc){
 			scale_size_manual(values = c(2, 4))+
 			theme_classic()+
 			theme(legend.position = "none")  +
-			labs(title=paste(indiv, " : ", stat, sep = ""),
+			labs(title=paste0(indiv, " : ", stat),
 				x="", y = "Minimum Z-score") +
 			geom_hline(yintercept = (3.5), linetype="dashed", color = "blue") +ylim(c(0,17)) +
 			geom_hline(yintercept = (10), linetype="dashed", color = "gold")

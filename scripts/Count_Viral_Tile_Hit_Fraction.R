@@ -33,21 +33,20 @@ if (is.null(opt$manifest)){
 
 
 # Input parameters
-plate = "gbm"
-resdir = paste("out.", plate, ".test6", sep = "")
 
-Zfilename = paste("out.",plate,".test4/Zscores.t", sep = "")
+
 
 Z = 3.5
 
-message("Read in the metadata file")
+print("Read in the metadata file")
 
 meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 
-message("Read in the Z file")
+print("Read in the Z file")
 
-Zfile = read.csv(paste(opt$working_dir, "/", Zfilename,".csv", sep = ""), sep = ",", header=FALSE)
+Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 Zfile = data.frame(t(Zfile))
+
 
 # If in the format of subject, type species, remove subject and type, and remove second row.
 if("subject" %in% Zfile[2,c(1:3)]){
@@ -61,7 +60,7 @@ if("type" %in% Zfile[2,c(1:3)]){
 
 
 
-message("Extract the peptide information")
+print("Extract the peptide information")
 
 species_id = data.frame(t(Zfile[c(1:2),]))
 colnames(species_id) = species_id[1,]
@@ -70,8 +69,9 @@ species_id = species_id[-1,]
 Zfile = Zfile[-2,]
 
 
-message("Unique samples to keep")
+print("Unique samples to keep")
 uniqid = unique(meta$subject)
+print(uniqid[1:5])
 
 to_keep = 1
 for(u in uniqid){
@@ -83,9 +83,11 @@ for(u in uniqid){
 Zfile1 = Zfile[to_keep,]
 rm(Zfile)
 
+print("Unique species (column name is 'species' NOT 'Species')")
 uniq_spec = unique(species_id$species)
+print(uniq_spec[1:5])
 
-# Shell file for viral fractions
+print("Shell file for viral fractions")
 virfracs = data.frame(mat.or.vec(length(uniqid), length(unique(species_id$species))+1))
 colnames(virfracs) = c("id", unique(species_id$species))
 virfracs$id = uniqid
@@ -106,5 +108,12 @@ for( j in c(2:ncol(virfracs))){
 	}
 }
 
-write.table(virfracs, paste(opt$working_dir, "/", resdir, "/Viral_Frac_Hits_Z_", Z, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+outfile=paste0(opt$working_dir, "/", "Viral_Frac_Hits_Z_", Z, ".csv")
+print(paste0("Writing ",outfile))
+write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+
+#	warnings()
+#	1: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
+#	2: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
+
 

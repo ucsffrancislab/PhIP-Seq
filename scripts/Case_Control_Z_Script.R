@@ -34,19 +34,17 @@ if (is.null(opt$manifest)){
 # For each tile, compares proportion of present in each group using 2-prop test. Reports proportions and associated p-value.
 
 # Input parameters
-plate = "gbm"
 groups_to_compare = c("case", "control")
 #groups_to_compare=c("PF Patient", "Endemic Control" )
 
 Z = 3.5
 
-resdir = paste("out.", plate, ".test6", sep = "")
 
-Zfilename = paste(resdir, "/Zscores.t", sep = "")
+
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)
 
-Zfile = read.csv(paste(opt$working_dir, "/", Zfilename,".csv", sep = ""), sep = ",", header=FALSE)
+Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 
 Zfile = data.frame(t(Zfile))
 
@@ -66,7 +64,7 @@ if("type" %in% Zfile[2,c(1:3)]){
 	Zfile = Zfile[,-to_remove]
 }
 
-message("Extract the peptide information")
+print("Extract the peptide information")
 
 species_id = data.frame(t(Zfile[c(1:2),]))
 colnames(species_id) = species_id[1,]
@@ -74,7 +72,7 @@ species_id = species_id[-1,]
 
 Zfile = Zfile[-2,]
 
-message("Unique samples to keep")
+print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
 to_keep = 1
 for(u in uniqid){
@@ -87,7 +85,7 @@ for(u in uniqid){
 Zfile1 = Zfile[to_keep,]
 rm(Zfile)
 
-message("Create a shell file for analysis")
+print("Create a shell file for analysis")
 
 datfile = data.frame(mat.or.vec(length(unique(Zfile1[,1]))-1,3))
 colnames(datfile) = c("ID", "case", "peptide")
@@ -102,7 +100,7 @@ pvalues = data.frame(mat.or.vec(ncol(Zfile1)-1, 5))
 colnames(pvalues) = c("peptide", "species", "freq_case", "freq_control", "pval")
 
 
-message("Pick a peptide:")
+print("Pick a peptide:")
 pep_index = 1
 for(pep_index in c(1:(ncol(Zfile1)-1))){
 	pepcol = pep_index+1
@@ -111,7 +109,7 @@ for(pep_index in c(1:(ncol(Zfile1)-1))){
 
 	pvalues$species[pep_index] = species_id[which(species_id$id==peptide), 2]
 
-	message(peptide)
+	print(peptide)
 
 	datfile$peptide = NA
 	for(i in c(1:nrow(datfile))){
@@ -153,11 +151,13 @@ for(pep_index in c(1:(ncol(Zfile1)-1))){
 	}
 }
 
-message("close loop over peptides")
+print("close loop over peptides")
 
-colnames(pvalues) = c("peptide", "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""), "pval")
+colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(opt$working_dir, "/", resdir, "/Tile_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+outfile=paste0(opt$working_dir, "/", "Tile_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv")
+print(paste0("Writing ",outfile))
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 
