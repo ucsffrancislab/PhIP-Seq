@@ -36,6 +36,8 @@ if (is.null(opt$manifest)){
 
 #groups_to_compare = c("case", "control" )
 groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+print("Comparing these groups")
+print(groups_to_compare)
 
 posfile = read.csv(paste(opt$working_dir, "seropositive.csv", sep = "/"), header = TRUE, sep = ",")
 

@@ -45,6 +45,8 @@ library(gridExtra)
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
 #groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
 groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+print("Comparing these groups")
+print(groups_to_compare)
 
 
 n_plots_per_page = 5

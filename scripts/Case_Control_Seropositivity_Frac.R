@@ -35,6 +35,8 @@ if (is.null(opt$manifest)){
 
 groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 #	groups_to_compare=unlist(strsplit(opt$groups, split = ","))
+print("Comparing these groups")
+print(groups_to_compare)
 
 
 Z_thresh = 3.5
