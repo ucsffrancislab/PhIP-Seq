@@ -100,7 +100,10 @@ datZ = virScanR::vs.convert(
 print(datZ)
 
 
-output_base = paste( inbase, "Zscores", "csv", sep=".")
+outfile = paste( inbase, "Zscores", "csv", sep=".")
 
-mmR::mm.fastwrite(datZ$out, path = output_base )
+print(paste0("Writing ",outfile))
+
+mmR::mm.fastwrite(datZ$out, path = outfile )
+
 

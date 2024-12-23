@@ -58,8 +58,9 @@ n_plots_per_page = 5
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)
 
 Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-
 Zfile = data.frame(t(Zfile))
+print("head(Zfile)")
+print(Zfile[0:5,0:5])
 
 print("Read in the metadata file")
 meta = read.csv( opt$manifest, sep= ",", header = TRUE)
@@ -114,13 +115,20 @@ public_ep_id = public_eps$id
 rm(public_eps)
 
 
-
-
 print("Keep only this virus")
-viral_ids = species_id$id[which(species_id$Species==opt$virus)]
+print("IT IS IMPORTANT THAT THE species column name is 'species' NOT 'Species'")
+print(opt$virus)
+viral_ids = species_id$id[which(species_id$species==opt$virus)]
+print("viral_ids[1:4]")
+print(viral_ids[1:4])
 Zfile2 = Zfile1[,c(1, which(Zfile1[1,] %in% viral_ids))]
+print("Zfile1[1:4,1:4]")
+print(Zfile1[1:4,1:4])
 rm(Zfile1)
-# Order the viral IDs numerically
+
+print("Order the viral IDs numerically")
+print(Zfile2[1:4,1:4])
+#[1] "id"          "14078-01"    "14078-01dup" "14118-01"    "14118-01dup"
 IDs = as.numeric(Zfile2[1, -c(1)])
 IDs_sort = sort(IDs, decreasing = FALSE)
 Zfile3 = Zfile2[,c(1,order(IDs,decreasing = FALSE)+1 )]
@@ -136,6 +144,7 @@ for(i in c(1:nrow(plot_df))){
 	plot_df$Public[i] = ifelse(ID %in% public_ep_id, 1, 0)
 }
 
+print("Opening plot file")
 viral_plotfile = paste0(opt$working_dir,"/","Manhattan_plots-",gsub(" ","_",opt$virus), "-", gsub(" ","_",paste(groups_to_compare, collapse = "-")), ".pdf")
 pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
@@ -194,4 +203,11 @@ for(stat in cc){
 } # Loop over Case Control
 
 dev.off()
+
+print(paste0("Writing ", viral_plotfile ))
+#outfile=paste0(opt$working_dir, "/",
+#		paste("Seropositivity_Prop_test_results", groups_to_compare[1], groups_to_compare[2], sep="_"), ".csv")
+#print(paste0("Writing ",outfile))
+#write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE,     quote= FALSE)
+
 

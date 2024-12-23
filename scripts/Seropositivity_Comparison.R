@@ -83,6 +83,6 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 outfile=paste0(opt$working_dir, "/", 
 	paste("Seropositivity_Prop_test_results", groups_to_compare[1], groups_to_compare[2], sep="_"), ".csv")
-print("Writing ",outfile)
+print(paste0("Writing ",outfile))
 write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
