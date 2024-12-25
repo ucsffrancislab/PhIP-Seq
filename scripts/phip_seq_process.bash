@@ -35,7 +35,7 @@ function usage(){
 
 
 
-MANIFEST="/francislab/data1/raw/20240925-Illumina-PhIP/manifest.csv"
+#MANIFEST="/francislab/data1/raw/20240925-Illumina-PhIP/manifest.csv"
 #	subject,sample,bam_file,input
 
 OUTPUT="out"
