@@ -31,6 +31,7 @@ parser.add_argument('-o', '--output', nargs=1, type=str, default=['merged.csv.gz
 
 #	store_true means "int=False unless --int passed, then int=True" (store_false is the inverse)
 parser.add_argument('--int', action='store_true', help='convert values to ints to %(prog)s (default: %(default)s)')
+parser.add_argument('--de_nan', action='store_true', help='convert NaN to 0 to %(prog)s (default: %(default)s)')
 
 parser.add_argument('--seqint', action='store_true', help='items are ints so sort like it : %(prog)s (default: %(default)s)')
 
@@ -72,8 +73,9 @@ if len(data_frames) > 0:
 	df = pd.concat(data_frames, axis=1, sort=True)
 	data_frames = []
 
-	print("Replacing all NaN with 0")
-	df.fillna(0, inplace=True)
+	if args.de_nan:
+		print("Replacing all NaN with 0")
+		df.fillna(0, inplace=True)
 
 	if args.int:
 		print("Converting all counts back to integers")
