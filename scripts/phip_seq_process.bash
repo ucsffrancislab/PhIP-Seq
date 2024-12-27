@@ -159,7 +159,7 @@ f=${OUTPUT}/All.count.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
-	merge_all_combined_counts_files.py --int -o ${f} \
+	merge_all_combined_counts_files.py --de_nan --int -o ${f} \
 		${OUTPUT}/counts/*.q${Q}.count.csv.gz ${OUTPUT}/counts/input/All.count.csv.gz
 	chmod -w ${f}
 fi
