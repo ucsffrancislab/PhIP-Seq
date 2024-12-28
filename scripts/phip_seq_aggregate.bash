@@ -79,8 +79,12 @@ echo "- prep to join"
 echo -n "y,z," > ${dir}/Zscores.minimums.filtered.csv
 head -1 ${dir}/tmp6.csv >> ${dir}/Zscores.minimums.filtered.csv
 
+cut -d, -f1,4,6 ${manifest} | head -1 > ${dir}/tmp7.csv
+cut -d, -f1,4,6 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp7.csv
+
 echo "- joining with manifest. EXPECTING A CERTAIN COLUMN FORMAT with at least 6 columns (1,4,6)"
-join --header -t, <( cut -d, -f1,4,6 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.filtered.csv
+#join --header -t, <( cut -d, -f1,4,6 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.filtered.csv
+join --header -t, ${dir}/tmp7.csv <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.filtered.csv
 
 #	y,z,id,100,1000,10006,10007,1001,10012,10015,10016
 #	subject,type,group,Human herpesvirus 3,Hepatitis B
@@ -110,7 +114,11 @@ cat ${dir}/tmp1.csv | datamash transpose -t, > ${dir}/tmp2.csv
 head -1 ${dir}/tmp2.csv > ${dir}/tmp3.csv
 tail -n +2 ${dir}/tmp2.csv | sort -t, -k1,1 >> ${dir}/tmp3.csv
 
-join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) ${dir}/tmp3.csv > ${dir}/seropositive.csv
+cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp4.csv
+cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp4.csv
+
+#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) ${dir}/tmp3.csv > ${dir}/seropositive.csv
+join --header -t, ${dir}/tmp4.csv ${dir}/tmp3.csv > ${dir}/seropositive.csv
 cat ${dir}/seropositive.csv | datamash transpose -t, > ${dir}/seropositive.t.csv
 
 
@@ -137,9 +145,13 @@ join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.vi
 
 cat ${dir}/tmp5.csv | datamash transpose -t, > ${dir}/tmp6.csv
 
+cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp7.csv
+cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp7.csv
+
 echo -n "y," > ${dir}/Zscores.csv
 head -1 ${dir}/tmp6.csv >> ${dir}/Zscores.csv
-join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.csv
+#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.csv
+join --header -t, ${dir}/tmp7.csv <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.csv
 
 cat ${dir}/Zscores.csv | datamash transpose -t, > ${dir}/Zscores.t.csv
 
