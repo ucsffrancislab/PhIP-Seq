@@ -11,8 +11,12 @@
 library("optparse")
 
 option_list = list(
-	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-		help="Comma separated list of groups to compare", metavar="character"),
+	make_option(c("-a", "--group1"), type="character", default=NULL,
+		help="First group to compare", metavar="character"),
+	make_option(c("-b", "--group2"), type="character", default=NULL,
+		help="Second group to compare", metavar="character"),
+#	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+#		help="Comma separated list of groups to compare", metavar="character"),
 	make_option(c("-m", "--manifest"), type="character", default=NULL,
 		help="manifest file name", metavar="character"),
 	make_option(c("-d", "--working_dir"), type="character", default="./",
@@ -28,6 +32,16 @@ if (is.null(opt$manifest)){
 	stop("manifest file required.\n", call.=FALSE)
 }
 
+if (is.null(opt$group1)){
+	print_help(opt_parser)
+	stop("group1 required.\n", call.=FALSE)
+}
+
+if (is.null(opt$group2)){
+	print_help(opt_parser)
+	stop("group2 required.\n", call.=FALSE)
+}
+
 
 
 # Seropositivity Test
@@ -35,7 +49,9 @@ if (is.null(opt$manifest)){
 # Input parameters
 
 #groups_to_compare = c("case", "control" )
-groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+
+groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
