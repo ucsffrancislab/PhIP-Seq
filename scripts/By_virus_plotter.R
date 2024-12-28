@@ -145,7 +145,11 @@ for(i in c(1:nrow(plot_df))){
 }
 
 print("Opening plot file")
-viral_plotfile = paste0(opt$working_dir,"/","Manhattan_plots-",gsub(" ","_",opt$virus), "-", gsub(" ","_",paste(groups_to_compare, collapse = "-")), ".pdf")
+viral_plotfile = paste0(
+	opt$working_dir,"/",
+	gsub(" ","_", paste("Manhattan_plots", opt$virus, paste(groups_to_compare, collapse = "-"),sep="-")),
+	".pdf")
+
 pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
 for(stat in cc){
@@ -205,9 +209,4 @@ for(stat in cc){
 dev.off()
 
 print(paste0("Writing ", viral_plotfile ))
-#outfile=paste0(opt$working_dir, "/",
-#		paste("Seropositivity_Prop_test_results", groups_to_compare[1], groups_to_compare[2], sep="_"), ".csv")
-#print(paste0("Writing ",outfile))
-#write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE,     quote= FALSE)
-
 

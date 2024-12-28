@@ -163,8 +163,10 @@ print("close loop over peptides")
 colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
 
 
-outfile=paste0(opt$working_dir, "/", 
-	paste("Tile_Comparison", groups_to_compare[1], groups_to_compare[2],"Prop_test_results", Z, sep="_"), ".csv")
+outfile=paste0(opt$working_dir, "/",
+	gsub(" ","_",paste("Tile_Comparison", paste(groups_to_compare[1:2],collapse="-"), "Prop_test_results", Z, sep="-")), ".csv")
+
+
 print(paste0("Writing ",outfile))
 write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
