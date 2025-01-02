@@ -1,3 +1,57 @@
+#!/usr/bin/env Rscript
+
+#	Uses a logistic regression framework to assess the association between the presence of each peptide and user specified case control status.
+#	Uses a user specifed Z score threshold (i.e. Z >3.5) to call positivity
+#	Takes as input a list of directories (e.g. plates), to use in the analysis, the directories should contain the Zscores.t.csv and the manifest* files. 
+#	Only peptides found in both files are included in the analysis
+#	The logistic regression adjusts for age (continuous), sex (M/F factor), and plate (1..n plates, factor)
+#	The output (to a user specified directory owd , is a list of peptides, ordered by ascending p-value. It includes peptide ID, species, frequency of peptide in the first group, frequency of the peptide in the second group, and the beta, standard error, and p-value from the multivariable logistic regression (NA if there is no variation in the presence of the peptide overall, e.g. all 0 or all 1).
+ #	The file will also output a logfile with similar naming convention, which includes the details of the plates used in the analysis, sample sizes, etc.
+
+
+
+library("optparse")
+
+option_list = list(
+	make_option(c("-a", "--group1"), type="character", default=NULL,
+		help="First group to compare", metavar="character"),
+	make_option(c("-b", "--group2"), type="character", default=NULL,
+		help="Second group to compare", metavar="character"),
+#	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+#		help="Comma separated list of groups to compare", metavar="character"),
+#	make_option(c("-m", "--manifest"), type="character", default=NULL,
+#		help="manifest file name", metavar="character"),
+#	make_option(c("-d", "--working_dir"), type="character", default="./",
+#		help="working dir [default= %default]", metavar="character")
+);
+
+opt_parser = OptionParser(option_list=option_list);
+opt = parse_args(opt_parser);
+
+
+#if (is.null(opt$manifest)){
+#	print_help(opt_parser)
+#	stop("manifest file required.\n", call.=FALSE)
+#}
+
+if (is.null(opt$group1)){
+	print_help(opt_parser)
+	stop("group1 required.\n", call.=FALSE)
+}
+
+if (is.null(opt$group2)){
+	print_help(opt_parser)
+	stop("group2 required.\n", call.=FALSE)
+}
+
+groups_to_compare = c(opt$group1,opt$group2)
+print("Comparing these groups")
+print(groups_to_compare)
+
+
+
+
+
 # Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate 
 Z= 3.5
 
@@ -9,7 +63,7 @@ Z= 3.5
   owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-gbm"
 #Groups to compare, from the manifest file. 
   # Order here matters, the first will be coded to 1, the second to 0. So choose the event (aka glioma or pemphigus) to be coded to 1. 
- groups_to_compare = c("case", "control")
+# groups_to_compare = c("case", "control")
 
 #Pemphigus
 # plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.menpem.test6", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.menpem")
