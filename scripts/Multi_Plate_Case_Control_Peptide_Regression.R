@@ -17,12 +17,12 @@ option_list = list(
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
 		help="Second group to compare", metavar="character"),
-#	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-#		help="Comma separated list of groups to compare", metavar="character"),
+	make_option(c("-p", "--plates_to_compare"), type="character", default=NULL,
+		help="Comma separated list of plate dirs to compare", metavar="character"),
 #	make_option(c("-m", "--manifest"), type="character", default=NULL,
 #		help="manifest file name", metavar="character"),
-#	make_option(c("-d", "--working_dir"), type="character", default="./",
-#		help="working dir [default= %default]", metavar="character")
+	make_option(c("-o", "--output_dir"), type="character", default="./",
+		help="output dir [default= %default]", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -33,6 +33,16 @@ opt = parse_args(opt_parser);
 #	print_help(opt_parser)
 #	stop("manifest file required.\n", call.=FALSE)
 #}
+
+if (is.null(opt$plates_to_compare)){
+	print_help(opt_parser)
+	stop("plates_to_compare required.\n", call.=FALSE)
+}
+
+if (is.null(opt$output_dir)){
+	print_help(opt_parser)
+	stop("output_dir required.\n", call.=FALSE)
+}
 
 if (is.null(opt$group1)){
 	print_help(opt_parser)
@@ -48,6 +58,13 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
+plates=unlist(strsplit(opt$plates_to_compare, split = ","))
+print("Comparing these plates")
+print(plates)
+
+owd=opt$output_dir
+print("Output dir")
+print(owd)
 
 
 
@@ -58,9 +75,9 @@ Z= 3.5
 # #GBM
 
 # list of paths to the Z score files, each path represents a plate.
-plates= c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.gbm", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.gbm.test6")
+#plates= c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.gbm", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.gbm.test6")
 # Directory to pipe all results to
-owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-gbm"
+#owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-gbm"
 #Groups to compare, from the manifest file.
 # Order here matters, the first will be coded to 1, the second to 0. So choose the event (aka glioma or pemphigus) to be coded to 1.
 # groups_to_compare = c("case", "control")
@@ -299,7 +316,8 @@ colnames(pvalues) = c("peptide", "species",
 
 write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
 	paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_",
-		groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv"), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+		groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv"),
+	col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 

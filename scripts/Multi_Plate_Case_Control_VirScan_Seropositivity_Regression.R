@@ -17,12 +17,12 @@ option_list = list(
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
 		help="Second group to compare", metavar="character"),
-#	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-#		help="Comma separated list of groups to compare", metavar="character"),
+	make_option(c("-p", "--plates_to_compare"), type="character", default=NULL,
+		help="Comma separated list of plate dirs to compare", metavar="character"),
 #	make_option(c("-m", "--manifest"), type="character", default=NULL,
 #		help="manifest file name", metavar="character"),
-#	make_option(c("-d", "--working_dir"), type="character", default="./",
-#		help="working dir [default= %default]", metavar="character")
+	make_option(c("-o", "--output_dir"), type="character", default="./",
+		help="output dir [default= %default]", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
@@ -33,6 +33,16 @@ opt = parse_args(opt_parser);
 #	print_help(opt_parser)
 #	stop("manifest file required.\n", call.=FALSE)
 #}
+
+if (is.null(opt$plates_to_compare)){
+	print_help(opt_parser)
+	stop("plates_to_compare required.\n", call.=FALSE)
+}
+
+if (is.null(opt$output_dir)){
+	print_help(opt_parser)
+	stop("output_dir required.\n", call.=FALSE)
+}
 
 if (is.null(opt$group1)){
 	print_help(opt_parser)
@@ -48,6 +58,13 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
+plates=unlist(strsplit(opt$plates_to_compare, split = ","))
+print("Comparing these plates")
+print(plates)
+
+owd=opt$output_dir
+print("Output dir")
+print(owd)
 
 
 
@@ -65,8 +82,8 @@ print(groups_to_compare)
 # groups_to_compare = c("case", "control")
 
 ##Pemphigus
-plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.menpem.test6", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.menpem")
-owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
+#plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.menpem.test6", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.menpem")
+#owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
 #groups_to_compare=c("PF Patient", "Endemic Control" )
 #groups_to_compare=c("PF Patient", "Non Endemic Control" )
 #groups_to_compare=c("Endemic Control", "Non Endemic Control" )
