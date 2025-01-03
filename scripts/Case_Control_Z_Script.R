@@ -11,6 +11,8 @@
 library("optparse")
 
 option_list = list(
+  make_option(c("-z", "--zscore"), type="double", default=3.5,
+    help="Zscore threshold", metavar="character"),
 	make_option(c("-a", "--group1"), type="character", default=NULL,
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
@@ -59,7 +61,8 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-Z = 3.5
+#Z = 3.5
+Z = opt$zscore
 
 
 

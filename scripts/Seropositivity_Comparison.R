@@ -11,6 +11,8 @@
 library("optparse")
 
 option_list = list(
+  make_option(c("-z", "--zscore"), type="double", default=3.5,
+    help="Zscore threshold", metavar="character"),
 	make_option(c("-a", "--group1"), type="character", default=NULL,
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
@@ -42,6 +44,7 @@ if (is.null(opt$group2)){
 	stop("group2 required.\n", call.=FALSE)
 }
 
+Z=opt$zscore
 
 
 # Seropositivity Test
@@ -55,7 +58,7 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-posfile = read.csv(paste(opt$working_dir, "seropositive.csv", sep = "/"), header = TRUE, sep = ",")
+posfile = read.csv(paste0(opt$working_dir, paste("/seropositive",Z,"csv",sep=".")), header = TRUE, sep = ",")
 
 print("Keep only 'Before' samples")
 

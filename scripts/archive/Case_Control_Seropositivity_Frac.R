@@ -9,6 +9,8 @@
 library("optparse")
 
 option_list = list(
+  make_option(c("-z", "--zscore"), type="double", default=3.5,
+    help="Zscore threshold", metavar="character"),
 	make_option(c("-a", "--group1"), type="character", default=NULL,
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
@@ -55,7 +57,8 @@ print("Comparing these groups")
 print(groups_to_compare)
 
 
-Z_thresh = 3.5
+#Z_thresh = 3.5
+Z_thresh = opt$zscore
 Vir_frac = 0.05
 virfracfilename = paste0("Viral_Frac_Hits_Z_",Z_thresh,".csv")
 

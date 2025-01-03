@@ -551,7 +551,7 @@ for threshold in ${THRESHOLDS}; do
 
 
 
-	f=${OUTPUT}/merged.public_epitopes_AFTER.csv
+	f=${OUTPUT}/merged.${threshold}.public_epitopes_AFTER.csv
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else

@@ -13,6 +13,8 @@
 library("optparse")
 
 option_list = list(
+  make_option(c("-z", "--zscore"), type="double", default=3.5,
+    help="Zscore threshold", metavar="character"),
 	make_option(c("-a", "--group1"), type="character", default=NULL,
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
@@ -69,8 +71,10 @@ dir.create(owd,showWarnings=F)
 
 date=format(Sys.Date(),"%Y%m%d")
 
+Z = opt$zscore
+
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste(date, "Multiplate_VirScan_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
+	paste(date, "Multiplate_VirScan_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results",Z, sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -93,7 +97,7 @@ posfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-	posfile = read.csv(paste0(plates[i], "/seropositive.csv"), header = TRUE, sep = ",")
+	posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
 	posfile1= posfile[grep("_B", posfile$id), ]
 	rm(posfile)
 

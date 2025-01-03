@@ -104,22 +104,34 @@ cat ${dir}/Zscores.minimums.filtered.csv | datamash transpose -t, > ${dir}/Zscor
 
 
 echo
-echo "Annotate Seropositivity"
+echo "Annotate Seropositivities"
 
-head -1 ${dir}/merged.seropositive.csv | sed -e '1s/\(,[^,]*\)_./\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
-sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${dir}/merged.seropositive.csv >> ${dir}/tmp1.csv
+for f in ${dir}/merged.*.seropositive.csv ; do
+	echo $f
+	threshold=$( basename $f .seropositive.csv )
+	threshold=${threshold#merged.}
+	echo $threshold
 
-cat ${dir}/tmp1.csv | datamash transpose -t, > ${dir}/tmp2.csv
+	head -1 ${f} | sed -e '1s/\(,[^,]*\)_./\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
+	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
 
-head -1 ${dir}/tmp2.csv > ${dir}/tmp3.csv
-tail -n +2 ${dir}/tmp2.csv | sort -t, -k1,1 >> ${dir}/tmp3.csv
+	cat ${dir}/tmp1.csv | datamash transpose -t, > ${dir}/tmp2.csv
 
-cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp4.csv
-cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp4.csv
+	head -1 ${dir}/tmp2.csv > ${dir}/tmp3.csv
+	tail -n +2 ${dir}/tmp2.csv | sort -t, -k1,1 >> ${dir}/tmp3.csv
 
-#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) ${dir}/tmp3.csv > ${dir}/seropositive.csv
-join --header -t, ${dir}/tmp4.csv ${dir}/tmp3.csv > ${dir}/seropositive.csv
-cat ${dir}/seropositive.csv | datamash transpose -t, > ${dir}/seropositive.t.csv
+	cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp4.csv
+	cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp4.csv
+
+	#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) ${dir}/tmp3.csv > ${dir}/seropositive.csv
+	join --header -t, ${dir}/tmp4.csv ${dir}/tmp3.csv > ${dir}/seropositive.${threshold}.csv
+	cat ${dir}/seropositive.${threshold}.csv | datamash transpose -t, > ${dir}/seropositive.${threshold}.t.csv
+
+done
+
+
+
+
 
 
 echo
