@@ -19,20 +19,12 @@ option_list = list(
 		help="Second group to compare", metavar="character"),
 	make_option(c("-p", "--plates_to_compare"), type="character", default=NULL,
 		help="Comma separated list of plate dirs to compare", metavar="character"),
-#	make_option(c("-m", "--manifest"), type="character", default=NULL,
-#		help="manifest file name", metavar="character"),
 	make_option(c("-o", "--output_dir"), type="character", default="./",
 		help="output dir [default= %default]", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
-
-
-#if (is.null(opt$manifest)){
-#	print_help(opt_parser)
-#	stop("manifest file required.\n", call.=FALSE)
-#}
 
 if (is.null(opt$plates_to_compare)){
 	print_help(opt_parser)
@@ -68,41 +60,19 @@ print(owd)
 dir.create(owd,showWarnings=F)
 
 
-
-
 # Multi plate Logistic regression for seropositivity (VirScan calls) on case/control status, adjusting for age, sex, and plate
 
-
-
 # # list of paths to the Z score files, each path represents a plate.
-# plates= c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.gbm", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.gbm.test6")
-# # Directory to pipe all results to
-# owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-gbm"
 # #Groups to compare, from the manifest file.
 # # Order here matters, the first will be coded to 1, the second to 0. So choose the event (aka glioma or pemphigus) to be coded to 1.
 # groups_to_compare = c("case", "control")
 
-##Pemphigus
-#plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.menpem.test6", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.menpem")
-#owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
-#groups_to_compare=c("PF Patient", "Endemic Control" )
-#groups_to_compare=c("PF Patient", "Non Endemic Control" )
-#groups_to_compare=c("Endemic Control", "Non Endemic Control" )
-
-
-
-
-
-
-#date="20250102"
 date=format(Sys.Date(),"%Y%m%d")
 
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste(date, "Multiplate_VirScan_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
 
 # Log the parameter choices into a logfile
-#logname = paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
-#	groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log")
 logname = paste0(output_base,'.log')
 
 cat("Multi plate Logistic regression for presence of virus on case/control status, adjusting for age, sex, and plate. Using VirScan's parameters for virus calling.",file=logname,sep="\n")

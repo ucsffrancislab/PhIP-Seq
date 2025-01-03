@@ -13,26 +13,20 @@
 library("optparse")
 
 option_list = list(
+	make_option(c("-z", "--zscore"), type="double", default=3.5,
+		help="Zscore threshold", metavar="character"),
 	make_option(c("-a", "--group1"), type="character", default=NULL,
 		help="First group to compare", metavar="character"),
 	make_option(c("-b", "--group2"), type="character", default=NULL,
 		help="Second group to compare", metavar="character"),
 	make_option(c("-p", "--plates_to_compare"), type="character", default=NULL,
 		help="Comma separated list of plate dirs to compare", metavar="character"),
-#	make_option(c("-m", "--manifest"), type="character", default=NULL,
-#		help="manifest file name", metavar="character"),
 	make_option(c("-o", "--output_dir"), type="character", default="./",
 		help="output dir [default= %default]", metavar="character")
 );
 
 opt_parser = OptionParser(option_list=option_list);
 opt = parse_args(opt_parser);
-
-
-#if (is.null(opt$manifest)){
-#	print_help(opt_parser)
-#	stop("manifest file required.\n", call.=FALSE)
-#}
 
 if (is.null(opt$plates_to_compare)){
 	print_help(opt_parser)
@@ -69,40 +63,19 @@ dir.create(owd,showWarnings=F)
 
 
 
-
 # Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate
-Z= 3.5
+Z = opt$zscore
 
-# #GBM
-
-# list of paths to the Z score files, each path represents a plate.
-#plates= c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.gbm", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.gbm.test6")
-# Directory to pipe all results to
-#owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-gbm"
 #Groups to compare, from the manifest file.
 # Order here matters, the first will be coded to 1, the second to 0. So choose the event (aka glioma or pemphigus) to be coded to 1.
-# groups_to_compare = c("case", "control")
-
-#Pemphigus
-# plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241204-Illumina-PhIP/20241204c-PhIP/out.menpem.test6", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20241224c-PhIP/out.menpem")
-# owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
-# groups_to_compare=c("PF Patient", "Endemic Control" )
-# groups_to_compare=c("PF Patient", "Non Endemic Control" )
-# groups_to_compare=c("Endemic Control", "Non Endemic Control" )
 
 
-
-
-
-
-#date="20250102"
 date=format(Sys.Date(),"%Y%m%d")
 
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste(date, "Multiplate_Peptide_Comparison", paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
 
 # Log the parameter choices into a logfile
-#logname = paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".log")
 logname = paste0(output_base,'.log')
 
 cat("Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate.",
@@ -254,7 +227,6 @@ datfile$plate = as.factor(datfile$plate)
 #----- Shell function for logistic regression analysis.
 log_reg = function(df){
 
-
 	# A simple model that simply adjusts for plate/batch in the model. When the number of plates becomes large, a mixed effects regression model should be considered.
 	# as there are likely differences in the peptide calling sensitivity between plates, and so peptide probably has different associations with case based on plate.
 	logitmodel = "case~ peptide +age + sex + plate"
@@ -266,7 +238,6 @@ log_reg = function(df){
 	se = go$coefficients[2,2]
 	pval = go$coefficients[2,4]
 	return(c(beta, se, pval))
-
 }
 #-------
 
