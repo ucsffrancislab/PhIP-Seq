@@ -1,3 +1,5 @@
+.RData
+.Rhistory
 Makefile
 Elledge/fastq_files.1
 Elledge/fastq_files/*.count.csv.gz
