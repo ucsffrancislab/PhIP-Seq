@@ -65,6 +65,7 @@ print(plates)
 owd=opt$output_dir
 print("Output dir")
 print(owd)
+dir.create(owd,showWarnings=F)
 
 
 
