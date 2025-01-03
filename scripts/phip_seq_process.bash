@@ -42,7 +42,7 @@ OUTPUT="out"
 Q=40
 SPECIES_ORDER=""
 STOP_AFTER_ZSCORE=false
-THRESHOLD=3.5
+THRESHOLDS=3.5
 
 while [ $# -gt 0 ] ; do
 	case $1 in
@@ -52,8 +52,8 @@ while [ $# -gt 0 ] ; do
 			shift; OUTPUT=$1; shift;;
 		-s|--species|--species_order)
 			shift; SPECIES_ORDER=$1; shift;;
-		--threshold)
-			shift; THRESHOLD=$1; shift;;
+		-t|--threshold*)
+			shift; THRESHOLDS=$( echo $1 | tr , " " ); shift;;
 		--stop_after_zscore)
 			STOP_AFTER_ZSCORE=true; shift;;
 		-q)
@@ -106,11 +106,11 @@ done < <( awk -F, '(NR>1){print $2"\t"$3"\t"$4}' ${MANIFEST} )
 #	Separate the "input" samples
 
 #	In this case, the dataset is 4 separate comparisono so do it separately
-#	
+#
 #	echo "Moving blanks into separate directory"
-#	
+#
 #	mkdir -p ${OUTPUT}/counts/input
-#	
+#
 #	while read sample ; do
 #		echo $sample
 #		f=${OUTPUT}/counts/input/${sample}.q40.count.csv.gz
@@ -254,16 +254,22 @@ while read subject ; do
 	all_samples=$( awk -F, -v subject=${subject} '( $1==subject && $4 != "input" ){print $2}' ${MANIFEST} | paste -sd' ' )
 	echo $all_samples
 
-	f=${OUTPUT}/${subject}.count.Zscores.hits.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-		booleanize_Zscore_replicates.py --sample ${subject} \
-			--threshold ${THRESHOLD} \
-			--matrix ${OUTPUT}/All.count.Zscores.csv \
-			--output ${f} ${all_samples}
-		chmod -w ${f}
-	fi
+	for threshold in ${THRESHOLDS}; do
+
+		echo $threshold
+
+		f=${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+			booleanize_Zscore_replicates.py --sample ${subject} \
+				--threshold ${threshold} \
+				--matrix ${OUTPUT}/All.count.Zscores.csv \
+				--output ${f} ${all_samples}
+			chmod -w ${f}
+		fi
+
+	done
 
 	f=${OUTPUT}/${subject}.count.Zscores.minimums.csv
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
@@ -305,279 +311,295 @@ fi
 #	Create a list of viral species sorted by number of hits for all samples
 
 
-if [ -z "${SPECIES_ORDER}" ] ; then
 
-	echo "Creating a fixed species order"
 
-	f=${OUTPUT}/species_order.txt
-	SPECIES_ORDER=${f}
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
+#	process multiple Zscore thresholds
 
-		tail -q -n +2 ${OUTPUT}/*.count.Zscores.hits.csv | sort -t, -k1,1 \
-			| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.merged_trues.csv
+for threshold in ${THRESHOLDS}; do
 
-		sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.merged_trues.csv
+	echo $threshold
 
-		join --header -t, ${OUTPUT}/All.count.Zscores.merged_trues.csv \
-			/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
+	if [ -z "${SPECIES_ORDER}" ] ; then
 
-		awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
-			| cut -d' ' -f2- > ${f}
-		\rm ${OUTPUT}/tmp
+		echo "Creating a fixed species order"
 
-		chmod -w ${f}
-	fi
+		f=${OUTPUT}/${threshold}.species_order.txt
+		SPECIES_ORDER=${f}
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
 
-fi
+			tail -q -n +2 ${OUTPUT}/*.count.Zscores.${threshold}.hits.csv | sort -t, -k1,1 \
+				| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv
 
+			sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv
 
+			join --header -t, ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv \
+				/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
 
-#	Create virus scores in same order for all samples using the previous species order file.
+			awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
+				| cut -d' ' -f2- > ${f}
+			\rm ${OUTPUT}/tmp
 
-
-echo "Calculate virus scores"
-
-while read subject ; do
-	echo $subject
-
-	f=${OUTPUT}/${subject}.count.Zscores.hits.virus_scores.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-		elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.hits.csv \
-			--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
-			--species_order ${SPECIES_ORDER} > ${OUTPUT}/tmp 
-		head -1 ${OUTPUT}/tmp > ${f}
-		tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${f}
-		\rm ${OUTPUT}/tmp
-
-		chmod -w ${f}
-	fi
-
-done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
-
-
-
-f=${OUTPUT}/merged.virus_scores.csv
-if [ -f ${f} ] && [ ! -w ${f} ] ; then
-	echo "Write-protected ${f} exists. Skipping."
-else
-	merge_results.py --int -o ${f} ${OUTPUT}/*.hits.virus_scores.csv
-	chmod -w ${f}
-fi
-
-
-
-
-
-
-
-
-#	Threshold check
-
-
-#	~/github/ucsffrancislab/PhIP-Seq/Elledge/VirScan_viral_thresholds.csv 
-
-
-#	A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
-
-
-#	GREATER THAN THRESHOLD. NOT GREATER THAN OR EQUAL TO THE THRESHOLD.
-
-
-echo "Thresholds"
-
-for virus_scores in ${OUTPUT}/*.count.Zscores.hits.virus_scores.csv ; do
-	echo ${virus_scores}
-
-	f=${virus_scores%.csv}.threshold.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-		join --header -t, ~/github/ucsffrancislab/PhIP-Seq/Elledge/VirScan_viral_thresholds.csv ${virus_scores} \
-			| awk 'BEGIN{FS=OFS=","}(NR==1){print "Species",$3}(NR>1 && $3>$2){print $1,$3}' \
-			> ${f}
-		chmod -w ${f}
-	fi
-
-done 
-
-
-
-
-
-echo "Filter with join to public epitopes BEFORE"
-
-while read subject ; do
-	echo $subject
-
-	hits=${OUTPUT}/${subject}.count.Zscores.hits.csv
-
-#for hits in ${OUTPUT}/*.count.Zscores.hits.csv ; do
-	echo ${hits}
-
-	f=${hits%.csv}.found_public_epitopes.BEFORE_scoring.txt
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '($2=="True"){print $6}' | sort | uniq > ${f}
-		sed -i '1iSpecies' ${f}
-
-		chmod -w ${f}
-	fi
-
-	f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.txt
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
-		sed -i '1icount,Species' ${f}
-
-		chmod -w ${f}
-	fi
-
-
-
-	f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.test.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
-			| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
-		sed -i "1iSpecies,${subject}" ${f}
-
-		chmod -w ${f}
-	fi
-
-#done
-done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
-
-
-f=${OUTPUT}/merged.public_epitopes_BEFORE.csv
-if [ -f ${f} ] && [ ! -w ${f} ] ; then
-	echo "Write-protected ${f} exists. Skipping."
-else
-	merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.BEFORE_scoring.test.csv
-	chmod -w ${f}
-fi
-
-
-
-echo "Filter with join to public epitopes AFTER"
-
-#	*.7.peptides.txt files created during my version of the calc_virus_score scripts
-#	This is the list of peptides that survive the "novel" test hence the name "AFTER"
-#	The "BEFORE" list would effectively be the hits list, but I need to create something to get the counts for both BEFORE and AFTER.
-
-while read subject ; do
-	echo $subject
-
-	peptides=${OUTPUT}/${subject}.count.Zscores.hits.7.peptides.txt
-#for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
-	echo ${peptides}
-
-	f=${peptides%.7.peptides.txt}.found_public_epitopes.AFTER_scoring.txt
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( sort -t, -k1,1 ${peptides} ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '{print $2}' | sort | uniq > ${f}
-		sed -i '1iSpecies' ${f}
-
-		chmod -w ${f}
-	fi
-
-	f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.txt
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( sort -t, -k1,1 ${peptides} ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
-		sed -i '1icount,Species' ${f}
-
-		chmod -w ${f}
-	fi
-
-
-
-	f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.test.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-
-		join -t, <( sort -t, -k1,1 ${peptides} ) \
-			<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
-			| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
-			| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
-		sed -i "1iSpecies,${subject}" ${f}
-
-		chmod -w ${f}
-	fi
-
-#done
-done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
-
-
-
-f=${OUTPUT}/merged.public_epitopes_AFTER.csv
-if [ -f ${f} ] && [ ! -w ${f} ] ; then
-	echo "Write-protected ${f} exists. Skipping."
-else
-	merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.AFTER_scoring.test.csv
-	chmod -w ${f}
-fi
-
-
-
-
-
-
-
-
-for scoring in ${OUTPUT}/*.count.Zscores.hits.found_public_epitopes.*_scoring.txt ; do
-	echo ${scoring}
-
-	f=${scoring%.txt}.seropositive.csv
-	if [ -f ${f} ] && [ ! -w ${f} ] ; then
-		echo "Write-protected ${f} exists. Skipping."
-	else
-		join --header -t, ${scoring} \
-			${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv > ${f}
-
-#	merging gets its name from the filename, not the column name. Should I change that?
-		if [[ "${scoring}" =~ "BEFORE" ]]; then
-			sed -i '1s/$/_B/' ${f}
-		elif [[ "${scoring}" =~ "AFTER" ]]; then
-			sed -i '1s/$/_A/' ${f}
+			chmod -w ${f}
 		fi
 
+	fi
+
+
+
+	#	Create virus scores in same order for all samples using the previous species order file.
+
+
+	echo "Calculate virus scores"
+
+	while read subject ; do
+		echo $subject
+
+		f=${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.virus_scores.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+			elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.csv \
+				--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
+				--species_order ${SPECIES_ORDER} > ${OUTPUT}/tmp 
+			head -1 ${OUTPUT}/tmp > ${f}
+			tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${f}
+			\rm ${OUTPUT}/tmp
+
+			chmod -w ${f}
+		fi
+
+	done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
+
+
+
+	f=${OUTPUT}/merged.${threshold}.virus_scores.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.virus_scores.csv
 		chmod -w ${f}
 	fi
 
-done 
 
 
 
-f=${OUTPUT}/merged.seropositive.csv
-if [ -f ${f} ] && [ ! -w ${f} ] ; then
-	echo "Write-protected ${f} exists. Skipping."
-else
-	merge_results.py --int -o ${f} ${OUTPUT}/*_scoring.seropositive.csv
-	chmod -w ${f}
-fi
+
+
+
+
+	#	Threshold check
+
+
+	#	~/github/ucsffrancislab/PhIP-Seq/Elledge/VirScan_viral_thresholds.csv 
+
+
+	#	A sample is determined to be seropositive for a virus if the virus_score > VirScan_viral_threshold and if at least one public epitope from that virus scores as a hit. The file “VirScan_viral_thresholds” contains the thresholds for each virus (Supplementary materials).
+
+
+	#	GREATER THAN THRESHOLD. NOT GREATER THAN OR EQUAL TO THE THRESHOLD.
+
+
+	echo "Thresholds"
+
+	for virus_scores in ${OUTPUT}/*.count.Zscores.${threshold}.hits.virus_scores.csv ; do
+		echo ${virus_scores}
+
+		f=${virus_scores%.csv}.threshold.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+			join --header -t, ~/github/ucsffrancislab/PhIP-Seq/Elledge/VirScan_viral_thresholds.csv ${virus_scores} \
+				| awk 'BEGIN{FS=OFS=","}(NR==1){print "Species",$3}(NR>1 && $3>$2){print $1,$3}' \
+				> ${f}
+			chmod -w ${f}
+		fi
+
+	done 
+
+
+
+
+
+	echo "Filter with join to public epitopes BEFORE"
+
+	while read subject ; do
+		echo $subject
+
+		hits=${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.csv
+
+	#for hits in ${OUTPUT}/*.count.Zscores.${threshold}.hits.csv ; do
+		echo ${hits}
+
+		f=${hits%.csv}.found_public_epitopes.BEFORE_scoring.txt
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '($2=="True"){print $6}' | sort | uniq > ${f}
+			sed -i '1iSpecies' ${f}
+
+			chmod -w ${f}
+		fi
+
+		f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.txt
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
+			sed -i '1icount,Species' ${f}
+
+			chmod -w ${f}
+		fi
+
+
+
+		#f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.test.csv
+		f=${hits%.csv}.found_public_epitope_counts.BEFORE_scoring.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
+				| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
+			sed -i "1iSpecies,${subject}" ${f}
+
+			chmod -w ${f}
+		fi
+
+	#done
+	done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
+
+
+	f=${OUTPUT}/merged.${threshold}.public_epitopes_BEFORE.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+		#merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.BEFORE_scoring.test.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.BEFORE_scoring.csv
+		chmod -w ${f}
+	fi
+
+
+
+	echo "Filter with join to public epitopes AFTER"
+
+	#	*.7.peptides.txt files created during my version of the calc_virus_score scripts
+	#	This is the list of peptides that survive the "novel" test hence the name "AFTER"
+	#	The "BEFORE" list would effectively be the hits list, but I need to create something to get the counts for both BEFORE and AFTER.
+
+	while read subject ; do
+		echo $subject
+
+		peptides=${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.7.peptides.txt
+	#for peptides in ${OUTPUT}/*.count.Zscores.hits.7.peptides.txt ; do
+		echo ${peptides}
+
+		f=${peptides%.7.peptides.txt}.found_public_epitopes.AFTER_scoring.txt
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( sort -t, -k1,1 ${peptides} ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '{print $2}' | sort | uniq > ${f}
+			sed -i '1iSpecies' ${f}
+
+			chmod -w ${f}
+		fi
+
+		f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.txt
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( sort -t, -k1,1 ${peptides} ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
+			sed -i '1icount,Species' ${f}
+
+			chmod -w ${f}
+		fi
+
+
+
+		#f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.test.csv
+		f=${peptides%.7.peptides.txt}.found_public_epitope_counts.AFTER_scoring.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+
+			join -t, <( sort -t, -k1,1 ${peptides} ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
+				| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
+			sed -i "1iSpecies,${subject}" ${f}
+
+			chmod -w ${f}
+		fi
+
+	#done
+	done < <( awk -F, '(NR>1 && $4 != "input" ){print $1}' ${MANIFEST} | sort | uniq )
+
+
+
+	f=${OUTPUT}/merged.public_epitopes_AFTER.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.7.peptides.found_public_epitope_counts.AFTER_scoring.csv
+		chmod -w ${f}
+	fi
+
+
+
+
+	for scoring in ${OUTPUT}/*.count.Zscores.${threshold}.hits.found_public_epitopes.*_scoring.txt ; do
+		echo ${scoring}
+
+		f=${scoring%.txt}.seropositive.csv
+		if [ -f ${f} ] && [ ! -w ${f} ] ; then
+			echo "Write-protected ${f} exists. Skipping."
+		else
+			join --header -t, ${scoring} \
+				${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv > ${f}
+
+	#	merging gets its name from the filename, not the column name. Should I change that?
+			if [[ "${scoring}" =~ "BEFORE" ]]; then
+				sed -i '1s/$/_B/' ${f}
+			elif [[ "${scoring}" =~ "AFTER" ]]; then
+				sed -i '1s/$/_A/' ${f}
+			fi
+
+			chmod -w ${f}
+		fi
+
+	done 
+
+
+
+	f=${OUTPUT}/merged.${threshold}.seropositive.csv
+	if [ -f ${f} ] && [ ! -w ${f} ] ; then
+		echo "Write-protected ${f} exists. Skipping."
+	else
+		#merge_results.py --int -o ${f} ${OUTPUT}/*_scoring.seropositive.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitopes.*_scoring.txt
+		chmod -w ${f}
+	fi
+
+
+done	#	thresholds
+
+
+
+
+
 
