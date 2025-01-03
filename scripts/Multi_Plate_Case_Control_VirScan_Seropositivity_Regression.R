@@ -284,7 +284,8 @@ colnames(pvalues) = c( "species",
 	paste0("freq_", groups_to_compare[2]),
 	"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],paste0(output_base,'.csv'))
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],paste0(output_base,'.csv'),
+	col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE )
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 
