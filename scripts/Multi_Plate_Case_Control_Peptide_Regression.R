@@ -77,15 +77,15 @@ owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-
 
 
 
-date="20250102"
-
-
-
+#date="20250102"
+date=format(Sys.Date(),"%Y%m%d")
 
 # Log the parameter choices into a logfile
-logname = paste(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".log", sep = "")
-cat("Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate.",file=logname,sep="\n")
-cat(paste("Z-score threshold = ", Z, "\n", sep = ""), file = logname, append = TRUE, sep = "\n")
+logname = paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".log")
+
+cat("Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate.",
+	file=logname,sep="\n")
+cat(paste0("Z-score threshold = ", Z, "\n"), file = logname, append = TRUE, sep = "\n")
 cat("Plates used in this analysis:", file = logname, append = TRUE, sep = "\n")
 for(i in c(1:length(plates))){
 	cat(plates[i], file = logname, append= TRUE, sep = "\n")
@@ -105,7 +105,7 @@ Zfiles = list()
 species_ids = list()
 
 for(i in c(1:length(plates))){
-	Zfilename = paste(plates[i], "/Zscores.t.csv", sep = "")
+	Zfilename = paste0(plates[i], "/Zscores.t.csv")
 	Zfile= read.csv(Zfilename, sep = ",", header=FALSE)
 	Zfile = data.frame(t(Zfile))
 
@@ -139,11 +139,12 @@ for(i in c(1:length(plates))){
 	# Find the manifest file for the given plate. Requires only ONE manifest file per plate folder
 	mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
 	if(length(mfname)!=1){
-		print(paste(plates[i], " needs a single manifest file!", sep = ""))
+		print(paste0(plates[i], " needs a single manifest file!"))
 	}
 
 	# read in the manifest file
-	mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+	mf = read.csv(mfname, sep= ",", header = TRUE)
 	# Create a categorical variable, assign all of these the same number to indicate plate.
 	mf$plate = i
 	mfs[[i]] = mf
@@ -159,12 +160,12 @@ rm(mfs)
 
 uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 
-cat(paste("\nTotal number of included subjects: ", length(uniq_sub), sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
 
 # Get the overlapping peptides included in each file
 common_peps = Reduce(intersect, sapply(species_ids, `[`,1))
 
-cat(paste("\nTotal number of included peptides: ", length(common_peps), sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of included peptides: ", length(common_peps)), file = logname, append = TRUE, sep = "\n")
 
 
 # Go back into the Z score files and reorder them/cull them to have only the common_peps, in that specific order.
@@ -255,8 +256,8 @@ pvalues$peptide = common_peps
 n_case = length(which(datfile$case==1))
 n_control = length(which(datfile$case==0))
 
-cat(paste("\nTotal number of ", groups_to_compare[1], ": ", n_case, sep =""), file = logname, append = TRUE, sep = "\n")
-cat(paste("\nTotal number of ", groups_to_compare[2], ": ", n_control, sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of ", groups_to_compare[1], ": ", n_case), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of ", groups_to_compare[2], ": ", n_control), file = logname, append = TRUE, sep = "\n")
 
 
 # Loop over peptides, populate the datfile, and run analyses.
@@ -291,9 +292,14 @@ for(i in c(1:length(common_peps))){
 cat("...Complete.", file = logname, append = TRUE, sep = "\n")
 
 
-colnames(pvalues) = c("peptide", "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""),"beta", "se", "pval")
+colnames(pvalues) = c("peptide", "species",
+	paste0("freq_", groups_to_compare[1]),
+	paste0("freq_", groups_to_compare[2]),
+	"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
+	paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_",
+		groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv"), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 

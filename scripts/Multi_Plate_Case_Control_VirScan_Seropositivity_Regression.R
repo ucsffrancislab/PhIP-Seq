@@ -76,11 +76,12 @@ owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-
 
 
 
-date="20250102"
-
+#date="20250102"
+date=format(Sys.Date(),"%Y%m%d")
 
 # Log the parameter choices into a logfile
-logname = paste(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log", sep = "")
+logname = paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
+	groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log")
 cat("Multi plate Logistic regression for presence of virus on case/control status, adjusting for age, sex, and plate. Using VirScan's parameters for virus calling.",file=logname,sep="\n")
 
 cat("\nPlates used in this analysis:", file = logname, append = TRUE, sep = "\n")
@@ -99,7 +100,7 @@ posfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-	posfile = read.csv(paste(plates[i], "/seropositive.csv", sep =""), header = TRUE, sep = ",")
+	posfile = read.csv(paste0(plates[i], "/seropositive.csv"), header = TRUE, sep = ",")
 	posfile1= posfile[grep("_B", posfile$id), ]
 	rm(posfile)
 
@@ -107,11 +108,12 @@ for(i in c(1:length(plates))){
 
 	mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
 	if(length(mfname)!=1){
-		print(paste(plates[i], " needs a single manifest file!", sep = ""))
+		print(paste0(plates[i], " needs a single manifest file!"))
 	}
 
 	# read in the manifest file
-	mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+	mf = read.csv(mfname, sep= ",", header = TRUE)
 	# Create a categorical variable, assign all of these the same number to indicate plate.
 	mf$plate = i
 	mfs[[i]] = mf
@@ -129,7 +131,7 @@ rm(mfs)
 
 uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 
-cat(paste("\nTotal number of included subjects: ", length(uniq_sub), sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
 
 
 # Identify the viruses that are in both files, and subset each posfile to that, with maintained order.
@@ -140,7 +142,7 @@ for(i in c(1:length(plates))){
 }
 common_virs = common_virs[-c(1:3)]
 
-cat(paste("\nTotal number of included viruses: ", length(common_virs), sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of included viruses: ", length(common_virs)), file = logname, append = TRUE, sep = "\n")
 
 
 # Convert every virus call into a binary 0/1 call based on >1 hits (Jake already filtered for public epitopes).
@@ -221,8 +223,8 @@ pvalues$species = common_virs
 n_case = length(which(datfile$case==1))
 n_control = length(which(datfile$case==0))
 
-cat(paste("\nTotal number of ", groups_to_compare[1], ": ", n_case, sep =""), file = logname, append = TRUE, sep = "\n")
-cat(paste("\nTotal number of ", groups_to_compare[2], ": ", n_control, sep =""), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of ", groups_to_compare[1], ": ", n_case), file = logname, append = TRUE, sep = "\n")
+cat(paste0("\nTotal number of ", groups_to_compare[2], ": ", n_control), file = logname, append = TRUE, sep = "\n")
 
 
 # Loop over viruses, populate the datfile, and run analyses.
@@ -254,9 +256,16 @@ for(i in c(1:length(common_virs))){
 }
 cat("...Complete.", file = logname, append = TRUE, sep = "\n")
 
-colnames(pvalues) = c( "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""),"beta", "se", "pval")
+colnames(pvalues) = c( "species",
+	paste0("freq_", groups_to_compare[1]),
+	paste0("freq_", groups_to_compare[2]),
+	"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_test_results.csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
+	paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
+		groups_to_compare[1], "_",
+		groups_to_compare[2],"_test_results.csv"),
+	col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 
