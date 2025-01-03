@@ -97,9 +97,14 @@ dir.create(owd,showWarnings=F)
 #date="20250102"
 date=format(Sys.Date(),"%Y%m%d")
 
+output_base = paste0(owd, "/", gsub(" ","_",
+	paste(date, "Multiplate_VirScan_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
+
 # Log the parameter choices into a logfile
-logname = paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
-	groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log")
+#logname = paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
+#	groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log")
+logname = paste0(output_base,'.log')
+
 cat("Multi plate Logistic regression for presence of virus on case/control status, adjusting for age, sex, and plate. Using VirScan's parameters for virus calling.",file=logname,sep="\n")
 
 cat("\nPlates used in this analysis:", file = logname, append = TRUE, sep = "\n")
@@ -279,11 +284,7 @@ colnames(pvalues) = c( "species",
 	paste0("freq_", groups_to_compare[2]),
 	"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
-	paste0(owd, "/", date, "_Multiplate_VirScan_Seropositivity_Comparison_",
-		groups_to_compare[1], "_",
-		groups_to_compare[2],"_test_results.csv"),
-	col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],paste0(output_base,'.csv'))
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 

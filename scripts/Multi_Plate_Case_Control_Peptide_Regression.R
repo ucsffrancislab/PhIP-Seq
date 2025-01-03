@@ -98,8 +98,12 @@ Z= 3.5
 #date="20250102"
 date=format(Sys.Date(),"%Y%m%d")
 
+output_base = paste0(owd, "/", gsub(" ","_",
+	paste(date, "Multiplate_Peptide_Comparison", paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
+
 # Log the parameter choices into a logfile
-logname = paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".log")
+#logname = paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".log")
+logname = paste0(output_base,'.log')
 
 cat("Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate.",
 	file=logname,sep="\n")
@@ -145,6 +149,7 @@ for(i in c(1:length(plates))){
 	Zfile = Zfile[-2,]
 	colnames(Zfile) = Zfile[1,]
 	Zfiles[[i]] = Zfile
+	colnames(species_ids[[i]]) = c("id", "species")
 }
 rm(Zfile)
 rm(species_id)
@@ -315,13 +320,9 @@ colnames(pvalues) = c("peptide", "species",
 	paste0("freq_", groups_to_compare[2]),
 	"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
-	paste0(owd, "/", date, "_Multiplate_Peptide_Comparison_",
-		groups_to_compare[1], "_", groups_to_compare[2],"_Prop_test_results_", Z, ".csv"),
-	col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],paste0(output_base,'.csv'))
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
-
 
 
 
