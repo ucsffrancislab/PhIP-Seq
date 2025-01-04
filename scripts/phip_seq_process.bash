@@ -555,7 +555,7 @@ for threshold in ${THRESHOLDS}; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.7.peptides.found_public_epitope_counts.AFTER_scoring.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.AFTER_scoring.csv
 		chmod -w ${f}
 	fi
 
@@ -591,7 +591,7 @@ for threshold in ${THRESHOLDS}; do
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		#merge_results.py --int -o ${f} ${OUTPUT}/*_scoring.seropositive.csv
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitopes.*_scoring.txt
+		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitopes.*_scoring.seropositive.csv
 		chmod -w ${f}
 	fi
 
