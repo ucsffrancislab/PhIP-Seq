@@ -169,7 +169,7 @@ print("Read in the metadata file")
 meta = read.csv( opt$manifest, sep= ",", header = TRUE)
 
 #	don't need to read it as still in memory from above.
-
+#	DIFFERENT VARIABLE NAME
 #print("Read in the VirFrac file")
 #vir_fracs = read.csv(paste(opt$working_dir, virfracfilename, sep = "/"), header = TRUE)
 
@@ -183,15 +183,15 @@ meta = read.csv( opt$manifest, sep= ",", header = TRUE)
 print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
 #vir_score = vir_score[which(vir_score$id %in% uniqid),]
-vir_fracs = vir_fracs[which(vir_fracs$id %in% uniqid),]
+virfracs = virfracs[which(virfracs$id %in% uniqid),]
 
 cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
 controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
 
 print("Create a shell file for analysis")
-pvalues = data.frame(mat.or.vec(ncol(vir_fracs)-1, 4))
+pvalues = data.frame(mat.or.vec(ncol(virfracs)-1, 4))
 colnames(pvalues) = c( "species", "freq_case", "freq_control", "pval")
-pvalues$species = colnames(vir_fracs)[-1]
+pvalues$species = colnames(virfracs)[-1]
 
 
 for(i in c(1:nrow(pvalues))){
@@ -201,8 +201,8 @@ for(i in c(1:nrow(pvalues))){
 
 	# For each case, determine number of ids that are >3.5 in both reps
 
-	n_case_success = length(which(as.numeric(vir_fracs[which(vir_fracs$id %in% cases), which(colnames(vir_fracs) == species)]) > Vir_frac))
-	n_control_success = length(which(as.numeric(vir_fracs[which(vir_fracs$id %in% controls), which(colnames(vir_fracs) == species)]) > Vir_frac))
+	n_case_success = length(which(as.numeric(virfracs[which(virfracs$id %in% cases), which(colnames(virfracs) == species)]) > Vir_frac))
+	n_control_success = length(which(as.numeric(virfracs[which(virfracs$id %in% controls), which(colnames(virfracs) == species)]) > Vir_frac))
 
 	prop = prop.test(c(n_case_success, n_control_success), c(n_cases, n_control), p = NULL, alternative = "two.sided", correct = TRUE)
 	pvalues$freq_case[i] = n_case_success/n_cases
