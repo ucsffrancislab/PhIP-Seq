@@ -7,31 +7,47 @@
 #	Draws lines at Z = 3.5 and Z=10, and recodes any super large Z scores as Z = 15 for visualization sake.
 #	Creates a PDF "Manhattan_plots_[VIRUS]" with indication of the groups compared.
 
-library("optparse")
+#	library("optparse")
+#	
+#	option_list = list(
+#		make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
+#			help="Comma separated list of groups to compare", metavar="character"),
+#		make_option(c("-v", "--virus"), type="character", default=NULL,
+#			help="virus name", metavar="character"),
+#		make_option(c("-m", "--manifest"), type="character", default=NULL,
+#			help="manifest file name", metavar="character"),
+#		make_option(c("-d", "--working_dir"), type="character", default="./",
+#			help="working dir [default= %default]", metavar="character")
+#	);
+#	
+#	opt_parser = OptionParser(option_list=option_list);
+#	opt = parse_args(opt_parser);
+#	
+#	if (is.null(opt$manifest)){
+#		print_help(opt_parser)
+#		stop("manifest file required.\n", call.=FALSE)
+#	}
+#	
+#	if (is.null(opt$virus)){
+#		print_help(opt_parser)
+#		stop("virus name required.\n", call.=FALSE)
+#	}
 
-option_list = list(
-	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-		help="Comma separated list of groups to compare", metavar="character"),
-	make_option(c("-v", "--virus"), type="character", default=NULL,
-		help="virus name", metavar="character"),
-	make_option(c("-m", "--manifest"), type="character", default=NULL,
-		help="manifest file name", metavar="character"),
-	make_option(c("-d", "--working_dir"), type="character", default="./",
-		help="working dir [default= %default]", metavar="character")
-);
 
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
+library("argparse")
+args=commandArgs()
+scriptname=sub("--file=", "", args[grepl("--file=", args)]))
+parser <- ArgumentParser(description=scriptname)
+parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE,action="append",
+	help="group to compare (use multiple times for each)", metavar="group")
+parser$add_argument("-v", "--virus", type="character", default=NULL, required=TRUE,
+	help="virus name", metavar="virus species")
+parser$add_argument("-m", "--manifest", type="character", default=NULL,required=TRUE,
+	help="manifest file name", metavar="manifest")
+parser$add_argument("-d", "--working_dir", type="character", default="./",
+	help="working dir [default=%(default)s]", metavar="directory")
+opt <- parser$parse_args()
 
-if (is.null(opt$manifest)){
-	print_help(opt_parser)
-	stop("manifest file required.\n", call.=FALSE)
-}
-
-if (is.null(opt$virus)){
-	print_help(opt_parser)
-	stop("virus name required.\n", call.=FALSE)
-}
 
 
 
@@ -44,7 +60,7 @@ library(gridExtra)
 
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
 #groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
-groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 print("Comparing these groups")
 print(groups_to_compare)
 
