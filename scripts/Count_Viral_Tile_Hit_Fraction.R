@@ -140,7 +140,11 @@ for( j in c(2:ncol(virfracs))){
 	}
 }
 
-outfile=paste0(opt$working_dir, "/", "Viral_Frac_Hits_Z_", Z, ".csv")
+outfile=paste0(opt$working_dir, "/",
+	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+
+#outfile=paste0(opt$working_dir, "/", "Viral_Frac_Hits_Z_", Z, ".csv")
+
 print(paste0("Writing ",outfile))
 write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
@@ -164,9 +168,9 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 Vir_frac = 0.05
 #virfracfilename = paste0("Viral_Frac_Hits_Z_",Z,".csv")
 
-print("Read in the metadata file")
+#print("Read in the metadata file")
 
-meta = read.csv( opt$manifest, sep= ",", header = TRUE)
+#meta = read.csv( opt$manifest, sep= ",", header = TRUE)
 
 #	don't need to read it as still in memory from above.
 #	DIFFERENT VARIABLE NAME
