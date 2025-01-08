@@ -170,12 +170,18 @@ viral_plotfile = paste0(
 pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
 for(stat in cc){
+	print(paste0("for(stat in cc){ - ",stat))
 	statids = uniqid[which(uniqid %in% meta$subject[which(meta$group== stat)])]
 	plots = list()
 	plot_counter = 1
+	before1=Sys.time()
 	for(indiv in statids){
+		print(paste0("for(indiv in statids){ - ",indiv))
 		plot_df$Zscore = 0
+		print(paste0("Time : ",format(Sys.time(),"%Y%m%d%H%M%S")))
+		before2=Sys.time()
 		for(i in c(1:nrow(plot_df))){
+			print(paste0("for(i in c(1:nrow(plot_df))){ - ",i))
 			ID = plot_df$ID[i]
 			Z = min(as.numeric(Zfile3[grep(indiv,Zfile3[,1]), which(Zfile3[1,]== ID)] ))
 			if(is.na(Z)){
@@ -195,6 +201,12 @@ for(stat in cc){
 
 			plot_df$Zscore[i] = Z
 		} # Loop over epitope IDs
+		print("Done with the zscore min loop")
+		print(paste0("Time : ",format(Sys.time(),"%Y%m%d%H%M%S")))
+		after2=Sys.time()
+		print(paste0(format(before2,"%Y%m%d%H%M%S")," - ",format(after2,"%Y%m%d%H%M%S")))
+		print(difftime(after2,before2,units='min'))
+
 		plot_df$Public = factor(plot_df$Public, levels = c("0", "1"))
 		plots[[plot_counter]] = ggplot(plot_df, aes(x=index, y=Zscore, color=Public, shape = Public, size =Public)) +
 			geom_point()+
@@ -207,19 +219,22 @@ for(stat in cc){
 			geom_hline(yintercept = (3.5), linetype="dashed", color = "blue") +ylim(c(0,17)) +
 			geom_hline(yintercept = (10), linetype="dashed", color = "gold")
 			plot_counter = plot_counter +1
-		} # Loop over individuals in the group
 
-		# This is an attempt at allowing an arbitrary number of plots be drawn, separating pages into only plots of max n_plots_per_page.
-		# Not sure if the while logic may fail in some case I havent thought of yet.
+	} # Loop over individuals in the group
+	after1=Sys.time()
+	print(difftime(after1,before1,units='min'))
 
-		pcount = 1
+	# This is an attempt at allowing an arbitrary number of plots be drawn, separating pages into only plots of max n_plots_per_page.
+	# Not sure if the while logic may fail in some case I havent thought of yet.
+
+	pcount = 1
+	pmax = min(length(plots), (pcount + n_plots_per_page - 1))
+	while(pcount <= pmax){
+		myplot = grid.arrange(grobs = lapply(pcount:pmax, function(i) plots[[i]]), ncol=1, nrow=n_plots_per_page, top = opt$virus)
+		print(myplot)
+		pcount = pcount+n_plots_per_page
 		pmax = min(length(plots), (pcount + n_plots_per_page - 1))
-		while(pcount <= pmax){
-			myplot = grid.arrange(grobs = lapply(pcount:pmax, function(i) plots[[i]]), ncol=1, nrow=n_plots_per_page, top = opt$virus)
-			print(myplot)
-			pcount = pcount+n_plots_per_page
-			pmax = min(length(plots), (pcount + n_plots_per_page - 1))
-		}
+	}
 
 } # Loop over Case Control
 
