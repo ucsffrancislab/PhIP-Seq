@@ -36,7 +36,7 @@
 
 library("argparse")
 args=commandArgs()
-scriptname=sub("--file=", "", args[grepl("--file=", args)]))
+scriptname=sub("--file=", "", args[grepl("--file=", args)])
 parser <- ArgumentParser(description=scriptname)
 parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE,action="append",
 	help="group to compare (use multiple times for each)", metavar="group")
