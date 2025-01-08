@@ -135,15 +135,34 @@ done < <( awk -F, '(NR>1){print $2"\t"$3"\t"$4}' ${MANIFEST} )
 
 echo "Summing up blanks"
 
-f=${OUTPUT}/counts/input/All.count.csv.gz
+f=${OUTPUT}/counts/input/All.sum.count.csv.gz
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
-	sum_counts_files.py --int -o ${OUTPUT}/counts/input/All.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
-	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.count.csv
-	gzip ${OUTPUT}/counts/input/All.count.csv
+	sum_counts_files.py --int -o ${OUTPUT}/counts/input/All.sum.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
+	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.sum.count.csv
+	gzip ${OUTPUT}/counts/input/All.sum.count.csv
 	chmod -w ${f}
 fi
+
+
+
+
+echo "Median up blanks"
+
+f=${OUTPUT}/counts/input/All.median.count.csv.gz
+if [ -f ${f} ] && [ ! -w ${f} ] ; then
+	echo "Write-protected ${f} exists. Skipping."
+else
+	median_counts_files.py --int -o ${OUTPUT}/counts/input/All.median.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
+	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.median.count.csv
+	gzip ${OUTPUT}/counts/input/All.median.count.csv
+	chmod -w ${f}
+fi
+
+
+
+
 
 
 
@@ -160,7 +179,7 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 	merge_all_combined_counts_files.py --de_nan --int -o ${f} \
-		${OUTPUT}/counts/*.q${Q}.count.csv.gz ${OUTPUT}/counts/input/All.count.csv.gz
+		${OUTPUT}/counts/*.q${Q}.count.csv.gz ${OUTPUT}/counts/input/All.median.count.csv.gz
 	chmod -w ${f}
 fi
 
