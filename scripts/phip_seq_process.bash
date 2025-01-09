@@ -155,7 +155,7 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 	median_counts_files.py --int -o ${OUTPUT}/counts/input/All.median.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
-	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.median.count.csv
+	sed -i '1s/median/input/' ${OUTPUT}/counts/input/All.median.count.csv
 	gzip ${OUTPUT}/counts/input/All.median.count.csv
 	chmod -w ${f}
 fi
