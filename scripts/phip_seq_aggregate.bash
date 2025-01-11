@@ -9,8 +9,8 @@ dir=$2
 
 echo "Annotating Zscores.minimums.filtered.t.csv"
 
-echo "- select only those tiles in All 4 Plibs"
-join -t, --header out.all/All4Plibs.csv $dir/All.count.Zscores.minimums.csv > ${dir}/tmp0.csv
+echo "- select only those tiles in All Plibs"
+join -t, --header out.all/AllPlibs.csv $dir/All.count.Zscores.minimums.csv > ${dir}/tmp0.csv
 
 #	id,14061-01,14091-01,14160-01,14167-01,14178-01,14
 #	100,-0.7610039640743376,-0.5636348697154461,-0.411
