@@ -139,6 +139,7 @@ f=${OUTPUT}/counts/input/All.sum.count.csv.gz
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 	sum_counts_files.py --int -o ${OUTPUT}/counts/input/All.sum.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
 	sed -i '1s/sum/input/' ${OUTPUT}/counts/input/All.sum.count.csv
 	gzip ${OUTPUT}/counts/input/All.sum.count.csv
@@ -154,6 +155,7 @@ f=${OUTPUT}/counts/input/All.median.count.csv.gz
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 	median_counts_files.py --int -o ${OUTPUT}/counts/input/All.median.count.csv ${OUTPUT}/counts/input/*.q${Q}.count.csv.gz
 	sed -i '1s/median/input/' ${OUTPUT}/counts/input/All.median.count.csv
 	gzip ${OUTPUT}/counts/input/All.median.count.csv
@@ -178,6 +180,7 @@ f=${OUTPUT}/All.count.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 	merge_all_combined_counts_files.py --de_nan --int -o ${f} \
 		${OUTPUT}/counts/*.q${Q}.count.csv.gz ${OUTPUT}/counts/input/All.median.count.csv.gz
 	chmod -w ${f}
@@ -203,6 +206,7 @@ f=${OUTPUT}/All.count.Zscores.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 
 	#	elledge_Zscore_analysis.R ${OUTPUT}/All.count.csv
 	#	mv ${OUTPUT}/All.count.Zscores.csv ${OUTPUT}/tmp1.csv
@@ -234,6 +238,7 @@ f=${OUTPUT}/All.public_epitope_annotations.Zscores.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 	join --header -t, /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.join_sorted.csv \
 		${OUTPUT}/All.count.Zscores.csv > ${f}
 		#${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv > ${f}
@@ -281,6 +286,7 @@ while read subject ; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 			booleanize_Zscore_replicates.py --sample ${subject} \
 				--threshold ${threshold} \
 				--matrix ${OUTPUT}/All.count.Zscores.csv \
@@ -294,6 +300,7 @@ while read subject ; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
+		echo "Creating ${f}"
 		minimum_Zscore_replicates.py --sample ${subject} \
 			--matrix ${OUTPUT}/All.count.Zscores.csv \
 			--output ${f} ${all_samples}
@@ -308,6 +315,7 @@ f=${OUTPUT}/All.count.Zscores.minimums.csv
 if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
+	echo "Creating ${f}"
 	#merge_all_combined_counts_files.py -o ${f} \
 	merge_all_combined_counts_files.py -o ${OUTPUT}/tmp.csv \
 		${OUTPUT}/*.count.Zscores.minimums.csv
@@ -347,6 +355,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			tail -q -n +2 ${OUTPUT}/*.count.Zscores.${threshold}.hits.csv | sort -t, -k1,1 \
 				| awk -F, '($2=="True")' > ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv
@@ -379,6 +388,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 			elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.csv \
 				--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
 				--species_order ${SPECIES_ORDER} > ${OUTPUT}/tmp 
@@ -397,6 +407,7 @@ for threshold in ${THRESHOLDS}; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
+		echo "Creating ${f}"
 		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.virus_scores.csv
 		chmod -w ${f}
 	fi
@@ -429,6 +440,8 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
+
 			join --header -t, ~/github/ucsffrancislab/PhIP-Seq/Elledge/VirScan_viral_thresholds.csv ${virus_scores} \
 				| awk 'BEGIN{FS=OFS=","}(NR==1){print "Species",$3}(NR>1 && $3>$2){print $1,$3}' \
 				> ${f}
@@ -455,6 +468,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -468,6 +482,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -484,6 +499,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -502,6 +518,7 @@ for threshold in ${THRESHOLDS}; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
+		echo "Creating ${f}"
 		#merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.BEFORE_scoring.test.csv
 		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.BEFORE_scoring.csv
 		chmod -w ${f}
@@ -526,6 +543,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -539,6 +557,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -555,6 +574,7 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
 				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
@@ -574,6 +594,7 @@ for threshold in ${THRESHOLDS}; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
+		echo "Creating ${f}"
 		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.AFTER_scoring.csv
 		chmod -w ${f}
 	fi
@@ -588,6 +609,8 @@ for threshold in ${THRESHOLDS}; do
 		if [ -f ${f} ] && [ ! -w ${f} ] ; then
 			echo "Write-protected ${f} exists. Skipping."
 		else
+			echo "Creating ${f}"
+
 			join --header -t, ${scoring} \
 				${scoring%.found_public_epitopes.*_scoring.txt}.virus_scores.threshold.csv > ${f}
 
@@ -609,6 +632,7 @@ for threshold in ${THRESHOLDS}; do
 	if [ -f ${f} ] && [ ! -w ${f} ] ; then
 		echo "Write-protected ${f} exists. Skipping."
 	else
+		echo "Creating ${f}"
 		#merge_results.py --int -o ${f} ${OUTPUT}/*_scoring.seropositive.csv
 		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitopes.*_scoring.seropositive.csv
 		chmod -w ${f}
