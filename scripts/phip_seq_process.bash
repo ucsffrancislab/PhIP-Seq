@@ -4,6 +4,8 @@
 hostname
 echo "Slurm job id:${SLURM_JOBID}:"
 date
+start_seconds=$SECONDS
+
 
 
 set -e	#	exit if any command fails
@@ -642,7 +644,13 @@ for threshold in ${THRESHOLDS}; do
 done	#	thresholds
 
 
+echo "Done"
+date
 
+end_seconds=$SECONDS
+seconds=$((end_seconds-start_seconds))
+printf "%d seconds passed\n" $seconds
+echo "Elapsed: $(($seconds / 3600))hrs $((($seconds / 60) % 60))min $(($seconds % 60))sec"
 
 
 
