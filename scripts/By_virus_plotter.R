@@ -38,11 +38,11 @@ library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
 parser <- ArgumentParser(description=scriptname)
-parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE,action="append",
+parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE, action="append",
 	help="group to compare (use multiple times for each)", metavar="group")
 parser$add_argument("-v", "--virus", type="character", default=NULL, required=TRUE,
 	help="virus name", metavar="virus species")
-parser$add_argument("-m", "--manifest", type="character", default=NULL,required=TRUE,
+parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
 	help="manifest file name", metavar="manifest")
 parser$add_argument("-d", "--working_dir", type="character", default="./",
 	help="working dir [default=%(default)s]", metavar="directory")

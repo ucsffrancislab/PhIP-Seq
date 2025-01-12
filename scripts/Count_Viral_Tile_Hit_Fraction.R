@@ -8,39 +8,58 @@
 #	We are using this ultimately as an alternate way to call a virus present, by thresholding the proportion of tiles present (see next file). This of course comes with many caveats, like tile uniqueness/homology.
 
 
-library("optparse")
+#library("optparse")
+#
+#option_list = list(
+#  make_option(c("-z", "--zscore"), type="double", default=3.5,
+#    help="Zscore threshold", metavar="character"),
+#	make_option(c("-a", "--group1"), type="character", default=NULL,
+#		help="First group to compare", metavar="character"),
+#	make_option(c("-b", "--group2"), type="character", default=NULL,
+#		help="Second group to compare", metavar="character"),
+#	make_option(c("-m", "--manifest"), type="character", default=NULL,
+#		help="manifest file name", metavar="character"),
+#	make_option(c("-d", "--working_dir"), type="character", default="./",
+#		help="working dir [default= %default]", metavar="character")
+#);
+#
+#opt_parser = OptionParser(option_list=option_list);
+#opt = parse_args(opt_parser);
+#
+#
+#if (is.null(opt$manifest)){
+#	print_help(opt_parser)
+#	stop("manifest file required.\n", call.=FALSE)
+#}
+#
+#if (is.null(opt$group1)){
+#	print_help(opt_parser)
+#	stop("group1 required.\n", call.=FALSE)
+#}
+#
+#if (is.null(opt$group2)){
+#	print_help(opt_parser)
+#	stop("group2 required.\n", call.=FALSE)
+#}
 
-option_list = list(
-  make_option(c("-z", "--zscore"), type="double", default=3.5,
-    help="Zscore threshold", metavar="character"),
-	make_option(c("-a", "--group1"), type="character", default=NULL,
-		help="First group to compare", metavar="character"),
-	make_option(c("-b", "--group2"), type="character", default=NULL,
-		help="Second group to compare", metavar="character"),
-	make_option(c("-m", "--manifest"), type="character", default=NULL,
-		help="manifest file name", metavar="character"),
-	make_option(c("-d", "--working_dir"), type="character", default="./",
-		help="working dir [default= %default]", metavar="character")
-);
-
-opt_parser = OptionParser(option_list=option_list);
-opt = parse_args(opt_parser);
 
 
-if (is.null(opt$manifest)){
-	print_help(opt_parser)
-	stop("manifest file required.\n", call.=FALSE)
-}
+library("argparse")
+args=commandArgs()
+scriptname=sub("--file=", "", args[grepl("--file=", args)])
+parser <- ArgumentParser(description=scriptname)
+parser$add_argument("-a", "--group1", type="character", required=TRUE,
+	help="first group to compare", metavar="group")
+parser$add_argument("-b", "--group2", type="character", required=TRUE,
+	help="second group to compare", metavar="group")
+parser$add_argument("-z", "--zscore", type="double", default=3.5,
+	help="zscore threshold", metavar="double")
+parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
+	help="manifest file name", metavar="manifest")
+parser$add_argument("-d", "--working_dir", type="character", default="./",
+	help="working dir [default=%(default)s]", metavar="directory")
+opt <- parser$parse_args()
 
-if (is.null(opt$group1)){
-	print_help(opt_parser)
-	stop("group1 required.\n", call.=FALSE)
-}
-
-if (is.null(opt$group2)){
-	print_help(opt_parser)
-	stop("group2 required.\n", call.=FALSE)
-}
 
 
 
