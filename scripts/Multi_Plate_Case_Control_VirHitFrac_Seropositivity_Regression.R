@@ -13,6 +13,36 @@
 
 
 
+library("argparse")
+args=commandArgs()
+scriptname=sub("--file=", "", args[grepl("--file=", args)])
+parser <- ArgumentParser(description=scriptname)
+parser$add_argument("-a", "--group1", type="character", required=TRUE,
+	help="first group to compare", metavar="group")
+parser$add_argument("-b", "--group2", type="character", required=TRUE,
+	help="second group to compare", metavar="group")
+parser$add_argument("-z", "--zscore", type="double", default=3.5,
+	help="zscore threshold", metavar="double")
+parser$add_argument("-p", "--plate", type="character", required=TRUE, action="append",
+	help="plate to compare (use multiple times for each)", metavar="group")
+parser$add_argument("-o", "--output_dir", type="character", default="./",
+	help="output dir [default=%(default)s]", metavar="directory")
+opt <- parser$parse_args()
+
+
+groups_to_compare = c(opt$group1,opt$group2)
+print("Comparing these groups")
+print(groups_to_compare)
+
+plates=opt$plate
+print("Comparing these plates")
+print(plates)
+
+owd=opt$output_dir
+print("Output dir")
+print(owd)
+dir.create(owd,showWarnings=F)
+
 # Multi plate Logistic regression for seropositivity (hit Frac) on case/control status, adjusting for age, sex, and plate 
 
 
@@ -26,24 +56,39 @@
 # groups_to_compare = c("case", "control")
 
 ##Pemphigus
-plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20250110-PhIP/out.plate13", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20250110-PhIP/out.plate14")
-owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
+#plates = c("/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20250110-PhIP/out.plate13", "/Users/gguerra/Library/CloudStorage/Box-Box/Francis _Lab_Share/20241224-Illumina-PhIP/20250110-PhIP/out.plate14")
+#owd = "/Users/gguerra/Library/CloudStorage/Box-Box/Francis\ _Lab_Share/20250102-PhIP-pemphigus"
 #groups_to_compare=c("PF Patient", "Endemic Control" )
 #groups_to_compare=c("PF Patient", "Non Endemic Control" )
-groups_to_compare=c("Endemic Control", "Non Endemic Control" )
+#groups_to_compare=c("Endemic Control", "Non Endemic Control" )
+
+#	Z_thresh = 3.5
 
 
-Z_thresh = 3.5
+Z_thresh = opt$zscore
 Vir_frac = 0.05
 
-virfracfilename = paste("Viral_Frac_Hits_Z-", Z_thresh, "-", groups_to_compare[1], "-", groups_to_compare[2],".csv", sep = "")
+#virfracfilename = paste("Viral_Frac_Hits_Z-", Z_thresh, "-", groups_to_compare[1], "-", groups_to_compare[2],".csv", sep = "")
+
+#	DO NOT INCLUDE THE DIRNAME
+virfracfilename = paste0(
+	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z_thresh, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+#print(virfracfilename)
+
+date=format(Sys.Date(),"%Y%m%d")
 
 
-date="20250113"
+output_base = paste0(owd, "/", gsub(" ","_",
+	paste(date, "Multiplate_VirHitFrac_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results",Z_thresh, sep="-")))
+
+# Log the parameter choices into a logfile
+logname = paste0(output_base,'.log')
+
+## Log the parameter choices into a logfile 
+#logname = paste(owd, "/", date, "_Multiplate_VirHitFrac_Seropositivity_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log", sep = "")
 
 
-# Log the parameter choices into a logfile 
-logname = paste(owd, "/", date, "_Multiplate_VirHitFrac_Seropositivity_Comparison_", groups_to_compare[1], "_", groups_to_compare[2],"_test_results", ".log", sep = "")
+
 cat("Multi plate Logistic regression for presence of virus on case/control status, adjusting for age, sex, and plate. Using our calculated hit fraction for virus calling.",file=logname,sep="\n")
 
 cat("\nPlates used in this analysis:", file = logname, append = TRUE, sep = "\n")
@@ -223,7 +268,17 @@ cat("...Complete.", file = logname, append = TRUE, sep = "\n")
 
 colnames(pvalues) = c( "species", paste("freq_", groups_to_compare[1], sep= ""), paste("freq_", groups_to_compare[2], sep= ""),"beta", "se", "pval")
 
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(owd, "/", date, "_Multiplate_VirFrac_Seropositivity_Comparison_Z-", Z_thresh, "-VirFrac-", Vir_frac, "-", groups_to_compare[1], "_", groups_to_compare[2],"_test_results.csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+
+#output_base = paste0(owd, "/", gsub(" ","_",
+#	paste(date, "Multiplate_VirHitFrac_Seropositivity_Comparison", paste(groups_to_compare, collapse="-"),"test_results",Z, sep="-")))
+
+# Log the parameter choices into a logfile
+#logname = paste0(output_base,'.log')
+
+#write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste(owd, "/", date, "_Multiplate_VirFrac_Seropositivity_Comparison_Z-", Z_thresh, "-VirFrac-", Vir_frac, "-", groups_to_compare[1], "_", groups_to_compare[2],"_test_results.csv", sep = ""), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], paste0(output_base,'.csv'), col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+
 
 cat("\n Analysis complete.", file = logname, append = TRUE, sep = "\n")
 
