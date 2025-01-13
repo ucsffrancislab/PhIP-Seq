@@ -5,47 +5,6 @@
 #	Output p-values are not adjusted for any multiple testing. NA p values are produced when tile proportion is 1 in both or 0 in both.
 
 
-
-
-
-#library("optparse")
-#
-#option_list = list(
-#  make_option(c("-z", "--zscore"), type="double", default=3.5,
-#    help="Zscore threshold", metavar="character"),
-#	make_option(c("-a", "--group1"), type="character", default=NULL,
-#		help="First group to compare", metavar="character"),
-#	make_option(c("-b", "--group2"), type="character", default=NULL,
-#		help="Second group to compare", metavar="character"),
-#	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-#		help="Comma separated list of groups to compare", metavar="character"),
-#	make_option(c("-m", "--manifest"), type="character", default=NULL,
-#		help="manifest file name", metavar="character"),
-#	make_option(c("-d", "--working_dir"), type="character", default="./",
-#		help="working dir [default= %default]", metavar="character")
-#);
-#
-#opt_parser = OptionParser(option_list=option_list);
-#opt = parse_args(opt_parser);
-#
-#
-#if (is.null(opt$manifest)){
-#	print_help(opt_parser)
-#	stop("manifest file required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group1)){
-#	print_help(opt_parser)
-#	stop("group1 required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group2)){
-#	print_help(opt_parser)
-#	stop("group2 required.\n", call.=FALSE)
-#}
-
-
-
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
@@ -63,24 +22,15 @@ parser$add_argument("-d", "--working_dir", type="character", default="./",
 opt <- parser$parse_args()
 
 
-
-
 # For each tile, compares proportion of present in each group using 2-prop test. Reports proportions and associated p-value.
 
 # Input parameters
-#groups_to_compare = c("case", "control")
-#groups_to_compare=c("PF Patient", "Endemic Control" )
-#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
-#groups_to_compare=unlist(strsplit(opt$groups, split = ","))
 
 groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-#Z = 3.5
 Z = opt$zscore
-
-
 
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)

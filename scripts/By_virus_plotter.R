@@ -7,32 +7,6 @@
 #	Draws lines at Z = 3.5 and Z=10, and recodes any super large Z scores as Z = 15 for visualization sake.
 #	Creates a PDF "Manhattan_plots_[VIRUS]" with indication of the groups compared.
 
-#	library("optparse")
-#	
-#	option_list = list(
-#		make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-#			help="Comma separated list of groups to compare", metavar="character"),
-#		make_option(c("-v", "--virus"), type="character", default=NULL,
-#			help="virus name", metavar="character"),
-#		make_option(c("-m", "--manifest"), type="character", default=NULL,
-#			help="manifest file name", metavar="character"),
-#		make_option(c("-d", "--working_dir"), type="character", default="./",
-#			help="working dir [default= %default]", metavar="character")
-#	);
-#	
-#	opt_parser = OptionParser(option_list=option_list);
-#	opt = parse_args(opt_parser);
-#	
-#	if (is.null(opt$manifest)){
-#		print_help(opt_parser)
-#		stop("manifest file required.\n", call.=FALSE)
-#	}
-#	
-#	if (is.null(opt$virus)){
-#		print_help(opt_parser)
-#		stop("virus name required.\n", call.=FALSE)
-#	}
-
 
 library("argparse")
 args=commandArgs()
@@ -49,27 +23,17 @@ parser$add_argument("-d", "--working_dir", type="character", default="./",
 opt <- parser$parse_args()
 
 
-
-
 library(ggplot2)
 library(gridExtra)
 
 
-
 # Input parameters
-
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
-#groups_to_compare=c("PF Patient", "Endemic Control" , "Non Endemic Control")
-#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 groups_to_compare=opt$groups_to_compare
 print("Comparing these groups")
 print(groups_to_compare)
 
-
 n_plots_per_page = 5
-
-
-
 
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)

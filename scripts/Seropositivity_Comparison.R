@@ -8,44 +8,6 @@
 #	Outputs a file "Seropositivity_Prop_test_results*" which also indicates the two groups compared.
 
 
-#library("optparse")
-#
-#option_list = list(
-#  make_option(c("-z", "--zscore"), type="double", default=3.5,
-#    help="Zscore threshold", metavar="character"),
-#	make_option(c("-a", "--group1"), type="character", default=NULL,
-#		help="First group to compare", metavar="character"),
-#	make_option(c("-b", "--group2"), type="character", default=NULL,
-#		help="Second group to compare", metavar="character"),
-##	make_option(c("-g", "--groups_to_compare"), type="character", default=NULL,
-##		help="Comma separated list of groups to compare", metavar="character"),
-#	make_option(c("-m", "--manifest"), type="character", default=NULL,
-#		help="manifest file name", metavar="character"),
-#	make_option(c("-d", "--working_dir"), type="character", default="./",
-#		help="working dir [default= %default]", metavar="character")
-#);
-#
-#opt_parser = OptionParser(option_list=option_list);
-#opt = parse_args(opt_parser);
-#
-#
-#if (is.null(opt$manifest)){
-#	print_help(opt_parser)
-#	stop("manifest file required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group1)){
-#	print_help(opt_parser)
-#	stop("group1 required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group2)){
-#	print_help(opt_parser)
-#	stop("group2 required.\n", call.=FALSE)
-#}
-
-
-
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])

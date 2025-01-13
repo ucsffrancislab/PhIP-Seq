@@ -9,47 +9,6 @@
 #	The file will also output a logfile with similar naming convention, which includes the details of the plates used in the analysis, sample sizes, etc.
 
 
-
-#library("optparse")
-#
-#option_list = list(
-#	make_option(c("-z", "--zscore"), type="double", default=3.5,
-#		help="Zscore threshold", metavar="character"),
-#	make_option(c("-a", "--group1"), type="character", default=NULL,
-#		help="First group to compare", metavar="character"),
-#	make_option(c("-b", "--group2"), type="character", default=NULL,
-#		help="Second group to compare", metavar="character"),
-#	make_option(c("-p", "--plates_to_compare"), type="character", default=NULL,
-#		help="Comma separated list of plate dirs to compare", metavar="character"),
-#	make_option(c("-o", "--output_dir"), type="character", default="./",
-#		help="output dir [default= %default]", metavar="character")
-#);
-#
-#opt_parser = OptionParser(option_list=option_list);
-#opt = parse_args(opt_parser);
-#
-#if (is.null(opt$plates_to_compare)){
-#	print_help(opt_parser)
-#	stop("plates_to_compare required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$output_dir)){
-#	print_help(opt_parser)
-#	stop("output_dir required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group1)){
-#	print_help(opt_parser)
-#	stop("group1 required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group2)){
-#	print_help(opt_parser)
-#	stop("group2 required.\n", call.=FALSE)
-#}
-
-
-
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
@@ -71,7 +30,6 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-#plates=unlist(strsplit(opt$plates_to_compare, split = ","))
 plates=opt$plate
 print("Comparing these plates")
 print(plates)

@@ -8,42 +8,6 @@
 #	We are using this ultimately as an alternate way to call a virus present, by thresholding the proportion of tiles present (see next file). This of course comes with many caveats, like tile uniqueness/homology.
 
 
-#library("optparse")
-#
-#option_list = list(
-#  make_option(c("-z", "--zscore"), type="double", default=3.5,
-#    help="Zscore threshold", metavar="character"),
-#	make_option(c("-a", "--group1"), type="character", default=NULL,
-#		help="First group to compare", metavar="character"),
-#	make_option(c("-b", "--group2"), type="character", default=NULL,
-#		help="Second group to compare", metavar="character"),
-#	make_option(c("-m", "--manifest"), type="character", default=NULL,
-#		help="manifest file name", metavar="character"),
-#	make_option(c("-d", "--working_dir"), type="character", default="./",
-#		help="working dir [default= %default]", metavar="character")
-#);
-#
-#opt_parser = OptionParser(option_list=option_list);
-#opt = parse_args(opt_parser);
-#
-#
-#if (is.null(opt$manifest)){
-#	print_help(opt_parser)
-#	stop("manifest file required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group1)){
-#	print_help(opt_parser)
-#	stop("group1 required.\n", call.=FALSE)
-#}
-#
-#if (is.null(opt$group2)){
-#	print_help(opt_parser)
-#	stop("group2 required.\n", call.=FALSE)
-#}
-
-
-
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
@@ -61,8 +25,6 @@ parser$add_argument("-d", "--working_dir", type="character", default="./",
 opt <- parser$parse_args()
 
 
-
-
 # For each virus, make a call of positive or negative based on at least 5% of possible tiles hitting, then measure proportion.
 # Input parameters
 
@@ -72,21 +34,12 @@ print("Comparing these groups")
 print(groups_to_compare)
 
 
-
-
-
-
-
 # Compute fraction of virus specific tiles hit for each sample
 
 # For each virus, calculate the number of tiles called positive (both reps Z > Z threshold), and divide by the total number of represented tiles for that virus.
 
-
 # Input parameters
 
-
-
-#Z = 3.5
 Z = opt$zscore
 
 print("Read in the metadata file")
@@ -108,7 +61,6 @@ if("type" %in% Zfile[2,c(1:3)]){
 	to_remove = which(Zfile[2,c(1:3)]== "type")
 	Zfile = Zfile[,-to_remove]
 }
-
 
 
 print("Extract the peptide information")
@@ -162,8 +114,6 @@ for( j in c(2:ncol(virfracs))){
 outfile=paste0(opt$working_dir, "/",
 	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
 
-#outfile=paste0(opt$working_dir, "/", "Viral_Frac_Hits_Z_", Z, ".csv")
-
 print(paste0("Writing ",outfile))
 write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
@@ -172,10 +122,7 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 #	2: In FUN(newX[, i], ...) : no non-missing arguments to min; returning Inf
 
 
-
-
 #	merged 2 scripts since one needs the output of the other
-
 
 
 #	Assesses differences in the proportion of samples with virus called present between two user specified groups (from the manifest "type" column).
@@ -183,24 +130,7 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 #	Outputs a file in the same test directory called "Viral_Sero_test_results*" with indicators of the groups and parameters used.
 
 
-
 Vir_frac = 0.05
-#virfracfilename = paste0("Viral_Frac_Hits_Z_",Z,".csv")
-
-#print("Read in the metadata file")
-
-#meta = read.csv( opt$manifest, sep= ",", header = TRUE)
-
-#	don't need to read it as still in memory from above.
-#	DIFFERENT VARIABLE NAME
-#print("Read in the VirFrac file")
-#vir_fracs = read.csv(paste(opt$working_dir, virfracfilename, sep = "/"), header = TRUE)
-
-# # Read in the viral score file
-# vs = read.csv(paste(mwd, "/", virfilename, sep =""),sep = ",", header= FALSE )
-# vir_score = data.frame(t(vs))
-# colnames(vir_score) = vir_score[1,]
-# vir_score = vir_score[-1,]
 
 
 print("Unique samples to keep")
