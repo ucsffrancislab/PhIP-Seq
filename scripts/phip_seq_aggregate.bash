@@ -219,7 +219,7 @@ echo "Annotate Zscore minimums"
 
 echo "- Sort All.count.Zscores.minimums.csv by tile, but probably already sorted"
 #head -1 ${dir}/All.count.Zscores.minimums.csv | sed -e '1s/dup//g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
-head -1 ${dir}/All.count.Zscores.minimums.csv >> ${dir}/tmp1.csv
+head -1 ${dir}/All.count.Zscores.minimums.csv > ${dir}/tmp1.csv
 tail -q -n +2 ${dir}/All.count.Zscores.minimums.csv | sort -t, -k1,1 >> ${dir}/tmp1.csv
 head -5 ${dir}/tmp1.csv | cut -c1-100
 
@@ -237,12 +237,17 @@ head -5 ${dir}/tmp3.csv | cut -c1-100
 #tail -n +3 ${dir}/tmp3.csv | sort -t, -k1,1 >> ${dir}/tmp4.csv
 ###	tmp3 == tmp4!
 
+#	tmp1 usually the same as tmp3
+
 echo "- join with virus species"
-echo -n "x," > ${dir}/tmp5.csv
+
+#echo -n "x," > ${dir}/tmp5.csv
 #head -1 ${dir}/tmp4.csv >> ${dir}/tmp5.csv
 #join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp4.csv ) >> ${dir}/tmp5.csv
-head -1 ${dir}/tmp3.csv >> ${dir}/tmp5.csv
-join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
+#head -1 ${dir}/tmp3.csv >> ${dir}/tmp5.csv
+#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
+
+join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp3.csv > ${dir}/tmp5.csv
 head -5 ${dir}/tmp5.csv | cut -c1-100
 
 echo "- transpose"
