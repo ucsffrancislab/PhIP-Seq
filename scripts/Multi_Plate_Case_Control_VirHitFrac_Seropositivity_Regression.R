@@ -21,6 +21,8 @@ parser$add_argument("-a", "--group1", type="character", required=TRUE,
 	help="first group to compare", metavar="group")
 parser$add_argument("-b", "--group2", type="character", required=TRUE,
 	help="second group to compare", metavar="group")
+parser$add_argument("-v", "--virfrac", type="double", default=0.05,
+	help="vir fraction", metavar="double")
 parser$add_argument("-z", "--zscore", type="double", default=3.5,
 	help="zscore threshold", metavar="double")
 parser$add_argument("-p", "--plate", type="character", required=TRUE, action="append",
@@ -45,9 +47,8 @@ dir.create(owd,showWarnings=F)
 
 # Multi plate Logistic regression for seropositivity (hit Frac) on case/control status, adjusting for age, sex, and plate
 
-
 Z_thresh = opt$zscore
-Vir_frac = 0.05
+Vir_frac = opt$virfrac	#	0.05
 
 #	DO NOT INCLUDE THE DIRNAME
 virfracfilename = paste0(
@@ -57,8 +58,8 @@ virfracfilename = paste0(
 date=format(Sys.Date(),"%Y%m%d")
 
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste(date, "Multiplate_VirHitFrac_Seropositivity_Comparison",
-	paste(groups_to_compare, collapse="-"),"test_results",Z_thresh, sep="-")))
+	paste(date, "Multiplate_VirFrac_Seropositivity_Comparison_Z",Z_thresh,"VirFrac",Vir_frac,
+	paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -83,9 +84,7 @@ mfs = list()
 for(i in c(1:length(plates))){
   virfile = read.csv(paste0(plates[i], "/", virfracfilename), header = TRUE, sep = ",")
 
-
   virfiles[[i]] = virfile
-
 
   mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
   if(length(mfname)!=1){
@@ -104,7 +103,6 @@ for(i in c(1:length(plates))){
 manifest = Reduce(rbind, mfs)
 # can get rid of mfs list.
 rm(mfs)
-
 
 
 # Identify the unique subjects to include in the analyses.
@@ -128,7 +126,8 @@ cat(paste0("\nTotal number of included viruses: ", length(common_virs)),
 
 # Convert every virus call into a binary 0/1 call based on >1 hits (Jake already filtered for public epitopes).
 
-cat("\nStart converting viral calls to  binary calls", file = logname, append = TRUE, sep = "\n")
+cat("\nStart converting viral calls to  binary calls",
+	file = logname, append = TRUE, sep = "\n")
 
 viral_calls = data.frame(mat.or.vec(length(uniq_sub), length(common_virs)+1))
 colnames(viral_calls) = c("ID", common_virs)
@@ -146,7 +145,9 @@ for(i in c(1:nrow(viral_calls))){
 	myCounts = data.frame(t(virfiles[[mp]][rloc, which(colnames(virfiles[[mp]]) %in% common_virs)]))
 	myCounts[,1]=as.numeric(myCounts[,1])
 	if(length(which((common_virs == row.names(myCounts))==FALSE))>0){
-		cat(paste("\nError:", id, ":", "plate", mp, ":Viruses out of order, need to ensure they are ordered the same as the common_virs vector. This should never appear.", sep = " "), file=logname, append = TRUE, sep= "\n")
+		cat(paste("\nError:", id, ":", "plate", mp,
+			":Viruses out of order, need to ensure they are ordered the same as the common_virs vector. This should never appear.",
+			sep = " "), file=logname, append = TRUE, sep= "\n")
 	}
 
 	viral_calls[i, -1] = ifelse(myCounts > Vir_frac, 1, 0)
@@ -203,12 +204,14 @@ pvalues$species = common_virs
 n_case = length(which(datfile$case==1))
 n_control = length(which(datfile$case==0))
 
-cat(paste("\nTotal number of ", groups_to_compare[1], ": ", n_case, sep =""), file = logname, append = TRUE, sep = "\n")
-cat(paste("\nTotal number of ", groups_to_compare[2], ": ", n_control, sep =""), file = logname, append = TRUE, sep = "\n")
-
+cat(paste("\nTotal number of ", groups_to_compare[1], ": ", n_case, sep =""),
+	file = logname, append = TRUE, sep = "\n")
+cat(paste("\nTotal number of ", groups_to_compare[2], ": ", n_control, sep =""),
+	file = logname, append = TRUE, sep = "\n")
 
 # Loop over viruses, populate the datfile, and run analyses.
-cat("\nStart loop over virus logistic regression analysis:", file = logname, append = TRUE, sep = "\n")
+cat("\nStart loop over virus logistic regression analysis:",
+	file = logname, append = TRUE, sep = "\n")
 
 for(i in c(1:length(common_virs))){
 
