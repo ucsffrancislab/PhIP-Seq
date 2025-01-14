@@ -20,6 +20,10 @@ parser$add_argument("-z", "--zscore", type="double", default=3.5,
 	help="zscore threshold", metavar="double")
 parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
 	help="manifest file name", metavar="manifest")
+parser$add_argument("--output_dir", type="character", default="./",
+	help="output dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--zfilename", type="character", default="out/Zscores.csv",
+	help="zfilename [default=%(default)s]", metavar="Zscores file")
 parser$add_argument("-d", "--working_dir", type="character", default="./",
 	help="working dir [default=%(default)s]", metavar="directory")
 opt <- parser$parse_args()
@@ -48,8 +52,10 @@ meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 
 print("Read in the Z file")
 
-Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-Zfile = data.frame(t(Zfile))
+#Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
+Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+#Zfile = data.frame(t(Zfile))
+print(Zfile[1:5,1:5])
 
 
 # If in the format of subject, type species, remove subject and type, and remove second row.
@@ -111,7 +117,7 @@ for( j in c(2:ncol(virfracs))){
 	}
 }
 
-outfile=paste0(opt$working_dir, "/",
+outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
@@ -167,7 +173,7 @@ colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0(
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
-outfile=paste0(opt$working_dir, "/",
+outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_", paste("Viral_Sero_test_results", paste(groups_to_compare[1:2],collapse="-"),
 		"Vir_hit_frac", Vir_frac, "Z", Z, sep="-")), ".csv")
 
