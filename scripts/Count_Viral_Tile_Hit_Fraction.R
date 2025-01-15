@@ -24,10 +24,9 @@ parser$add_argument("--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
 parser$add_argument("--zfilename", type="character", default="out/Zscores.csv",
 	help="zfilename [default=%(default)s]", metavar="Zscores file")
-parser$add_argument("-d", "--working_dir", type="character", default="./",
-	help="working dir [default=%(default)s]", metavar="directory")
 opt <- parser$parse_args()
 
+dir.create(opt$output_dir,showWarnings=F)
 
 # For each virus, make a call of positive or negative based on at least 5% of possible tiles hitting, then measure proportion.
 # Input parameters
@@ -57,6 +56,26 @@ Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
 #Zfile = data.frame(t(Zfile))
 print(Zfile[1:5,1:5])
 
+#	[1] "Comparing these groups"
+#	[1] "case"    "control"
+#	[1] "Read in the metadata file"
+#	[1] "Read in the Z file"
+
+#	        V1           V2          V3                    V4                   V5
+#	1        y            x          id                     1                   10
+#	2  subject         type     species Papiine herpesvirus 2       Vaccinia virus
+#	3 14078-01 glioma serum    14078-01   -0.1735488911468417  -0.1735488911468417
+#	4 14078-01 glioma serum 14078-01dup   -0.2909274899485718  -0.2909274899485718
+#	5 14118-01 glioma serum    14118-01  -0.20783649486361835 -0.20783649486361835
+
+#	[1] "Extract the peptide information"
+#	[1] "Unique samples to keep"
+#	[1] "14078-01" "14118-01" "14127-01" "14142-01" "14206-01"
+#	[1] "Unique species (column name is 'species' NOT 'Species')"
+#	[1] "Papiine herpesvirus 2" "Vaccinia virus"        "Human herpesvirus 3"  
+#	[4] "Hepatitis B virus"     "Human herpesvirus 8"  
+#	[1] "Shell file for viral fractions"
+
 
 # If in the format of subject, type species, remove subject and type, and remove second row.
 if("subject" %in% Zfile[2,c(1:3)]){
@@ -68,6 +87,7 @@ if("type" %in% Zfile[2,c(1:3)]){
 	Zfile = Zfile[,-to_remove]
 }
 
+print(Zfile[1:5,1:5])
 
 print("Extract the peptide information")
 
@@ -77,6 +97,8 @@ species_id = species_id[-1,]
 
 Zfile = Zfile[-2,]
 
+print("Zfile = Zfile[-2,]")
+print(Zfile[1:5,1:5])
 
 print("Unique samples to keep")
 uniqid = unique(meta$subject)
