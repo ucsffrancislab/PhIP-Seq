@@ -228,7 +228,7 @@ fi
 
 
 
-if [ -f All.count.Zscores.minimums.csv ] ; then
+if [ -f ${dir}/All.count.Zscores.minimums.csv ] ; then
 
 	echo
 	echo "Annotate Zscore minimums"
@@ -271,12 +271,15 @@ if [ -f All.count.Zscores.minimums.csv ] ; then
 	head -5 ${dir}/tmp5.csv | cut -c1-100
 
 	echo "- create join file from manifest"
-	cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp7.csv
-	cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp7.csv
+	cut -d, -f1,4,6 ${manifest} | head -1 > ${dir}/tmp7.csv
+	cut -d, -f1,4,6 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp7.csv
+	#cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp7.csv
+	#cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp7.csv
 	head -5 ${dir}/tmp7.csv | cut -c1-100
 
 	echo "- joining with the partial manifest"
-	echo -n "y," > ${dir}/Zscores.minimums.csv
+	#echo -n "y," > ${dir}/Zscores.minimums.csv
+	echo -n "z,y," > ${dir}/Zscores.minimums.csv
 	head -1 ${dir}/tmp6.csv >> ${dir}/Zscores.minimums.csv
 	#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.csv
 	join --header -t, ${dir}/tmp7.csv <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.csv
