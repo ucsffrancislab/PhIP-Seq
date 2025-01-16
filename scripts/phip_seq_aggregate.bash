@@ -24,14 +24,15 @@ for f in ${dir}/merged.*.virus_scores.csv ; do
 	head -1 ${dir}/tmp2.csv > ${dir}/tmp3.csv
 	tail -n +2 ${dir}/tmp2.csv | sort -t, -k1,1 >> ${dir}/tmp3.csv
 
-	cut -d, -f1,4 ${manifest} | head -1 > ${dir}/tmp4.csv
-	cut -d, -f1,4 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp4.csv
+	cut -d, -f1,4,6 ${manifest} | head -1 > ${dir}/tmp4.csv
+	cut -d, -f1,4,6 ${manifest} | tail -n +2 | sort -t, -k1,1 | uniq >> ${dir}/tmp4.csv
 
 	#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) ${dir}/tmp3.csv > ${dir}/virus_scores.csv
 	join --header -t, ${dir}/tmp4.csv ${dir}/tmp3.csv > ${dir}/virus_scores.${threshold}.csv
 	cat ${dir}/virus_scores.${threshold}.csv | datamash transpose -t, > ${dir}/virus_scores.${threshold}.t.csv
 
 done
+
 
 
 if [ -f $dir/All.count.Zscores.minimums.csv ] ; then
