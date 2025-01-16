@@ -24,6 +24,8 @@ parser$add_argument("-p", "--plate", type="character", required=TRUE, action="ap
 	help="plate to compare (use multiple times for each)", metavar="group")
 parser$add_argument("-o", "--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--sfile_basename", type="character", default="seropositive.csv",
+	help="sfile_basename [default=%(default)s]", metavar="seropositive file basename")
 opt <- parser$parse_args()
 
 
@@ -76,7 +78,8 @@ posfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-	posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
+	#posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
+	posfile = read.csv(paste(plates[i],opt$sfile_basename,sep="/"), header = TRUE, sep = ",")
 	posfile1= posfile[grep("_B", posfile$id), ]
 	rm(posfile)
 

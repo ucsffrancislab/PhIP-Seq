@@ -18,8 +18,14 @@ parser$add_argument("-v", "--virus", type="character", default=NULL, required=TR
 	help="virus name", metavar="virus species")
 parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
 	help="manifest file name", metavar="manifest")
-parser$add_argument("-d", "--working_dir", type="character", default="./",
-	help="working dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--output_dir", type="character", default="./",
+	help="output dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--zfilename", type="character", default="out/Zscores.csv",
+	help="zfilename [default=%(default)s]", metavar="Zscores file")
+parser$add_argument("--public_eps_filename", type="character", default="out/All.public_epitope_annotations.Zscores.csv",
+	help="public_eps_filename [default=%(default)s]", metavar="Public Eps file")
+#parser$add_argument("-d", "--working_dir", type="character", default="./",
+#	help="working dir [default=%(default)s]", metavar="directory")
 opt <- parser$parse_args()
 
 
@@ -38,10 +44,11 @@ n_plots_per_page = 5
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)
 
-Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-Zfile = data.frame(t(Zfile))
+#Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
+#Zfile = data.frame(t(Zfile))
+Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
 print("head(Zfile)")
-print(Zfile[0:5,0:5])
+print(Zfile[1:5,1:5])
 
 print("Read in the metadata file")
 meta = read.csv( opt$manifest, sep= ",", header = TRUE)
@@ -66,6 +73,7 @@ if("type" %in% Zfile[2,c(1:3)]){
 }
 
 
+print(Zfile[1:5,1:5])
 
 print("Extract the peptide information")
 
@@ -91,7 +99,8 @@ rm(Zfile)
 
 
 # This simply needs to be a list of peptides to work. Just need to know which peptides are deemed as "Public Epitopes"
-public_eps = read.csv(paste(opt$working_dir, "All.public_epitope_annotations.Zscores.csv", sep = "/"), header = TRUE, sep = ",")
+#public_eps = read.csv(paste(opt$working_dir, "All.public_epitope_annotations.Zscores.csv", sep = "/"), header = TRUE, sep = ",")
+public_eps = read.csv(opt$public_eps_filename, header = TRUE, sep = ",")
 public_ep_id = public_eps$id
 rm(public_eps)
 
@@ -125,9 +134,10 @@ for(i in c(1:nrow(plot_df))){
 	plot_df$Public[i] = ifelse(ID %in% public_ep_id, 1, 0)
 }
 
+#	opt$working_dir,"/",
 print("Opening plot file")
 viral_plotfile = paste0(
-	opt$working_dir,"/",
+	opt$output_dir,"/",
 	gsub(" ","_", paste("Manhattan_plots", opt$virus, paste(groups_to_compare, collapse = "-"),sep="-")),
 	".pdf")
 

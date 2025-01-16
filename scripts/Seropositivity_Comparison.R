@@ -20,8 +20,12 @@ parser$add_argument("-z", "--zscore", type="double", default=3.5,
 	help="zscore threshold", metavar="double")
 parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
 	help="manifest file name", metavar="manifest")
-parser$add_argument("-d", "--working_dir", type="character", default="./",
-	help="working dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--output_dir", type="character", default="./",
+	help="output dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--sfilename", type="character", default="out/seropositive.csv",
+	help="seropositive filename [default=%(default)s]", metavar="Zscores file")
+#parser$add_argument("-d", "--working_dir", type="character", default="./",
+#	help="working dir [default=%(default)s]", metavar="directory")
 opt <- parser$parse_args()
 
 
@@ -39,7 +43,8 @@ groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-posfile = read.csv(paste0(opt$working_dir, paste("/seropositive",Z,"csv",sep=".")), header = TRUE, sep = ",")
+#posfile = read.csv(paste0(opt$working_dir, paste("/seropositive",Z,"csv",sep=".")), header = TRUE, sep = ",")
+posfile = read.csv(opt$sfilename, header = TRUE, sep = ",")
 
 print("Keep only 'Before' samples")
 
@@ -82,7 +87,7 @@ colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0(
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
-outfile=paste0(opt$working_dir, "/",
+outfile=paste0(opt$output_dir, "/",
 	gsub(" ","-",paste("Seropositivity_Prop_test_results", paste(groups_to_compare[1:2],collapse="-"), "Z",Z,sep="-")), ".csv")
 
 

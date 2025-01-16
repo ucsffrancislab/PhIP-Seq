@@ -23,6 +23,8 @@ parser$add_argument("-o", "--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
 parser$add_argument("-p", "--plate", type="character", required=TRUE, action="append",
 	help="plate to compare (use multiple times for each)", metavar="group")
+parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
+	help="zfile_basename [default=%(default)s]", metavar="Zscores file basename")
 opt <- parser$parse_args()
 
 
@@ -52,6 +54,7 @@ date=format(Sys.Date(),"%Y%m%d")
 
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste(date, "Multiplate_Peptide_Comparison", paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
+print(output_base)
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -78,9 +81,14 @@ Zfiles = list()
 species_ids = list()
 
 for(i in c(1:length(plates))){
-	Zfilename = paste0(plates[i], "/Zscores.t.csv")
+	#Zfilename = paste0(plates[i], "/Zscores.t.csv")
+	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
+	print(paste0("Reading ",Zfilename))
 	Zfile= read.csv(Zfilename, sep = ",", header=FALSE)
-	Zfile = data.frame(t(Zfile))
+	#Zfile = data.frame(t(Zfile))
+
+	print("Zfile[1:5,1:5]")
+	print(Zfile[1:5,1:5])
 
 	# If in the format of subject, type species, remove subject and type, and remove second row.
 	if("subject" %in% Zfile[2,c(1:3)]){
@@ -91,6 +99,9 @@ for(i in c(1:length(plates))){
 		to_remove= which(Zfile[2,c(1:3)]== "type")
 		Zfile = Zfile[,-to_remove]
 	}
+
+	print("Zfile[1:5,1:5]")
+	print(Zfile[1:5,1:5])
 
 	# Extract the peptide information
 	species_id = data.frame(t(Zfile[c(1:2),]))
@@ -138,12 +149,20 @@ cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = lo
 
 # Get the overlapping peptides included in each file
 common_peps = Reduce(intersect, sapply(species_ids, `[`,1))
+print("length(common_peps)")
+print(length(common_peps))
+print("common_peps[1:5]")
+print(common_peps[1:5])
 
 cat(paste0("\nTotal number of included peptides: ", length(common_peps)), file = logname, append = TRUE, sep = "\n")
 
 
 # Go back into the Z score files and reorder them/cull them to have only the common_peps, in that specific order.
+print("for(i in c(1:length(plates))){")
+print("IMPORTANT: The column is 'id' NOT 'ids'")
 for(i in c(1:length(plates))){
+	print(i)
+	print(Zfiles[[i]][1:5,1:5])
 	Zfiles[[i]] = Zfiles[[i]][,c("id", common_peps)]
 }
 
@@ -156,7 +175,9 @@ colnames(peptide_calls) = c("ID", common_peps)
 peptide_calls$ID = uniq_sub
 
 # Loop over every person, and convert all of their peptide Z scores into 0's and 1's.
+print("for(i in c(1:nrow(peptide_calls))){")
 for(i in c(1:nrow(peptide_calls))){
+	print(i)
 
 	id = peptide_calls$ID[i]
 	# Get plate to pull from
@@ -188,7 +209,9 @@ datfile = data.frame(mat.or.vec(length(uniq_sub),6))
 colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
 datfile$ID = uniq_sub
 datfile$peptide = NA
+print("for(i in c(1:nrow(datfile))){")
 for(i in c(1:nrow(datfile))){
+	print(i)
 	man_loc = which(manifest$subject== datfile$ID[i])[1]
 	datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
 	datfile$age[i] = manifest$age[man_loc]
@@ -235,7 +258,9 @@ cat(paste0("\nTotal number of ", groups_to_compare[2], ": ", n_control), file = 
 # Loop over peptides, populate the datfile, and run analyses.
 cat("\nStart loop over peptide logistic regression analysis:", file = logname, append = TRUE, sep = "\n")
 
+print("for(i in c(1:length(common_peps))){")
 for(i in c(1:length(common_peps))){
+	print(i)
 
 	# Pull the species assignment of the peptide (this could be more efficient but not really a heavy lookup)
 	pvalues$species[i] = species_ids[[1]]$species[which(species_ids[[1]]$id==common_peps[i])][1]

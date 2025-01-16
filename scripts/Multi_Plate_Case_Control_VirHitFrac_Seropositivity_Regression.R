@@ -29,6 +29,8 @@ parser$add_argument("-p", "--plate", type="character", required=TRUE, action="ap
 	help="plate to compare (use multiple times for each)", metavar="group")
 parser$add_argument("-o", "--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
+parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
+	help="zfile_basename [default=%(default)s]", metavar="Zscores file basename")
 opt <- parser$parse_args()
 
 
