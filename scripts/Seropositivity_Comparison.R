@@ -87,8 +87,9 @@ colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0(
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
+sbase=fs::path_ext_remove(basename(opt$sfilename))
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","-",paste("Seropositivity_Prop_test_results", paste(groups_to_compare[1:2],collapse="-"), "Z",Z,sep="-")), ".csv")
+	gsub(" ","-",paste("Seropositivity_Prop_test_results", paste(groups_to_compare[1:2],collapse="-"),sbase,"Z",Z,sep="-")), ".csv")
 
 
 print(paste0("Writing ",outfile))
