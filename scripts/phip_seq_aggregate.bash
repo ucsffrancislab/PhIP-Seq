@@ -279,7 +279,7 @@ if [ -f ${dir}/All.count.Zscores.minimums.csv ] ; then
 
 	echo "- joining with the partial manifest"
 	#echo -n "y," > ${dir}/Zscores.minimums.csv
-	echo -n "z,y," > ${dir}/Zscores.minimums.csv
+	echo -n "y,z," > ${dir}/Zscores.minimums.csv
 	head -1 ${dir}/tmp6.csv >> ${dir}/Zscores.minimums.csv
 	#join --header -t, <( cut -d, -f1,4 ${manifest} | uniq ) <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.csv
 	join --header -t, ${dir}/tmp7.csv <( tail -n +2 ${dir}/tmp6.csv ) >> ${dir}/Zscores.minimums.csv
