@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 
 
+
+#	pepsyn is a bit outdated. Need biopython with Alphabet (1.69)
+#	but I can't get it to install anymore.
+#	I think that there is a different manner of creating these.
+
+#	https://pmc.ncbi.nlm.nih.gov/articles/PMC6568263
+
+
+#	pip uninstall biopython pepsyn
+#	python3 -m pip install --upgrade --user numpy scipy biopython click tqdm phip-stat
+#	cd ~/github/
+#	mkdir lasersonlab
+#	cd lasersonlab/
+#	git clone https://github.com/lasersonlab/pepsyn.git
+#	cd pepsyn
+#	python3 setup.py install --user
+
+
+
 #	python3 -m pip install --upgrade --user numpy scipy biopython==1.69 click tqdm pepsyn phip-stat
 #	
 #	http://weizhong-cluster.ucsd.edu/cd-hit/
