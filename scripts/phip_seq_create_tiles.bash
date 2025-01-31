@@ -63,17 +63,27 @@ cat ${INPUT} \
 	| pepsyn disambiguateaa - - \
 	> cterm_tiles-${TILESIZE}-${OVERLAP}.fasta
 
+
+
+
+#	-l default is 10 so any read shorter is ignored
+#		set to ..... half of tile size????
+#	$((TILESIZE/10))
+
+#	looks like minimum l is 4
+
+
 ~/.local/cd-hit-v4.8.1-2019-0228/cd-hit \
 	-i orf_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	-o orf_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
-	-c 0.95 -G 0 -A 100 -M 0 -T 1 -d 0
+	-c 0.95 -G 0 -A 100 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))
 #	no difference with 56/28
 #	-c 0.95 -G 0 -A 50 -M 0 -T 1 -d 0
 
 ~/.local/cd-hit-v4.8.1-2019-0228/cd-hit \
 	-i cterm_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	-o cterm_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
-	-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0
+	-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))
 
 
 cat orf_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
