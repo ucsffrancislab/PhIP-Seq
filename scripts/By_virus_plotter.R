@@ -35,7 +35,9 @@ library(gridExtra)
 
 # Input parameters
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
-groups_to_compare=opt$groups_to_compare
+
+#groups_to_compare=opt$groups_to_compare
+groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
 print("Comparing these groups")
 print(groups_to_compare)
 
