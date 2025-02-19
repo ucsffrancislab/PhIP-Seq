@@ -31,6 +31,7 @@ opt <- parser$parse_args()
 
 library(ggplot2)
 library(gridExtra)
+library(data.table)
 
 
 # Input parameters
@@ -48,12 +49,14 @@ n_plots_per_page = 5
 
 #Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 #Zfile = data.frame(t(Zfile))
-Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
 print("head(Zfile)")
 print(Zfile[1:5,1:5])
 
 print("Read in the metadata file")
-meta = read.csv( opt$manifest, sep= ",", header = TRUE)
+#meta = read.csv( opt$manifest, sep= ",", header = TRUE)
+meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 # ## Code to create an id_species file so Jake doesn't need to append it each time
 # mydat = Zfile[c(1,2),-c(1:3)]
@@ -102,7 +105,8 @@ rm(Zfile)
 
 # This simply needs to be a list of peptides to work. Just need to know which peptides are deemed as "Public Epitopes"
 #public_eps = read.csv(paste(opt$working_dir, "All.public_epitope_annotations.Zscores.csv", sep = "/"), header = TRUE, sep = ",")
-public_eps = read.csv(opt$public_eps_filename, header = TRUE, sep = ",")
+#public_eps = read.csv(opt$public_eps_filename, header = TRUE, sep = ",")
+public_eps <- data.frame(data.table::fread(opt$public_eps_filename, sep = ",", header=TRUE))
 public_ep_id = public_eps$id
 rm(public_eps)
 
