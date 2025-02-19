@@ -42,6 +42,7 @@ print(owd)
 dir.create(owd,showWarnings=F)
 
 
+library(data.table)
 
 # Multi plate Logistic regression for tile presence on case/control status, adjusting for age, sex, and plate
 Z = opt$zscore
@@ -53,7 +54,10 @@ Z = opt$zscore
 date=format(Sys.Date(),"%Y%m%d")
 
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste(date, "Multiplate_Peptide_Comparison", paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
+	paste(date, "Multiplate_Peptide_Comparison",
+		fs::path_ext_remove(basename(opt$zfile_basename)),
+		paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
+
 print(output_base)
 
 # Log the parameter choices into a logfile
@@ -84,7 +88,8 @@ for(i in c(1:length(plates))){
 	#Zfilename = paste0(plates[i], "/Zscores.t.csv")
 	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
 	print(paste0("Reading ",Zfilename))
-	Zfile= read.csv(Zfilename, sep = ",", header=FALSE)
+	#Zfile= read.csv(Zfilename, sep = ",", header=FALSE)
+	Zfile <- data.frame(data.table::fread(Zfilename, sep = ",", header=FALSE))	#	50x faster
 	#Zfile = data.frame(t(Zfile))
 
 	print("Zfile[1:5,1:5]")
@@ -129,8 +134,14 @@ for(i in c(1:length(plates))){
 
 	# read in the manifest file
 	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
-	mf = read.csv(mfname, sep= ",", header = TRUE)
+	#mf = read.csv(mfname, sep= ",", header = TRUE)
+	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))	#	50x faster
+
 	# Create a categorical variable, assign all of these the same number to indicate plate.
+
+	#	The plate number is now a column in the manifest file
+	#	Later in this script it is used in a formula and can't all the be the same
+	#	However, it is used as the index and not the actual plate number.
 	mf$plate = i
 	mfs[[i]] = mf
 }
@@ -225,6 +236,7 @@ datfile$sex = as.factor(datfile$sex)
 datfile$plate = as.factor(datfile$plate)
 
 
+
 #----- Shell function for logistic regression analysis.
 log_reg = function(df){
 
@@ -257,6 +269,8 @@ cat(paste0("\nTotal number of ", groups_to_compare[2], ": ", n_control), file = 
 
 # Loop over peptides, populate the datfile, and run analyses.
 cat("\nStart loop over peptide logistic regression analysis:", file = logname, append = TRUE, sep = "\n")
+
+print(length(common_peps))
 
 print("for(i in c(1:length(common_peps))){")
 for(i in c(1:length(common_peps))){
