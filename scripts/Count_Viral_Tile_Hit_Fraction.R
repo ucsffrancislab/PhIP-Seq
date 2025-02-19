@@ -45,14 +45,19 @@ print(groups_to_compare)
 
 Z = opt$zscore
 
+library(data.table)
+
+
 print("Read in the metadata file")
 
-meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Read in the Z file")
 
 #Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
 #Zfile = data.frame(t(Zfile))
 print(Zfile[1:5,1:5])
 
@@ -72,8 +77,8 @@ print(Zfile[1:5,1:5])
 #	[1] "Unique samples to keep"
 #	[1] "14078-01" "14118-01" "14127-01" "14142-01" "14206-01"
 #	[1] "Unique species (column name is 'species' NOT 'Species')"
-#	[1] "Papiine herpesvirus 2" "Vaccinia virus"        "Human herpesvirus 3"  
-#	[4] "Hepatitis B virus"     "Human herpesvirus 8"  
+#	[1] "Papiine herpesvirus 2" "Vaccinia virus"        "Human herpesvirus 3"
+#	[4] "Hepatitis B virus"     "Human herpesvirus 8"
 #	[1] "Shell file for viral fractions"
 
 
@@ -140,7 +145,9 @@ for( j in c(2:ncol(virfracs))){
 }
 
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+	gsub(" ","_", paste("Viral_Frac_Hits_Z",
+		fs::path_ext_remove(basename(opt$zfilename)),
+		Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
 write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
@@ -196,7 +203,9 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","_", paste("Viral_Sero_test_results", paste(groups_to_compare[1:2],collapse="-"),
+	gsub(" ","_", paste("Viral_Sero_test_results",
+		fs::path_ext_remove(basename(opt$zfilename)),
+		paste(groups_to_compare[1:2],collapse="-"),
 		"Vir_hit_frac", Vir_frac, "Z", Z, sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
