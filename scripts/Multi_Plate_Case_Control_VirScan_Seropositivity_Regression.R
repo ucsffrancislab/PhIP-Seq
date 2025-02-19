@@ -42,6 +42,7 @@ print("Output dir")
 print(owd)
 dir.create(owd,showWarnings=F)
 
+library(data.table)
 
 # Multi plate Logistic regression for seropositivity (VirScan calls) on case/control status, adjusting for age, sex, and plate
 
@@ -80,7 +81,8 @@ mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
 	#posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
-	posfile = read.csv(paste(plates[i],opt$sfile_basename,sep="/"), header = TRUE, sep = ",")
+	#posfile = read.csv(paste(plates[i],opt$sfile_basename,sep="/"), header = TRUE, sep = ",")
+	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"), sep = ",", header=TRUE))
 	posfile1= posfile[grep("_B", posfile$id), ]
 	rm(posfile)
 
@@ -93,7 +95,8 @@ for(i in c(1:length(plates))){
 
 	# read in the manifest file
 	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
-	mf = read.csv(mfname, sep= ",", header = TRUE)
+	#mf = read.csv(mfname, sep= ",", header = TRUE)
+	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
 	# Create a categorical variable, assign all of these the same number to indicate plate.
 	mf$plate = i
 	mfs[[i]] = mf
