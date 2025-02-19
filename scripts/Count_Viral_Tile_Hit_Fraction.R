@@ -145,9 +145,9 @@ for( j in c(2:ncol(virfracs))){
 }
 
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","_", paste("Viral_Frac_Hits_Z",
+	gsub(" ","_", paste("Viral_Frac_Hits",
 		fs::path_ext_remove(basename(opt$zfilename)),
-		Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+		"Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
 write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
