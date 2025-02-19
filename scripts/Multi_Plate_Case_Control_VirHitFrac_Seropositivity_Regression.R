@@ -47,6 +47,8 @@ print("Output dir")
 print(owd)
 dir.create(owd,showWarnings=F)
 
+library(data.table)
+
 # Multi plate Logistic regression for seropositivity (hit Frac) on case/control status, adjusting for age, sex, and plate
 
 Z_thresh = opt$zscore
@@ -84,7 +86,8 @@ virfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-  virfile = read.csv(paste0(plates[i], "/", virfracfilename), header = TRUE, sep = ",")
+  #virfile = read.csv(paste0(plates[i], "/", virfracfilename), header = TRUE, sep = ",")
+	virfile <- data.frame(data.table::fread(paste0(plates[i], "/", virfracfilename), sep = ",", header=TRUE))
 
   virfiles[[i]] = virfile
 
@@ -94,7 +97,8 @@ for(i in c(1:length(plates))){
   }
 
   # read in the manifest file
-  mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+  #mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
+	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
   # Create a categorical variable, assign all of these the same number to indicate plate.
   mf$plate = i
   mfs[[i]] = mf
