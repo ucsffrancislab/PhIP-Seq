@@ -26,6 +26,10 @@ parser$add_argument("--sfilename", type="character", default="out/seropositive.c
 	help="seropositive filename [default=%(default)s]", metavar="Zscores file")
 #parser$add_argument("-d", "--working_dir", type="character", default="./",
 #	help="working dir [default=%(default)s]", metavar="directory")
+#parser$add_argument("--keep_only_B", action="store_true",
+#	help="Keep only those ids with '_B'")
+parser$add_argument("--keep_all_ids", action="store_true",
+	help="Keep all ids. Not just '_B'")
 opt <- parser$parse_args()
 
 
@@ -50,7 +54,16 @@ posfile <- data.frame(data.table::fread(opt$sfilename, sep = ",", header=TRUE))
 
 print("Keep only 'Before' samples")
 
-posfile1 = posfile[grep("_B", posfile$id), ]
+#if( opt$keep_only_B ){
+#	posfile1 = posfile[grep("_B$", posfile$id), ]
+#}else{
+#	posfile1 = posfile
+#}
+if( opt$keep_all_ids ){
+	posfile1 = posfile
+}else{
+	posfile1 = posfile[grep("_B$", posfile$id), ]
+}
 rm(posfile)
 
 print("Read in the metadata file")

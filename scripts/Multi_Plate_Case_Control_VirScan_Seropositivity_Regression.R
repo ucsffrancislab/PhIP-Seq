@@ -26,6 +26,10 @@ parser$add_argument("-o", "--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
 parser$add_argument("--sfile_basename", type="character", default="seropositive.csv",
 	help="sfile_basename [default=%(default)s]", metavar="seropositive file basename")
+#parser$add_argument("--keep_only_B", action="store_true",
+#	help="Keep only those ids with '_B'")
+parser$add_argument("--keep_all_ids", action="store_true",
+	help="Keep all ids. Not just '_B'")
 opt <- parser$parse_args()
 
 
@@ -83,7 +87,16 @@ for(i in c(1:length(plates))){
 	#posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
 	#posfile = read.csv(paste(plates[i],opt$sfile_basename,sep="/"), header = TRUE, sep = ",")
 	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"), sep = ",", header=TRUE))
-	posfile1= posfile[grep("_B", posfile$id), ]
+	#if( opt$keep_only_B ){
+	#	posfile1 = posfile[grep("_B$", posfile$id), ]
+	#}else{
+	#	posfile1 = posfile
+	#}
+	if( opt$keep_all_ids ){
+		posfile1 = posfile
+	}else{
+		posfile1 = posfile[grep("_B$", posfile$id), ]
+	}
 	rm(posfile)
 
 	posfiles[[i]] = posfile1
