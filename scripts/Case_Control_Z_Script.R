@@ -36,19 +36,23 @@ print(groups_to_compare)
 
 Z = opt$zscore
 
+library(data.table)
+
 
 # Read in the Z-score file  (wihtout transpose and remove the transpose line)
 
 #Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 #Zfile = data.frame(t(Zfile))
 
-Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
 #Zfile = data.frame(t(Zfile))
 print(Zfile[1:5,1:5])
 
 # Read in the metadata file
 
-meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
 # If in the format of subject, type species, remove subject and type, and remove second row.
@@ -156,7 +160,9 @@ colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]
 
 
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","_",paste("Tile_Comparison", paste(groups_to_compare[1:2],collapse="-"), "Prop_test_results", Z, sep="-")), ".csv")
+	gsub(" ","_",paste("Tile_Comparison",
+		fs::path_ext_remove(basename(opt$zfilename)),
+		paste(groups_to_compare[1:2],collapse="-"), "Prop_test_results", Z, sep="-")), ".csv")
 
 
 print(paste0("Writing ",outfile))
