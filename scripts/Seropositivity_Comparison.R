@@ -31,6 +31,7 @@ opt <- parser$parse_args()
 
 Z=opt$zscore
 
+library(data.table)
 
 # Seropositivity Test
 
@@ -44,7 +45,8 @@ print("Comparing these groups")
 print(groups_to_compare)
 
 #posfile = read.csv(paste0(opt$working_dir, paste("/seropositive",Z,"csv",sep=".")), header = TRUE, sep = ",")
-posfile = read.csv(opt$sfilename, header = TRUE, sep = ",")
+#posfile = read.csv(opt$sfilename, header = TRUE, sep = ",")
+posfile <- data.frame(data.table::fread(opt$sfilename, sep = ",", header=TRUE))
 
 print("Keep only 'Before' samples")
 
@@ -53,7 +55,8 @@ rm(posfile)
 
 print("Read in the metadata file")
 
-meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
+meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
