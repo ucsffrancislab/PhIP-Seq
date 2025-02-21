@@ -61,8 +61,9 @@ virfracfilename = paste0(
 
 date=format(Sys.Date(),"%Y%m%d")
 
+#	paste(date, "Multiplate_VirFrac_Seropositivity_Comparison_Z",Z_thresh,"VirFrac",Vir_frac,
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste(date, "Multiplate_VirFrac_Seropositivity_Comparison_Z",Z_thresh,"VirFrac",Vir_frac,
+	paste("Multiplate_VirFrac_Seropositivity_Comparison-Z",Z_thresh,"VirFrac",Vir_frac,
 	paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
 
 # Log the parameter choices into a logfile

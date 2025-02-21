@@ -52,11 +52,12 @@ Z = opt$zscore
 
 
 date=format(Sys.Date(),"%Y%m%d")
+#	paste(date, "Multiplate_Peptide_Comparison",
 
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste(date, "Multiplate_Peptide_Comparison",
+	paste("Multiplate_Peptide_Comparison",
 		fs::path_ext_remove(basename(opt$zfile_basename)),
-		paste(groups_to_compare, collapse="-"),"Prop_test_results", Z,sep="-")))
+		paste(groups_to_compare, collapse="-"),"Prop_test_results-Z", Z,sep="-")))
 
 print(output_base)
 
