@@ -103,6 +103,7 @@ pvalues = data.frame(mat.or.vec(ncol(Zfile1)-1, 5))
 colnames(pvalues) = c("peptide", "species", "freq_case", "freq_control", "pval")
 
 
+print("This loop takes quite a while. Haven't attempted to speed it up.")
 print("Pick a peptide:")
 pep_index = 1
 for(pep_index in c(1:(ncol(Zfile1)-1))){
