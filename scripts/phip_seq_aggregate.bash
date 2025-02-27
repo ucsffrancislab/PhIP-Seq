@@ -385,9 +385,21 @@ fi
 #	head -7 ${dir}/tmp6.csv > ${dir}/tmp7.csv
 #	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
 #	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv <( tail -n +8 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+
+
+
+#	head -8 ${dir}/tmp6.csv > ${dir}/tmp7.csv
+#	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
+
+#	#	This isn't uniq
+#	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+
 	head -8 ${dir}/tmp6.csv > ${dir}/tmp7.csv
-	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
-	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+	sed -i 's/^/,/' ${dir}/tmp7.csv
+
+	#	Use this but it only has id and species.
+	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.id_species.uniq.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+
 
 	awk -F, '{print NF}' ${dir}/tmp7.csv | uniq
 	#582
@@ -395,14 +407,19 @@ fi
 	wc -l ${dir}/tmp7.csv
 	#126324 tmp7.csv
 
-	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
-	#128258 /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
+#	don't use this file. It isn't unique with all of the additional fields.
+#	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
+#	#128258 /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
+
+	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.id_species.uniq.csv
 
 	#	lose almost 2000
 
 
 	head -9 ${dir}/tmp7.csv > ${dir}/Counts.csv
-	tail -n +10 ${dir}/tmp7.csv | sort -t, -k2,2 -k3,3 -k4n,4 -k5n,5 -k6n,6 >> ${dir}/Counts.csv
+	#tail -n +10 ${dir}/tmp7.csv | sort -t, -k2,2 -k3,3 -k4n,4 -k5n,5 -k6n,6 >> ${dir}/Counts.csv
+	tail -n +10 ${dir}/tmp7.csv | sort -t, -k2,2  >> ${dir}/Counts.csv
+
 	#head -8 ${dir}/tmp7.csv > ${dir}/Counts.csv
 	#tail -n +9 ${dir}/tmp7.csv | sort -t, -k2,2 -k3,3 -k4n,4 -k5n,5 -k6n,6 >> ${dir}/Counts.csv
 
@@ -410,8 +427,8 @@ fi
 
 
 phip_seq_normalize_counts.py -i ${dir}/Counts.csv
-
-
+	
+	
 #	Prep for usage in Multi_Plate_Case_Control_Peptide_Regression.R like Zscores.csv
 
 if [ -f ${dir}/Counts.normalized.subtracted.csv ] ; then
@@ -450,11 +467,15 @@ if [ -f ${dir}/Counts.normalized.subtracted.csv ] ; then
 	head -1 ${dir}/Counts.normalized.subtracted.csv | tail -1 >> ${dir}/tmp1.csv
 	tail -n +10 ${dir}/Counts.normalized.subtracted.csv | sort -t, -k1,1 >> ${dir}/tmp1.csv
 
-	cat ${dir}/tmp1.csv | cut -d, -f1,2,5- | datamash transpose -t, > ${dir}/Counts.normalized.subtracted.trim.csv
+	#cat ${dir}/tmp1.csv | cut -d, -f1,2,5- | datamash transpose -t, > ${dir}/Counts.normalized.subtracted.trim.csv
+	cat ${dir}/tmp1.csv | datamash transpose -t, > ${dir}/Counts.normalized.subtracted.trim.csv
+
 #	y,x	#	probably not
 #	subject,type	#	yes
 
 	sed -i -e '1s/^,/y,x/' -e '2s/^,/subject,type/' ${dir}/Counts.normalized.subtracted.trim.csv
+
+#	create minimums? drop the sample id. 0 out negatives
 
 fi
 
