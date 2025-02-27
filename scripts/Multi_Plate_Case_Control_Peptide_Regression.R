@@ -25,6 +25,14 @@ parser$add_argument("-p", "--plate", type="character", required=TRUE, action="ap
 	help="plate to compare (use multiple times for each)", metavar="group")
 parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
 	help="zfile_basename [default=%(default)s]", metavar="Zscores file basename")
+
+
+
+# store_true means "int=False unless --int passed, then int=True" (store_false is the inverse)
+#parser.add_argument('--int', action='store_true', help='convert values to ints to %(prog)s (default: %(default)s)')
+parser$add_argument('--counts', action='store_true', help='values are counts not zscores to %(prog)s (default: %(default)s)')
+
+
 opt <- parser$parse_args()
 
 
@@ -60,6 +68,8 @@ output_base = paste0(owd, "/", gsub(" ","_",
 		paste(groups_to_compare, collapse="-"),"Prop_test_results-Z", Z,sep="-")))
 
 print(output_base)
+dir.create(owd, recursive = TRUE)
+
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -165,6 +175,7 @@ print("length(common_peps)")
 print(length(common_peps))
 print("common_peps[1:5]")
 print(common_peps[1:5])
+#	[1] "1"     "10"    "100"   "1000"  "10000"
 
 cat(paste0("\nTotal number of included peptides: ", length(common_peps)), file = logname, append = TRUE, sep = "\n")
 
@@ -172,21 +183,57 @@ cat(paste0("\nTotal number of included peptides: ", length(common_peps)), file =
 # Go back into the Z score files and reorder them/cull them to have only the common_peps, in that specific order.
 print("for(i in c(1:length(plates))){")
 print("IMPORTANT: The column is 'id' NOT 'ids'")
+#	[1] "IMPORTANT: The column is 'id' NOT 'ids'"
 for(i in c(1:length(plates))){
 	print(i)
 	print(Zfiles[[i]][1:5,1:5])
 	Zfiles[[i]] = Zfiles[[i]][,c("id", common_peps)]
 }
+#	[1] 1
+#	           id   1  10                  100 1000
+#	1          id   1  10                  100 1000
+#	3    14078-01 0.0 0.0   0.8133400627769187  0.0
+#	4 14078-01dup 0.0 0.0 -0.48156984062927694  0.0
+#	5    14118-01 0.0 0.0   1.1354027662377901  0.0
+#	6 14118-01dup 0.0 0.0    5.141737192497063  0.0
+
+
 
 # Convert every Z score pair to a binary 0/1 call based on the Z thresh.
 
+
 cat("\nStart converting Z scores to peptide binary calls", file = logname, append = TRUE, sep = "\n")
+
+
+
+
+
+#common_peps = common_peps[1:1000]
+#print(common_peps[1:5])
+#[1] "1"     "10"    "100"   "1000"  "10000"
+#print(dim(common_peps))
+#NULL
+
+
+
+
 
 peptide_calls = data.frame(mat.or.vec(length(uniq_sub), length(common_peps)+1))
 colnames(peptide_calls) = c("ID", common_peps)
 peptide_calls$ID = uniq_sub
+print("peptide_calls[1:5,1:5]")
+print(peptide_calls[1:9,1:9])
+#        ID 1 10 100 1000
+#1 14078-01 0  0   0    0
+#2 14118-01 0  0   0    0
+#3 14127-01 0  0   0    0
+#4 14142-01 0  0   0    0
+#5 14206-01 0  0   0    0
+print(dim(peptide_calls))
+#[1]  126 1001
 
 # Loop over every person, and convert all of their peptide Z scores into 0's and 1's.
+print("Loop over every person, and convert all of their peptide Z scores into 0's and 1's.")
 print("for(i in c(1:nrow(peptide_calls))){")
 for(i in c(1:nrow(peptide_calls))){
 	print(i)
@@ -197,6 +244,8 @@ for(i in c(1:nrow(peptide_calls))){
 
 	# Extract the rows containing the duplicate samples, assumes they both contain the id, and that id doesn't match another subjects in a grep (i.e IDs 100 and 1000.)
 	rlocs = grep(id, Zfiles[[mp]][,1])
+#	print("head(rlocs)")
+#	print(head(rlocs))
 
 	myZs = data.frame(t(Zfiles[[mp]][c(1,rlocs), which(Zfiles[[mp]][1,] %in% common_peps)]))
 	myZs[,c(2:3)] = sapply(myZs[,c(2:3)], as.numeric)
@@ -209,13 +258,22 @@ for(i in c(1:nrow(peptide_calls))){
 		mymins[which(is.na(mymins))] = 0
 	}
 
-	peptide_calls[i, -1] = ifelse(mymins > Z, 1, 0)
+	if( !opt$counts ) {
+		peptide_calls[i, -1] = ifelse(mymins > Z, 1, 0)
+	} else {
+		peptide_calls[i, -1] = mymins
+	}
+
 }
 cat("...Complete.", file = logname, append = TRUE, sep = "\n")
 
 rm(Zfiles)
 
-# Create a shell file for analysis, Leaves the peptide column blank, we will repopulate this with every peptide.
+print("peptide_calls[1:5,1:5]")
+print(peptide_calls[1:5,1:5])
+
+#	Create a shell file for analysis, Leaves the peptide column blank, we will repopulate this with every peptide.
+#	I still don't know what a "shell file" is in this context
 
 datfile = data.frame(mat.or.vec(length(uniq_sub),6))
 colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
@@ -230,8 +288,6 @@ for(i in c(1:nrow(datfile))){
 	datfile$sex[i] = manifest$sex[man_loc]
 	datfile$plate[i] = manifest$plate[man_loc]
 }
-
-
 datfile$age = as.numeric(datfile$age)
 datfile$sex = as.factor(datfile$sex)
 datfile$plate = as.factor(datfile$plate)
@@ -241,8 +297,10 @@ datfile$plate = as.factor(datfile$plate)
 #----- Shell function for logistic regression analysis.
 log_reg = function(df){
 
-	# A simple model that simply adjusts for plate/batch in the model. When the number of plates becomes large, a mixed effects regression model should be considered.
-	# as there are likely differences in the peptide calling sensitivity between plates, and so peptide probably has different associations with case based on plate.
+	# A simple model that simply adjusts for plate/batch in the model. When the number
+	#	of plates becomes large, a mixed effects regression model should be considered.
+	# as there are likely differences in the peptide calling sensitivity between plates,
+	#	and so peptide probably has different associations with case based on plate.
 	logitmodel = "case~ peptide +age + sex + plate"
 
 	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
@@ -261,6 +319,9 @@ pvalues = data.frame(mat.or.vec(length(common_peps), 7))
 colnames(pvalues) = c("peptide", "species",  "freq_case", "freq_control", "beta", "se", "pval")
 pvalues$peptide = common_peps
 
+print("pvalues[1:5,1:5]")
+print(pvalues[1:5,1:5])
+
 n_case = length(which(datfile$case==1))
 n_control = length(which(datfile$case==0))
 
@@ -271,6 +332,7 @@ cat(paste0("\nTotal number of ", groups_to_compare[2], ": ", n_control), file = 
 # Loop over peptides, populate the datfile, and run analyses.
 cat("\nStart loop over peptide logistic regression analysis:", file = logname, append = TRUE, sep = "\n")
 
+print("length(common_peps)")
 print(length(common_peps))
 
 print("for(i in c(1:length(common_peps))){")
@@ -283,25 +345,50 @@ for(i in c(1:length(common_peps))){
 	# Extract all peptide information into the new datfile.
 	datfile$peptide = peptide_calls[, which(colnames(peptide_calls)== common_peps[i])]
 
-	# Calculate the frequency of the peptide in each group
-	n_case_pos = length(which(datfile$peptide==1 & datfile$case==1))
-	n_control_pos = length(which(datfile$peptide==1 & datfile$case==0))
+	if( !opt$counts ) {
 
-	pvalues$freq_case[i] = n_case_pos/n_case
-	pvalues$freq_control[i] = n_control_pos/n_control
+		# Calculate the frequency of the peptide in each group
+		n_case_pos = length(which(datfile$peptide==1 & datfile$case==1))
+		n_control_pos = length(which(datfile$peptide==1 & datfile$case==0))
 
-	if( (n_case_pos +n_control_pos) %in% c(0, n_case+n_control)){
-		pvalues$beta[i]= NA
-		pvalues$se[i] = NA
-		pvalues$pval[i] = NA
-	}else{
+		pvalues$freq_case[i] = n_case_pos/n_case
+		pvalues$freq_control[i] = n_control_pos/n_control
+
+		#	Ignore if all or none of the samples include the peptide. (This is about 70%)
+		if( (n_case_pos +n_control_pos) %in% c(0, n_case+n_control)){
+			pvalues$beta[i]= NA
+			pvalues$se[i] = NA
+			pvalues$pval[i] = NA
+		}else{
+			results =log_reg(datfile)
+			pvalues$beta[i]= results[1]
+			pvalues$se[i] = results[2]
+			pvalues$pval[i] = results[3]
+		}
+
+	} else {
+
+		pvalues$freq_case[i] = "UNK"
+		pvalues$freq_control[i] = "UNK"
 		results =log_reg(datfile)
 		pvalues$beta[i]= results[1]
 		pvalues$se[i] = results[2]
 		pvalues$pval[i] = results[3]
+
 	}
+
 }
 cat("...Complete.", file = logname, append = TRUE, sep = "\n")
+
+
+print("pvalues[1:5,1:5]")
+print(pvalues[1:5,1:5])
+#  peptide               species freq_case freq_control         beta
+#1       1 Papiine herpesvirus 2       UNK          UNK   0.00240489
+#2      10        Vaccinia virus       UNK          UNK   0.31687319
+#3     100   Human herpesvirus 3       UNK          UNK  -0.22301611
+#4    1000     Hepatitis B virus       UNK          UNK -52.93485789
+#5   10000   Human herpesvirus 8       UNK          UNK  -0.69588877
 
 
 colnames(pvalues) = c("peptide", "species",
