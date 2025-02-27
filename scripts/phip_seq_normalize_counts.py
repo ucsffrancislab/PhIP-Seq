@@ -36,13 +36,16 @@ print("Reading csv")
 #df = pd.read_csv("ALL.csv",
 df = pd.read_csv(args.input[0],
 	header=[0,1,2,3,4,5,6,7,8],
-	index_col=[0,1,2,3,4,5,6])
+	index_col=[0,1])
+#	index_col=[0,1,2,3,4,5,6])
 
 #df.columns = df.columns.set_names(["sample","subject","type","study","group","age","sex","plate"])
 df.columns = df.columns.set_names(["sample","subject","bampath","type","study","group","age","sex","plate"])
-df.index = df.index.set_names(["id","species","protein","entry version","sequence version","start","end"])
 
-df=df.droplevel([3,4,6])
+#df.index = df.index.set_names(["id","species","protein","entry version","sequence version","start","end"])
+df.index = df.index.set_names(["id","species"])
+
+#df=df.droplevel([3,4,6])
 
 df.shape
 
@@ -67,7 +70,7 @@ def replace_unnameds(value):
 df=df.rename(columns=replace_unnameds)
 
 #df=df.sort_index(axis=1,level=[2,3,4,1,0])
-df=df.sort_index(axis=1,level=[0,1,2,3,4])
+df=df.sort_index(axis=1,level=[0,1,3,4,5])
 df=df.fillna(0)
 
 print(df.head())
