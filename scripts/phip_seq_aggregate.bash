@@ -427,8 +427,8 @@ fi
 
 
 phip_seq_normalize_counts.py -i ${dir}/Counts.csv
-	
-	
+
+
 #	Prep for usage in Multi_Plate_Case_Control_Peptide_Regression.R like Zscores.csv
 
 if [ -f ${dir}/Counts.normalized.subtracted.csv ] ; then
