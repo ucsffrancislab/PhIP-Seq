@@ -54,16 +54,19 @@ library(data.table)
 Z_thresh = opt$zscore
 Vir_frac = opt$virfrac	#	0.05
 
+
 #	DO NOT INCLUDE THE DIRNAME
 virfracfilename = paste0(
-	gsub(" ","_", paste("Viral_Frac_Hits_Z", Z_thresh,
-	paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+	gsub(" ","_", paste("Viral_Frac_Hits",
+		fs::path_ext_remove(basename(opt$zfile_basename)),
+		"Z", Z_thresh, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
 
 date=format(Sys.Date(),"%Y%m%d")
 
 #	paste(date, "Multiplate_VirFrac_Seropositivity_Comparison_Z",Z_thresh,"VirFrac",Vir_frac,
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirFrac_Seropositivity_Comparison-Z",Z_thresh,"VirFrac",Vir_frac,
+	fs::path_ext_remove(basename(opt$zfile_basename)),
 	paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
 
 # Log the parameter choices into a logfile
