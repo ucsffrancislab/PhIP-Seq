@@ -373,6 +373,12 @@ for(i in c(1:length(common_peps))){
 
 	} else {
 
+		#	prep for log transform of 0, or perhaps even negative
+		datfile$peptide <- ifelse(datfile$peptide <= 0, 0.001, datfile$peptide)
+
+		#	log transform data to normalize
+		datfile$peptide <- log(datfile$peptide)
+
 		pvalues$freq_case[i] = "UNK"
 		pvalues$freq_control[i] = "UNK"
 		results =log_reg(datfile)
