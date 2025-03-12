@@ -306,9 +306,14 @@ log_reg = function(df){
 	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
 
 	go= summary(logit_fun)
-	beta = go$coefficients[2,1]
-	se = go$coefficients[2,2]
-	pval = go$coefficients[2,4]
+	#beta = go$coefficients[2,1]
+	#se = go$coefficients[2,2]
+	#pval = go$coefficients[2,4]
+	#	sometimes "Coefficients: (1 not defined because of singularities)"
+	#	and peptide doesn't exist. This would then return the age coefficients.
+	beta <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Estimate'] else NA
+	se <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Std. Error'] else NA
+	pval <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Pr(>|z|)'] else NA
 	return(c(beta, se, pval))
 }
 #-------
