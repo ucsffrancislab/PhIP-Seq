@@ -20,6 +20,8 @@ parser$add_argument("-b", "--group2", type="character", required=TRUE,
 	help="second group to compare", metavar="group")
 parser$add_argument("-z", "--zscore", type="double", default=3.5,
 	help="zscore threshold", metavar="double")
+parser$add_argument("-s", "--sex", type="character", default="",
+	help="limit sex", metavar="sex")
 parser$add_argument("-p", "--plate", type="character", required=TRUE, action="append",
 	help="plate to compare (use multiple times for each)", metavar="group")
 parser$add_argument("-o", "--output_dir", type="character", default="./",
@@ -63,7 +65,7 @@ sbase=fs::path_ext_remove(basename(opt$sfile_basename))
 #	paste(date, "Multiplate_VirScan_Seropositivity_Comparison",
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirScan_Seropositivity_Comparison",
-		paste(groups_to_compare, collapse="-"),sbase,"test_results-Z",Z, sep="-")))
+		paste(groups_to_compare, collapse="-"),sbase,"test_results-Z",Z, "sex",opt$sex,sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -127,7 +129,21 @@ rm(mfs)
 
 # Identify the unique subjects to include in the analyses.
 
-uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+
+if ( opt$sex == "" ){
+	print("Sex is not set so not filtering on sex.")
+	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+} else {
+	print(paste0("Sex is set to ",opt$sex,". Filtering"))
+	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
+}
+
+print(uniq_sub)
+
+
+
+
 
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
 
@@ -200,7 +216,12 @@ log_reg = function(df){
 
 	# A simple model that simply adjusts for plate/batch in the model. When the number of plates becomes large, a mixed effects regression model should be considered.
 	# as there are likely differences in the virus calling sensitivity between plates, and so virus probably has different associations with case based on plate.
+
+if(opt$sex == ''){
 	logitmodel = "case~ virus +age + sex + plate"
+}else{
+	logitmodel = "case~ virus +age + plate"
+}
 
 	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
 
