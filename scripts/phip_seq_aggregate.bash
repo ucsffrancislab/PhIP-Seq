@@ -100,8 +100,8 @@ done
 #	#	10007,-0.5776876416792566,-0.4664278247594301,-0.5
 #
 #	echo "- join with species"
-#	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp4.csv > ${dir}/tmp5.csv
-#	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp3.csv > ${dir}/tmp5.csv
+#	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp4.csv > ${dir}/tmp5.csv
+#	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp3.csv > ${dir}/tmp5.csv
 #	head -5 ${dir}/tmp5.csv | cut -c1-100
 #
 #	#	id,species,14061-01,14091-01,14160-01,14167-01,141
@@ -206,9 +206,9 @@ if [ -f ${dir}/All.count.Zscores.csv ] ; then
 	echo "- join with virus species"
 	echo -n "x," > ${dir}/tmp5.csv
 	#head -1 ${dir}/tmp4.csv >> ${dir}/tmp5.csv
-	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp4.csv ) >> ${dir}/tmp5.csv
+	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp4.csv ) >> ${dir}/tmp5.csv
 	head -1 ${dir}/tmp3.csv >> ${dir}/tmp5.csv
-	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
+	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
 	head -5 ${dir}/tmp5.csv | cut -c1-100
 
 	echo "- transpose"
@@ -266,11 +266,11 @@ if [ -f ${dir}/All.count.Zscores.minimums.csv ] ; then
 
 	#echo -n "x," > ${dir}/tmp5.csv
 	#head -1 ${dir}/tmp4.csv >> ${dir}/tmp5.csv
-	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp4.csv ) >> ${dir}/tmp5.csv
+	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp4.csv ) >> ${dir}/tmp5.csv
 	#head -1 ${dir}/tmp3.csv >> ${dir}/tmp5.csv
-	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
+	#join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) <( tail -n +2 ${dir}/tmp3.csv ) >> ${dir}/tmp5.csv
 
-	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp3.csv > ${dir}/tmp5.csv
+	join --header -t, <( cut -d, -f1,2 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv ) ${dir}/tmp3.csv > ${dir}/tmp5.csv
 	head -5 ${dir}/tmp5.csv | cut -c1-100
 
 	echo "- transpose"
@@ -346,7 +346,7 @@ fi
 
 #	head -7 ${dir}/tmp6.csv > ${dir}/tmp7.csv
 #	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
-#	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250205.HHV3.for_joining.csv <( tail -n +8 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+#	join --header -t, /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250205.HHV3.for_joining.csv <( tail -n +8 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
 #
 #	awk -F, '{print NF}' ${dir}/tmp7.csv | uniq
 #	#582
@@ -354,8 +354,8 @@ fi
 #	wc -l ${dir}/tmp7.csv
 #	#1655 tmp7.csv
 #
-#	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250205.HHV3.for_joining.csv
-#	#1654 /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250205.HHV3.for_joining.csv
+#	wc -l /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250205.HHV3.for_joining.csv
+#	#1654 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250205.HHV3.for_joining.csv
 #
 #	head -8 ${dir}/tmp7.csv > ${dir}/tmp8.csv
 #	tail -n +9 ${dir}/tmp7.csv | sort -t, -k2,2 -k3,3 -k4n,4 -k5n,5 -k6n,6 >> ${dir}/tmp8.csv
@@ -384,7 +384,7 @@ fi
 
 #	head -7 ${dir}/tmp6.csv > ${dir}/tmp7.csv
 #	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
-#	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv <( tail -n +8 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+#	join --header -t, /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250207.for_joining.csv <( tail -n +8 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
 
 
 
@@ -392,13 +392,13 @@ fi
 #	sed -i 's/^/,,,,,,/' ${dir}/tmp7.csv
 
 #	#	This isn't uniq
-#	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+#	join --header -t, /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250207.for_joining.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
 
 	head -8 ${dir}/tmp6.csv > ${dir}/tmp7.csv
 	sed -i 's/^/,/' ${dir}/tmp7.csv
 
 	#	Use this but it only has id and species.
-	join --header -t, /francislab/data1/refs/PhIP-Seq/VIR3_clean.id_species.uniq.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
+	join --header -t, /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.id_species.uniq.csv <( tail -n +9 ${dir}/tmp6.csv ) >> ${dir}/tmp7.csv
 
 
 	awk -F, '{print NF}' ${dir}/tmp7.csv | uniq
@@ -408,10 +408,10 @@ fi
 	#126324 tmp7.csv
 
 #	don't use this file. It isn't unique with all of the additional fields.
-#	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
-#	#128258 /francislab/data1/refs/PhIP-Seq/VIR3_clean.20250207.for_joining.csv
+#	wc -l /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250207.for_joining.csv
+#	#128258 /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.20250207.for_joining.csv
 
-	wc -l /francislab/data1/refs/PhIP-Seq/VIR3_clean.id_species.uniq.csv
+	wc -l /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.id_species.uniq.csv
 
 	#	lose almost 2000
 

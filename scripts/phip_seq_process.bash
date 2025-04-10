@@ -365,7 +365,7 @@ for threshold in ${THRESHOLDS}; do
 			sed -i '1iid,all' ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv
 
 			join --header -t, ${OUTPUT}/All.count.Zscores.${threshold}.merged_trues.csv \
-				/francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
+				/francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.join_sorted.csv > ${OUTPUT}/tmp
 
 			awk -F, '(NR>1){print $3}' ${OUTPUT}/tmp | sort | uniq -c | sort -k1nr,1 | sed 's/^ *//' \
 				| cut -d' ' -f2- > ${f}
@@ -392,7 +392,7 @@ for threshold in ${THRESHOLDS}; do
 		else
 			echo "Creating ${f}"
 			elledge_calc_scores_nofilter_forceorder.py --hits ${OUTPUT}/${subject}.count.Zscores.${threshold}.hits.csv \
-				--oligo_metadata /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv \
+				--oligo_metadata /francislab/data1/refs/PhIP-Seq/VirScan/VIR3_clean.virus_score.csv \
 				--species_order ${SPECIES_ORDER} > ${OUTPUT}/tmp 
 			head -1 ${OUTPUT}/tmp > ${f}
 			tail -n +2 ${OUTPUT}/tmp | sort -t, -k1,1 >> ${f}
