@@ -186,7 +186,7 @@ if __name__ == '__main__':
 
 	parser.add_argument("--hits", required=True)
 	parser.add_argument("--oligo_metadata", required=True)
-	parser.add_argument("--level", default=['Species'])
+	parser.add_argument("--level", default=['species'])
 	parser.add_argument("--epitope_len", type=int, default=[7])
 	parser.add_argument("--species_order", required=True)
 
@@ -226,7 +226,8 @@ if __name__ == '__main__':
 	#hits[(beads_nhits > 2) | (samps_nhits < 2)] = 0
 
 	#columns = ['id', 'Species', 'Organism', 'Entry', 'peptide']
-	columns = ['id', 'Species', 'peptide']
+	#columns = ['id', 'Species', 'peptide']
+	columns = ['id', 'species', 'peptide']
 	hits2 = pd.merge(lib[columns], hits.reset_index(), on='id').set_index(columns)
 	#print(hits.head())
 	#print(hits2[hits.columns[0]])
