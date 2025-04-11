@@ -241,7 +241,7 @@ if [ -f ${f} ] && [ ! -w ${f} ] ; then
 	echo "Write-protected ${f} exists. Skipping."
 else
 	echo "Creating ${f}"
-	join --header -t, /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.join_sorted.csv \
+	join --header -t, /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.join_sorted.csv \
 		${OUTPUT}/All.count.Zscores.csv > ${f}
 		#${OUTPUT}/All.count.Zscores.reordered.join_sorted.csv > ${f}
 
@@ -473,7 +473,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '($2=="True"){print $6}' | sort | uniq > ${f}
 			sed -i '1iSpecies' ${f}
 
@@ -487,7 +487,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
 			sed -i '1icount,Species' ${f}
 
@@ -504,7 +504,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( tail -n +2 ${hits} | sort -t, -k1,1 ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '($2=="True"){print $6}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
 				| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
 			sed -i "1iSpecies,${subject}" ${f}
@@ -548,7 +548,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '{print $2}' | sort | uniq > ${f}
 			sed -i '1iSpecies' ${f}
 
@@ -562,7 +562,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' > ${f}
 			sed -i '1icount,Species' ${f}
 
@@ -579,7 +579,7 @@ for threshold in ${THRESHOLDS}; do
 			echo "Creating ${f}"
 
 			join -t, <( sort -t, -k1,1 ${peptides} ) \
-				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/public_epitope_annotations.sorted.csv ) \
+				<( tail -n +2 /francislab/data1/refs/PhIP-Seq/VirScan/public_epitope_annotations.sorted.csv ) \
 				| awk -F, '{print $2}' | sort | uniq -c  | sort -k1nr,1 | sed -e 's/^\s*//' -e 's/ /,/' \
 				| awk 'BEGIN{FS=OFS=","}{print $2,$1}' > ${f}
 			sed -i "1iSpecies,${subject}" ${f}
