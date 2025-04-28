@@ -60,6 +60,11 @@ if("subject" %in% Zfile[2,c(1:3)]){
 	to_remove = which(Zfile[2,c(1:3)]== "subject")
 	Zfile = Zfile[,-to_remove]
 }
+#	Really should just keep the subject and drop the id column.
+
+
+
+
 
 if("type" %in% Zfile[2,c(1:3)]){
 	to_remove = which(Zfile[2,c(1:3)]== "type")
@@ -77,25 +82,115 @@ Zfile = Zfile[-2,]
 
 print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+print("length(uniqid)")
+print(length(uniqid))
+
+print("uniqid")
+print(uniqid)
+
+print("dim(Zfile)")
+print(dim(Zfile))
+
+
+#	something is off here
+#	to_keep is a list of column index ids? 
+#	grepping for an id has the side effect of getting more than you actually want
+#	[1] "4439"
+#	[1] 26 27 74 75
+#	[1] "1443901"    "1443901dup" "4439"       "4439dup"   
+#	[1] FALSE  TRUE FALSE  TRUE
+
 to_keep = 1
 for(u in uniqid){
-	possible_ids = grep(u, Zfile[,1])
+
+
+#	possible_ids = grep(u, Zfile[,1])	#	this will return all that match (possibly too many)
+
+	possible_ids = grep(paste0("^",u,"$|^",u,"dup$"), Zfile[,1])
+
+#	there also aren't necessarily dups
+
+
+
 	mids = Zfile[possible_ids,1]
 	locs = grepl("dup", mids)
 	to_keep = c(to_keep,possible_ids[c(which(locs==FALSE)[1],which(locs==TRUE)[1]) ] )
 }
 
+
+
+print("to_keep")
+print(to_keep)
+
+print("length(to_keep)")
+print(length(to_keep))
+
 Zfile1 = Zfile[to_keep,]
 rm(Zfile)
 
+print("dim(Zfile1)")
+print(dim(Zfile1))
+
+#print("Zfile1")
+#print(Zfile1)
+
 print("Create a shell file for analysis")
 
+print("Zfile1[,1]")
+print(Zfile1[,1])
+
+print("unique(Zfile1[,1])")
+print(unique(Zfile1[,1]))
+
+print("length(unique(Zfile1[,1]))")
+print(length(unique(Zfile1[,1])))
+
+#	datfile, IMO, is being created bigger than necessary. Because it is a multiple of the length of ids, it works, FOR NOW.
+#	gonna leave it alone
+
 datfile = data.frame(mat.or.vec(length(unique(Zfile1[,1]))-1,3))
+print("head(datfile)1")
+print(head(datfile))
+
+print("dim(datfile)")
+print(dim(datfile))
+
+print("head(uniqid)")
+print(head(uniqid))
+
 colnames(datfile) = c("ID", "case", "peptide")
+print("head(datfile)2")
+print(head(datfile))
+
+
+
 datfile$ID = uniqid
+print("head(datfile)3")
+print(head(datfile))
+
+print("datfile$ID")
+print(datfile$ID)
+
 for(i in c(1:nrow(datfile))){
 	datfile$case[i] = meta$group[which(meta$subject== datfile$ID[i])[1]]
 }
+
+
+
+print("head(Zfile1[,1])")
+print(head(Zfile1[,1]))
+print("head(datfile$ID)")
+print(head(datfile$ID))
+
+#	[1] "head(Zfile1[,1])"
+#	[1] "id"         "4199"       "4199dup"    "1439301"    "1439301dup"
+#	[6] "21129"     
+#	[1] "head(datfile$ID)"
+#	[1] "4199"    "1439301" "21129"   "1439701" "4465"    "1425001"
+
+
+
+
 
 
 # Result File
