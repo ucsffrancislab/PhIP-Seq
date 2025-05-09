@@ -107,14 +107,14 @@ library(ggrepel) # for nice annotations
 ```{r plot 10}
 df<-rawdf %>% mutate(sig=ifelse(pval<0.05,"yes","no"))
 
-ggplot(df, aes(x = beta, y = -log10(pval),size=sig,fill=sig)) +
+ggplot(df, aes(x = exp(beta), y = -log10(pval),size=sig,fill=sig)) +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_point(aes(fill=sig,size=sig),shape=21) +
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 #	coord_cartesian(ylim = c(0, 5), xlim = c(-5, 5)) + # since some genes can have minuslog10padj of inf, we set these limits
 	scale_fill_manual(values=c("#AAAAAA","#2ED0FE"),label=c(">0.05","<0.05"),name=c("p-value")) +
 	scale_size_manual(values=c(2.5,4.5), label=c(">0.05","<0.05"),name=c("p-value")) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
 	theme_bw() +
 	theme(panel.grid.minor = element_blank(),
 		legend.title = element_text(size=14, color="black",lineheight = 1),
@@ -134,14 +134,14 @@ head(df)
 ```
 
 ```{r plot 11}
-ggplot(df, aes(x = beta, y = -log10(pval),size=sig,fill=sig)) +
+ggplot(df, aes(x = exp(beta), y = -log10(pval),size=sig,fill=sig)) +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_point(aes(fill=sig,size=sig,shape=shape)) + scale_shape_identity() +
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 	scale_fill_manual(values=c("#AAAAAA","#2ED0FE"),label=c(">0.05","<0.05"),name=c("p-value")) +
 	scale_size_manual(values=c(2.5,4.5), label=c(">0.05","<0.05"),name=c("p-value")) +
 #	coord_cartesian(ylim = c(0, 5), xlim = c(-5, 5)) + # since some genes can have minuslog10padj of inf, we set these limits
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
 	theme_bw() +
 	theme(panel.grid.minor = element_blank(),
 		legend.title = element_text(size=14, color="black",lineheight = 1),
@@ -154,14 +154,14 @@ ggplot(df, aes(x = beta, y = -log10(pval),size=sig,fill=sig)) +
 
 
 ```{r plot 11b}
-ggplot(df, aes(x = beta, y = -log10(pval))) +
+ggplot(df, aes(x = exp(beta), y = -log10(pval))) +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_point(aes(fill=sig,size=sig,shape=shape)) + scale_shape_identity() +
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 	scale_fill_manual(values=c("#AAAAAA","#2ED0FE"),label=c(">0.05","<0.05"),name=c("p-value")) +
 	scale_size_manual(values=c(2.5,4.5), label=c(">0.05","<0.05"),name=c("p-value")) +
 #	coord_cartesian(ylim = c(0, 5), xlim = c(-5, 5)) + # since some genes can have minuslog10padj of inf, we set these limits
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")")))+
 	theme_bw() +
 	theme(panel.grid.minor = element_blank(),
 		legend.title = element_text(size=14, color="black",lineheight = 1),
@@ -219,12 +219,12 @@ head(df)
 ```
 
 ```{r plot 13}
-ggplot(df, aes(y = -log10(pval), x = beta, col = group)) +
+ggplot(df, aes(y = -log10(pval), x = exp(beta), col = group)) +
 	ggtitle("All Herpesviruses") +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 #	coord_cartesian(ylim = c(0, 5), xlim = c(-5, 5)) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 	geom_point(data = filter(df, group == "Other"), alpha = .1) +
 	geom_point(data = filter(df, !group == "Other")) +
 	theme_classic()
@@ -233,12 +233,12 @@ ggplot(df, aes(y = -log10(pval), x = beta, col = group)) +
 
 
 ```{r plot 14}
-ggplot(df, aes(y = -log10(pval), x = beta, col = group)) +
+ggplot(df, aes(y = -log10(pval), x = exp(beta), col = group)) +
 	ggtitle("All Herpesviruses") +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 #	coord_cartesian(ylim = c(0, 5), xlim = c(-5, 5)) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 	geom_point(data = filter(df, group == "Other"), alpha = .1,size=2) +
 	geom_point(data = filter(df, !group == "Other"), size=4) +
 	scale_color_brewer(palette="Set1") +
@@ -256,12 +256,12 @@ ggplot(df, aes(y = -log10(pval), x = beta, col = group)) +
 
 
 ```{r plot 15}
-ggplot(df, aes(y = -log10(pval), x = beta)) +
+ggplot(df, aes(y = -log10(pval), x = exp(beta))) +
 	ggtitle("All Herpesviruses") +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 #	coord_cartesian(ylim = c(0, 4), xlim = c(-5, 5)) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 	geom_point(data = filter(df, group == "Other"), alpha = .1, size=2) +
 	geom_point(data = filter(df, !group == "Other" & pval<=0.05), size=4, aes(col=group)) +
 	geom_point(data = filter(df, !group == "Other" & pval >0.05), size=2) +
@@ -284,12 +284,12 @@ Tried setting the color to black and then assigning fill which only did a lack d
 
 
 ```{r plot 16}
-ggplot(df, aes(y = -log10(pval), x = beta)) +
+ggplot(df, aes(y = -log10(pval), x = exp(beta))) +
 	ggtitle("Select Herpesviruses") +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 #	coord_cartesian(ylim = c(0, 4), xlim = c(-5, 5)) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 	geom_point(data = filter(df, group == "Other"), alpha = .1, size=2) +
 	geom_point(data = filter(df, !group == "Other" & pval<=0.05), size=4.5, col='black') +
 	geom_point(data = filter(df, !group == "Other" & pval<=0.05), size=4, aes(col=group)) +
@@ -315,13 +315,13 @@ head(df,20)
 ```
 
 ```{r plot 17}
-ggplot(df, aes(y = -log10(pval), x = beta, col = group, size=size, alpha=alpha)) +
+ggplot(df, aes(y = -log10(pval), x = exp(beta), col = group, size=size, alpha=alpha)) +
 	ggtitle("Select Herpes & Adenoviruses") +
 	geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 	geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 	geom_point() +
 #	coord_cartesian(ylim = c(0, 4), xlim = c(-5, 5)) +
-	labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+	labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 	scale_color_brewer(palette="Set1") +
 	theme_bw() +
 	theme(panel.grid.minor = element_blank(),
@@ -357,14 +357,14 @@ volcano_plot = function(title,abbrev){
 
 #	ggplot(localdf, aes(y = -log10(pval), x = beta, col = group, size=size, alpha=alpha, label=label)) +
 #  geom_label_repel() +
-	ggplot(localdf, aes(y = -log10(pval), x = beta, col = group, size=size, alpha=alpha)) +
+	ggplot(localdf, aes(y = -log10(pval), x = exp(beta), col = group, size=size, alpha=alpha)) +
 		ggtitle(title) +
 		geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 		geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 		geom_point() +
 		geom_text(aes(label=as.character(label)), hjust=0.5, nudge_y = 0.1)+
 #		coord_cartesian(ylim = c(0, 4), xlim = c(-5, 5)) +
-		labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+		labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 		scale_color_brewer(palette="Set1") +
 		theme_bw() +
 		theme(panel.grid.minor = element_blank(),
@@ -553,14 +553,14 @@ volcano_plot_solo = function(speci,abbrev,ids,title){
 	#ggplot(localdf, aes(y = -log10(pval), x = exp(beta), col = group, size=size, alpha=alpha)) +
 	#ggplot(localdf, aes(y = pval, x = beta, col = group, size=size, alpha=alpha)) +
 	#print(ggplot(localdf, aes(y = -log10(pval), x = beta, col = group, size=size, alpha=alpha)) +
-	print(ggplot(localdf, aes(y = -log10(pval), x = beta, col = group, size=size)) +
+	print(ggplot(localdf, aes(y = -log10(pval), x = exp(beta), col = group, size=size)) +
 		ggtitle(title) +
 		geom_vline(xintercept=0, linewidth = 0.5,col="gray60",linetype=2)+
 		geom_hline(yintercept=1.305, linewidth = 0.5, linetype=2)+
 		geom_point() +
 		geom_text(aes(label=as.character(label)), hjust=0.5, nudge_y = 0.1)+
 #		coord_cartesian(ylim = c(0, 4), xlim = c(-5, 5)) +
-		labs(x="beta", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
+		labs(x="exp(beta)", y=expression(paste("-log"[10]*"(",italic("P"),")"))) +
 		scale_color_brewer(palette="Set1") +
 		theme_bw() +
 		theme(panel.grid.minor = element_blank(),
