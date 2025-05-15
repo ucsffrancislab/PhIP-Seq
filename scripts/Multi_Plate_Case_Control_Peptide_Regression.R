@@ -246,7 +246,7 @@ print(dim(peptide_calls))
 #[1]  126 1001
 
 # Loop over every person, and convert all of their peptide Z scores into 0's and 1's.
-print("Loop over every person, and convert all of their peptide Z scores into 0's and 1's.")
+print("Loop over every person, extract mins and, if z scores, convert all of their peptide Z scores into 0's and 1's.")
 print("for(i in c(1:nrow(peptide_calls))){")
 for(i in c(1:nrow(peptide_calls))){
 	print(i)
