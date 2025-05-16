@@ -51,8 +51,21 @@ df.shape
 
 
 
+
+
+
+
+#	Why? Just Blank50_1?
+
+#	Blank50_1 is on 20241204-Illumina-PhIP plate13 ( I should remove it from the manifest and not put this here )
+
+#DO NOT USE Blank24dup plate6
+
 if( df.columns.get_level_values('sample').isin(['Blank50_1']).any() ):
 	df = df.drop('Blank50_1', level='sample', axis=1)
+
+
+
 
 
 
