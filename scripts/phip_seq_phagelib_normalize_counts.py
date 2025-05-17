@@ -50,7 +50,10 @@ df.shape
 
 #	Blank50_1 is on 20241204-Illumina-PhIP plate13 ( I should remove it from the manifest and not put this here )
 
-#DO NOT USE Blank24dup plate6
+#DO NOT USE Blank24dup plate6 - why? very, very low read counts. not actually in the manifest as I removed
+
+if( df.columns.get_level_values('sample').isin(['Blank24dup']).any() ):
+	df = df.drop('Blank24dup', level='sample', axis=1)
 
 if( df.columns.get_level_values('sample').isin(['Blank50_1']).any() ):
 	df = df.drop('Blank50_1', level='sample', axis=1)
@@ -76,7 +79,7 @@ df=df.fillna(0)
 print(df.head())
 
 
-samples=df.columns.get_level_values('sample').unique().to_numpy()
+#	samples=df.columns.get_level_values('sample').unique().to_numpy()
 #	df_corr = pd.DataFrame(
 #		columns=samples,
 #		index=samples)
@@ -117,17 +120,39 @@ n=n.fillna(0)
 #	We first mapped the sequencing reads to the reference library sequences using Bowtie (55) and counted the number of reads corresponding to each peptide in the input library and each sample “output”. For each sample, we normalized the read counts for each peptide by the total read counts for the sample. Then, we divided the normalized read counts of each peptide in the sample by the normalized read counts of each peptide in the input library to obtain an enrichment value. We averaged enrichment values for technical replicates of a sample.
 #df[df.loc[:,(df.columns.get_level_values('type') == 'Phage Library')].median(axis='columns')>0]
 
+
+
+
+
+#	They "averaged enrichment values for technical replicates". We took the minimum
+
+
+
+
 print(n.columns.get_level_values('plate').unique())
 
 ss=[]
 for plate in n.columns.get_level_values('plate').unique():
 	a = n.loc[:,(n.columns.get_level_values('plate') == plate)]
 	a = a[a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis='columns')>0]
-	ss.append(
-		a.div(
-			a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis=1),
-				axis=0)
-	)
+	#	ss.append(
+	#		a.div(
+	#			a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis=1),
+	#		axis=0)
+
+	blanksmedian = a.loc[:,(a.columns.get_level_values('type') == 'input')].median(axis=1)
+	plibsmedian=a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis=1)
+	#ss.append( a.div(plibsmedian, axis=0).sub( blanksmedian.div(plibsmedian, axis=0), axis=0 ) )
+
+	b=a.div(plibsmedian, axis=0).sub( blanksmedian.div(plibsmedian, axis=0), axis=0 )
+	b[b<0]=0
+	ss.append( b )
+
+	#	ss.append(
+	#		a.div(a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis=1),
+	#		axis=0).sub( a.loc[:,(a.columns.get_level_values('type') == 'input')].median(axis=1), axis=0).div(
+	#			a.loc[:,(a.columns.get_level_values('type') == 'Phage Library')].median(axis=1), axis=0)
+	#	)
 
 s=pd.concat(ss,axis=1)
 s=s.sort_index(axis=1)
@@ -136,11 +161,13 @@ s=s.fillna(0)
 print( s.head() )
 
 #	use the "reset_index" technique otherwise, the multi-index ends up on a line by itself.
-s.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.csv", sep=',', index=False)
+#s.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.csv", sep=',', index=False)
+s.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.subtracted.csv", sep=',', index=False)
 
 
 
-s.droplevel([2,4,5,6,7,8],axis='columns').reorder_levels(["subject","type","sample"],axis='columns').T.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.trim.csv", sep=',', index=False)
+#s.droplevel([2,4,5,6,7,8],axis='columns').reorder_levels(["subject","type","sample"],axis='columns').T.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.trim.csv", sep=',', index=False)
+s.droplevel([2,4,5,6,7,8],axis='columns').reorder_levels(["subject","type","sample"],axis='columns').T.reset_index().to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.subtracted.trim.csv", sep=',', index=False)
 
 
 
@@ -149,7 +176,7 @@ s.droplevel([2,4,5,6,7,8],axis='columns').reorder_levels(["subject","type","samp
 
 
 
-#	
+
 #	samples=s.columns.get_level_values('sample').unique().to_numpy()
 #	s_corr = pd.DataFrame( columns=samples, index=samples )
 #	for sample1 in samples:
@@ -162,5 +189,5 @@ s.droplevel([2,4,5,6,7,8],axis='columns').reorder_levels(["subject","type","samp
 #		
 #	s_corr=s_corr.fillna(0)
 #	s_corr.to_csv( os.path.splitext( args.input[0] )[0]+".normalized.normalized.pearson.csv", sep=',', index=True)
-#	
+
 
