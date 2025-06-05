@@ -174,28 +174,28 @@ cat ${INPUT} \
 #		this can be very slow if the input is in .gz format
 
 
-
 #	~/.local/cd-hit-v4.8.1-2019-0228/cd-hit \
 #		-i orf_tiles-${TILESIZE}-${OVERLAP}.fasta \
 #		-o orf_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
-#		-c 0.95 -G 0 -A  50 -M 0 -T 1 -d 0 -l 4	# <-- Try this again?
-##		-c 1.00 -G 0 -A 100 -M 0 -T 1 -d 0 -l 4
-#	
-#	
+#		-c 1.00 -G 0 -A 100 -M 0 -T 1 -d 0 -l 4
+#	#	-c 0.95 -G 0 -A  50 -M 0 -T 1 -d 0 -l 4	# <-- Try this again?
 #	
 #	#	-c 1.00 -G 0 -A 100 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))
 #	#	-c 0.95 -G 0 -A 50 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))	#	from paper
 #	#	-c 0.95 -G 0 -A 100 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))
 #	#	no difference with 56/28
 #	#	-c 0.95 -G 0 -A 50 -M 0 -T 1 -d 0
+#
+#	#	>EGFR_HotSpot-EGFR:1016-1026:Mutation:Q1021*|CTERM|STOP
+#	#	YLIPQ*GFFSS
+#	#	Warning: from file "cterm_tiles-56-28.fasta",
+#	#	Discarding invalid sequence or sequence without identifier and description!
 #	
 #	~/.local/cd-hit-v4.8.1-2019-0228/cd-hit \
 #		-i cterm_tiles-${TILESIZE}-${OVERLAP}.fasta \
 #		-o cterm_tiles_clustered-${TILESIZE}-${OVERLAP}.fasta \
-#		-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l 4 #	<-- Try this again?
-##		-c 1.00 -G 0 -A 100 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l 4
-#	
-#	
+#		-c 1.00 -G 0 -A 100 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l 4
+#	#	-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l 4 #	<-- Try this again?
 #	
 #	#	-c 1.00 -G 0 -A 100 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))
 #	#	-c 0.95 -G 0 -aL 1.0 -aS 1.0 -M 0 -T 1 -d 0 -l $((TILESIZE/10+4))	#	from paper
@@ -211,75 +211,6 @@ cat orf_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	| pepsyn pad -l $TILESIZE --c-term - - \
 	> protein_tiles-${TILESIZE}-${OVERLAP}.fasta
 
-##	CTA, ATA, CCC, CGA, CGG, AGA, AGG, and GGA
-##GGA G
-##AGG R
-##AGA R
-##CGG R
-##CTA L
-##ATA I
-##CCC P
-##CGA R
-#
-#cat << EOF > ${TMPDIR}/$$.codon_table.txt
-#TTT F
-#TTC F
-#TTA L
-#TTG L
-#TCT S
-#TCC S
-#TCA S
-#TCG S
-#TAT Y
-#TAC Y
-#TAA *
-#TAG *
-#TGT C
-#TGC C
-#TGA *
-#TGG W
-#CTT L
-#CTC L
-#CTG L
-#CCT P
-#CCA P
-#CCG P
-#CAT H
-#CAC H
-#CAA Q
-#CAG Q
-#CGT R
-#CGC R
-#ATT I
-#ATC I
-#ATG M
-#ACT T
-#ACC T
-#ACA T
-#ACG T
-#AAT N
-#AAC N
-#AAA K
-#AAG K
-#AGT S
-#AGC S
-#GTT V
-#GTC V
-#GTA V
-#GTG V
-#GCT A
-#GCC A
-#GCA A
-#GCG A
-#GAT D
-#GAC D
-#GAA E
-#GAG E
-#GGT G
-#GGC G
-#GGG G
-#EOF
-
 
 PREFIX=AGGAATTCCGCTGCGT
 SUFFIX=GCCTGGAGACGCCATC
@@ -289,7 +220,6 @@ FREQTHRESH=0.01
 
 #	pepsyn does not seem to have ever actually implemented the --codon-table option
 
-#	| pepsyn revtrans --codon-table ${TMPDIR}/$$.codon_table.txt --codon-freq-threshold $FREQTHRESH --amber-only - - \
 cat protein_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	| pepsyn revtrans --codon-freq-threshold $FREQTHRESH --amber-only - - \
 	| pepsyn prefix -p $PREFIX - - \
@@ -298,29 +228,14 @@ cat protein_tiles-${TILESIZE}-${OVERLAP}.fasta \
 	--clip-right $SUFFIXLEN --codon-freq-threshold $FREQTHRESH \
 	--amber-only - oligos-${TILESIZE}-${OVERLAP}.fasta
 
-#--site CTA --site GGA \
-#--site ATA --site CCC --site CGA \
-#--site CGG --site AGA --site AGG 
 
-# Thank you! TAG is good if you already excluded the restriction sites (EcoRI GAATTC and HindIII AAGCTT) as well as the uncommon codons in E.coli (CTA, ATA, CCC, CGA, CGG, AGA, AGG, GGA)
-
-
+#	findsite is not specific to frames so the following are found MANY times
 
 #	must clip-left as the prefix contain EcoRI
 pepsyn findsite --site EcoRI --clip-left 3 oligos-${TILESIZE}-${OVERLAP}.fasta
 
 pepsyn findsite --site HindIII oligos-${TILESIZE}-${OVERLAP}.fasta
 
-#	findsite is not specific to frames so the following are found MANY times
-
-#	pepsyn findsite --site CTA oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site ATA oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site CCC oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site CGA oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site CGG oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site AGA oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site AGG oligos-${TILESIZE}-${OVERLAP}.fasta
-#	pepsyn findsite --site GGA oligos-${TILESIZE}-${OVERLAP}.fasta
 
 pepsyn clip \
 	--left $PREFIXLEN \
