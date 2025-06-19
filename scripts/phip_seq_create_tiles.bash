@@ -95,6 +95,24 @@ cat ${INPUT} \
 	| pepsyn disambiguateaa - - \
 	> cterm_tiles-${TILESIZE}-${OVERLAP}.fasta
 
+#	#	Trying to avoid a tile being "duplicated" ish in specialized case
+#	#	If a sequence length is a factor of TILESIZE and OVERLAP,
+#	#	the last tile is essentially duplicated with STOP codon added.
+#	
+#	cat ${INPUT} \
+#		| pepsyn filterlen -M 55 - - \
+#		| pepsyn x2ggsg - - \
+#		| pepsyn ctermpep -l $TILESIZE --add-stop - - \
+#		| pepsyn disambiguateaa - - \
+#		> cterm_tiles-${TILESIZE}-${OVERLAP}.fasta
+#	
+#	cat ${INPUT} \
+#		| pepsyn filterlen -m 57 - - \
+#		| pepsyn x2ggsg - - \
+#		| pepsyn ctermpep -l $TILESIZE --add-stop - - \
+#		| pepsyn disambiguateaa - - \
+#		>> cterm_tiles-${TILESIZE}-${OVERLAP}.fasta
+
 
 #	-l default is 10 so any read shorter is ignored
 #		set to ..... half of tile size????
