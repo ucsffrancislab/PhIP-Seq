@@ -101,8 +101,8 @@ for(i in c(1:length(plates))){
   }
 
   # read in the manifest file
-  #mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
 	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
+
   # Create a categorical variable, assign all of these the same number to indicate plate.
   mf$plate = i
   mfs[[i]] = mf

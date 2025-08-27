@@ -88,14 +88,8 @@ posfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-	#posfile = read.csv(paste0(plates[i],"/seropositive.",Z,".csv"), header = TRUE, sep = ",")
-	#posfile = read.csv(paste(plates[i],opt$sfile_basename,sep="/"), header = TRUE, sep = ",")
 	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"), sep = ",", header=TRUE))
-	#if( opt$keep_only_B ){
-	#	posfile1 = posfile[grep("_B$", posfile$id), ]
-	#}else{
-	#	posfile1 = posfile
-	#}
+
 	if( opt$keep_all_ids ){
 		posfile1 = posfile
 	}else{
@@ -111,9 +105,8 @@ for(i in c(1:length(plates))){
 	}
 
 	# read in the manifest file
-	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
-	#mf = read.csv(mfname, sep= ",", header = TRUE)
 	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
+
 	# Create a categorical variable, assign all of these the same number to indicate plate.
 	mf$plate = i
 	mfs[[i]] = mf
@@ -126,11 +119,7 @@ manifest = Reduce(rbind, mfs)
 rm(mfs)
 
 
-
 # Identify the unique subjects to include in the analyses.
-
-#uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-
 if ( opt$sex == "" ){
 	print("Sex is not set so not filtering on sex.")
 	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
@@ -140,9 +129,6 @@ if ( opt$sex == "" ){
 }
 
 print(uniq_sub)
-
-
-
 
 
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
@@ -174,13 +160,16 @@ for(i in c(1:nrow(viral_calls))){
 	# Get plate to pull from
 	mp = manifest$plate[which(manifest$subject==id)][[1]]
 
-	# Extract the rows containing the duplicate samples, assumes they both contain the id, and that id doesn't match another subjects in a grep (i.e IDs 100 and 1000.)
+	# Extract the rows containing the duplicate samples, assumes they both contain the id,
+	#	and that id doesn't match another subjects in a grep (i.e IDs 100 and 1000.)
 	rloc = which(posfiles[[mp]][,1] == id)[1]
 
 	myCounts = data.frame(t(posfiles[[mp]][rloc, which(colnames(posfiles[[mp]]) %in% common_virs)]))
 	myCounts[,1]=as.numeric(myCounts[,1])
 	if(length(which((common_virs == row.names(myCounts))==FALSE))>0){
-		cat(paste("\nError:", id, ":", "plate", mp, ":Viruses out of order, need to ensure they are ordered the same as the common_virs vector. This should never appear.", sep = " "), file=logname, append = TRUE, sep= "\n")
+		cat(paste("\nError:", id, ":", "plate", mp,
+			":Viruses out of order, need to ensure they are ordered the same as the common_virs vector. This should never appear.",
+			sep = " "), file=logname, append = TRUE, sep= "\n")
 	}
 
 	viral_calls[i, -1] = ifelse(myCounts > 1, 1, 0)

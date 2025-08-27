@@ -2,7 +2,8 @@
 
 #	Uses the VirScan defined viral calls to assess difference in seropositivity between two user defined groups.
 #	Specifically, it only utilizes the "seropositive.csv" file to make calls.
-#	Currently it is hardcoded to call a virus positive the value in the seropositive.csv file is >1. This may not be exact VirScan threshold, but I recall their thresholds were basically this.
+#	Currently it is hardcoded to call a virus positive the value in the seropositive.csv file is >1.
+#		This may not be exact VirScan threshold, but I recall their thresholds were basically this.
 #	Only uses the "_B" columns, where the Public epitopes were assessed before viral scoring.
 #	Only makes calls for viruses with known public epitopes.
 #	Outputs a file "Seropositivity_Prop_test_results*" which also indicates the two groups compared.
@@ -40,16 +41,10 @@ library(data.table)
 # Seropositivity Test
 
 # Input parameters
-
-#groups_to_compare = c("case", "control" )
-#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
-
 groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
-#posfile = read.csv(paste0(opt$working_dir, paste("/seropositive",Z,"csv",sep=".")), header = TRUE, sep = ",")
-#posfile = read.csv(opt$sfilename, header = TRUE, sep = ",")
 posfile <- data.frame(data.table::fread(opt$sfilename, sep = ",", header=TRUE))
 
 print("Keep only 'Before' samples")
@@ -67,8 +62,6 @@ if( opt$keep_all_ids ){
 rm(posfile)
 
 print("Read in the metadata file")
-
-#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
@@ -95,7 +88,8 @@ for(sp in c(1:(nrow(pvalues)))){
 
 	pvalues$freq_case[sp] = n_case_success/n_cases
 	pvalues$freq_control[sp] = n_control_success/n_control
-	prop = prop.test(c(n_case_success, n_control_success), c(n_cases, n_control), p = NULL, alternative = "two.sided", correct = TRUE)
+	prop = prop.test(c(n_case_success, n_control_success), c(n_cases, n_control),
+		p = NULL, alternative = "two.sided", correct = TRUE)
 	pvalues$pval[sp] = prop$p.value
 }
 
@@ -109,5 +103,6 @@ outfile=paste0(opt$output_dir, "/",
 
 
 print(paste0("Writing ",outfile))
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
+	outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 

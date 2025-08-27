@@ -1,8 +1,12 @@
 #!/usr/bin/env Rscript
 
 #	Assesses differences between epitopes for two groups.
-#	For a user provided Z-score threshold, and two groups (chosen from the manifest "type" column), this will compute a p-value for the difference in proportion of samples with that tile present between the two groups. Writes a file in the same data directory, with name "Tile Comparison*" (this naming is new so it doesnt match the output names in the older test folders.
-#	Output p-values are not adjusted for any multiple testing. NA p values are produced when tile proportion is 1 in both or 0 in both.
+#	For a user provided Z-score threshold, and two groups (chosen from the manifest "type" column),
+#	this will compute a p-value for the difference in proportion of samples with that tile present
+#	between the two groups. Writes a file in the same data directory, with name "Tile Comparison*"
+#		(this naming is new so it doesnt match the output names in the older test folders.
+#	Output p-values are not adjusted for any multiple testing.
+#		NA p values are produced when tile proportion is 1 in both or 0 in both.
 
 
 library("argparse")
@@ -38,20 +42,11 @@ Z = opt$zscore
 
 library(data.table)
 
-
-# Read in the Z-score file  (wihtout transpose and remove the transpose line)
-
-#Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-#Zfile = data.frame(t(Zfile))
-
-#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+# Read in the Z-score file  (without transpose and remove the transpose line)
 Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
-#Zfile = data.frame(t(Zfile))
 print(Zfile[1:5,1:5])
 
 # Read in the metadata file
-
-#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
@@ -61,9 +56,6 @@ if("subject" %in% Zfile[2,c(1:3)]){
 	Zfile = Zfile[,-to_remove]
 }
 #	Really should just keep the subject and drop the id column.
-
-
-
 
 
 if("type" %in% Zfile[2,c(1:3)]){
@@ -103,14 +95,7 @@ print(dim(Zfile))
 to_keep = 1
 for(u in uniqid){
 
-
-#	possible_ids = grep(u, Zfile[,1])	#	this will return all that match (possibly too many)
-
 	possible_ids = grep(paste0("^",u,"$|^",u,"dup$"), Zfile[,1])
-
-#	there also aren't necessarily dups
-
-
 
 	mids = Zfile[possible_ids,1]
 	locs = grepl("dup", mids)
@@ -130,9 +115,6 @@ rm(Zfile)
 
 print("dim(Zfile1)")
 print(dim(Zfile1))
-
-#print("Zfile1")
-#print(Zfile1)
 
 print("Create a shell file for analysis")
 
@@ -220,18 +202,18 @@ for(pep_index in c(1:(ncol(Zfile1)-1))){
 	pvalues$pval[pep_index] = NA
 	if(length(which(dfl$case==groups_to_compare[1]))>4 & length(which(dfl$case==groups_to_compare[2]))>4){
 		# If its absent in everyone, report that
-		if(sum(dfl$peptide)==0 ){
+		if(sum(dfl$peptide)==0 ) {
 			pvalues$freq_case[pep_index] = 0
 			pvalues$freq_control[pep_index] = 0
 			pvalues$pval[pep_index] = NA
-		}else{
+		} else {
 
 			# If its present in everyone, report that
-			if(sum(dfl$peptide)==nrow(dfl) ){
+			if(sum(dfl$peptide)==nrow(dfl) ) {
 				pvalues$freq_case[pep_index] = 1
 				pvalues$freq_control[pep_index] = 1
 				pvalues$pval[pep_index] = NA
-			}else{
+			} else {
 
 				# If its not present in everyone, do some analysis
 				# For now, a proportion test
@@ -252,7 +234,8 @@ for(pep_index in c(1:(ncol(Zfile1)-1))){
 
 print("close loop over peptides")
 
-colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]), paste0("freq_", groups_to_compare[2]), "pval")
+colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]),
+	paste0("freq_", groups_to_compare[2]), "pval")
 
 
 outfile=paste0(opt$output_dir, "/",
@@ -262,6 +245,7 @@ outfile=paste0(opt$output_dir, "/",
 
 
 print(paste0("Writing ",outfile))
-write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),], outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
+write.table(pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),],
+	outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
 
 

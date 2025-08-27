@@ -2,10 +2,15 @@
 
 #	merged with Case_Control_Seropositivity_Frac.R as it requires the output of this script.
 
-#	Creates a table "Viral_Frac_Hits_Z_*.csv" indicating the fraction of tiles "hit" for each virus, for each sample, for the specified Z. (number tiles hit for viral species/total tiles associated with viral species)
+#	Creates a table "Viral_Frac_Hits_Z_*.csv" indicating the fraction of tiles "hit" for each virus,
+#	for each sample, for the specified Z.
+#	(number tiles hit for viral species/total tiles associated with viral species)
 #	This is a prerequisite to running the below Case_Control_Seropositivity_Frac.R script.
-#	This table is computed for all samples on the plate, so no need to specify anything, if they are in the manifest, their viral fractions are computed.
-#	We are using this ultimately as an alternate way to call a virus present, by thresholding the proportion of tiles present (see next file). This of course comes with many caveats, like tile uniqueness/homology.
+#	This table is computed for all samples on the plate, so no need to specify anything,
+#		if they are in the manifest, their viral fractions are computed.
+#	We are using this ultimately as an alternate way to call a virus present,
+#		by thresholding the proportion of tiles present (see next file).
+#	This of course comes with many caveats, like tile uniqueness/homology.
 
 
 library("argparse")
@@ -49,16 +54,11 @@ library(data.table)
 
 
 print("Read in the metadata file")
-
-#meta = read.csv(opt$manifest, sep= ",", header = TRUE)
 meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
-print("Read in the Z file")
 
-#Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
+print("Read in the Z file")
 Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
-#Zfile = data.frame(t(Zfile))
 print(Zfile[1:5,1:5])
 
 #	[1] "Comparing these groups"
@@ -160,8 +160,10 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 #	merged 2 scripts since one needs the output of the other
 
 
-#	Assesses differences in the proportion of samples with virus called present between two user specified groups (from the manifest "type" column).
-#	Uses our own definition of seropositivity (Virus present if >"Vir_frac" proportion of tiles are hit at Z > "Z_thresh"). I typically have used Vir_frac = 0.02 or 0.05 based on eyeballing the Viral_Frac_Hits table generated above.
+#	Assesses differences in the proportion of samples with virus called present between two user
+#	specified groups (from the manifest "type" column).
+#	Uses our own definition of seropositivity (Virus present if >"Vir_frac" proportion of tiles are hit at Z > "Z_thresh").
+#	I typically have used Vir_frac = 0.02 or 0.05 based on eyeballing the Viral_Frac_Hits table generated above.
 #	Outputs a file in the same test directory called "Viral_Sero_test_results*" with indicators of the groups and parameters used.
 
 
@@ -189,8 +191,10 @@ for(i in c(1:nrow(pvalues))){
 
 	# For each case, determine number of ids that are >3.5 in both reps
 
-	n_case_success = length(which(as.numeric(virfracs[which(virfracs$id %in% cases), which(colnames(virfracs) == species)]) > Vir_frac))
-	n_control_success = length(which(as.numeric(virfracs[which(virfracs$id %in% controls), which(colnames(virfracs) == species)]) > Vir_frac))
+	n_case_success = length(which(as.numeric(virfracs[which(virfracs$id %in% cases),
+		which(colnames(virfracs) == species)]) > Vir_frac))
+	n_control_success = length(which(as.numeric(virfracs[which(virfracs$id %in% controls),
+		which(colnames(virfracs) == species)]) > Vir_frac))
 
 	prop = prop.test(c(n_case_success, n_control_success), c(n_cases, n_control), p = NULL, alternative = "two.sided", correct = TRUE)
 	pvalues$freq_case[i] = n_case_success/n_cases
