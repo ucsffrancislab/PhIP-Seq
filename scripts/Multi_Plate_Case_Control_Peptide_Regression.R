@@ -151,7 +151,7 @@ rm(species_id)
 
 
 # Read in the multiple manifest files.
-mfs  = list()
+mfs = list()
 
 for(i in c(1:length(plates))){
 	# Find the manifest file for the given plate. Requires only ONE manifest file per plate folder
@@ -309,10 +309,8 @@ datfile$sex = as.factor(datfile$sex)
 datfile$plate = as.factor(datfile$plate)
 print(datfile$plate)
 
-
 print(head(datfile))
 cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")
-
 
 formula = "case ~ peptide + age"
 if( length(unique(datfile$sex)) > 1 )
@@ -322,7 +320,6 @@ if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
 
 print(paste("formula",formula))
 cat(paste("formula",formula), file = logname, append = TRUE, sep = "\n")
-
 
 
 #----- Shell function for logistic regression analysis.
