@@ -2,11 +2,28 @@
 
 #	Uses a logistic regression framework to assess the association between the presence of each peptide and user specified case control status.
 #	Uses a user specifed Z score threshold (i.e. Z >3.5) to call positivity
-#	Takes as input a list of directories (e.g. plates), to use in the analysis, the directories should contain the Zscores.t.csv and the manifest* files.
+#	Takes as input a list of directories (e.g. plates), to use in the analysis, the directories should contain the Zscores.csv and the manifest* files.
 #	Only peptides found in both files are included in the analysis
 #	The logistic regression adjusts for age (continuous), sex (M/F factor), and plate (1..n plates, factor)
 #	The output (to a user specified directory owd , is a list of peptides, ordered by ascending p-value. It includes peptide ID, species, frequency of peptide in the first group, frequency of the peptide in the second group, and the beta, standard error, and p-value from the multivariable logistic regression (NA if there is no variation in the presence of the peptide overall, e.g. all 0 or all 1).
 #	The file will also output a logfile with similar naming convention, which includes the details of the plates used in the analysis, sample sizes, etc.
+
+#	Expecting this precise format...
+#	hc out.plate14/Counts.normalized.subtracted.trim.select-121314.csv 
+#	y,x,id,1,10,100,1000,10000,10001,10002,10003,10004,10005,10006,10007,10008,10009,1001,10010,10011,10
+#	subject,type,species,Papiine herpesvirus 2,Vaccinia virus,Human herpesvirus 3,Hepatitis B virus,Huma
+#	024JCM,pemphigus serum,024JCM,0.0,0.0,9.16111056217155,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0
+#	024JCM,pemphigus serum,024JCMdup,0.0,0.0,0.6039953081644461,0.6039953081644461,0.0,0.0,2.41598123265
+#	074KBP,pemphigus serum,074KBP,0.0,0.0,0.0,0.0,0.0,0.0,0.0,1.118460014774857,0.0,0.0,0.0,0.0,0.0,0.0,
+#	074KBP,pemphigus serum,074KBPdup,0.0,0.0,3.4158313535744114,0.0,6.831662707148823,1.1386104511914705
+#	
+#	hc out.plate14/Zscores.select-121314.csv 
+#	y,x,id,1,10,100,1000,10000,10001,10002,10003,10004,10005,10006,10007,10008,10009,1001,10010,10011,10
+#	subject,type,species,Papiine herpesvirus 2,Vaccinia virus,Human herpesvirus 3,Hepatitis B virus,Huma
+#	024JCM,pemphigus serum,024JCM,-0.22559419625872576,-0.22559419625872576,2.1116455734686204,-0.225594
+#	024JCM,pemphigus serum,024JCMdup,-0.3524648371111257,-0.3524648371111257,-0.5719156651485517,-0.3524
+#	074KBP,pemphigus serum,074KBP,-0.3906228577599959,-0.3906228577599959,-0.6522456635017637,-0.3906228
+#	074KBP,pemphigus serum,074KBPdup,-0.44436930651974654,-0.44436930651974654,-0.17707278654036396,-0.4
 
 
 library("argparse")
@@ -35,6 +52,9 @@ parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
 parser$add_argument('--counts', action='store_true', help='values are counts not zscores to %(prog)s (default: %(default)s)')
 
 
+parser$add_argument('--ignore_plate', action='store_true', help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
+
+
 opt <- parser$parse_args()
 
 
@@ -60,11 +80,7 @@ Z = opt$zscore
 #Groups to compare, from the manifest file.
 # Order here matters, the first will be coded to 1, the second to 0. So choose the event (aka glioma or pemphigus) to be coded to 1.
 
-
 date=format(Sys.Date(),"%Y%m%d")
-#	paste(date, "Multiplate_Peptide_Comparison",
-
-
 
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_Peptide_Comparison",
@@ -95,17 +111,14 @@ cat("\n", file = logname, append = TRUE)
 
 
 
-# Read in multiple plate Zscores.t files.
+# Read in multiple plate Zscores files.
 Zfiles = list()
 species_ids = list()
 
 for(i in c(1:length(plates))){
-	#Zfilename = paste0(plates[i], "/Zscores.t.csv")
 	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
 	print(paste0("Reading ",Zfilename))
-	#Zfile= read.csv(Zfilename, sep = ",", header=FALSE)
 	Zfile <- data.frame(data.table::fread(Zfilename, sep = ",", header=FALSE))	#	50x faster
-	#Zfile = data.frame(t(Zfile))
 
 	print("Zfile[1:5,1:5]")
 	print(Zfile[1:5,1:5])
@@ -148,8 +161,6 @@ for(i in c(1:length(plates))){
 	}
 
 	# read in the manifest file
-	#mf = read.csv(paste(mfname, sep = ""), sep= ",", header = TRUE)
-	#mf = read.csv(mfname, sep= ",", header = TRUE)
 	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))	#	50x faster
 
 	# Create a categorical variable, assign all of these the same number to indicate plate.
@@ -169,6 +180,7 @@ rm(mfs)
 
 # Identify the unique subjects to include in the analyses.
 
+print("Selecting subjects")
 if ( opt$sex == "" ){
 	print("Sex is not set so not filtering on sex.")
 	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
@@ -178,6 +190,7 @@ if ( opt$sex == "" ){
 }
 
 print(uniq_sub)
+cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")
 
 
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
@@ -218,19 +231,6 @@ for(i in c(1:length(plates))){
 cat("\nStart converting Z scores to peptide binary calls", file = logname, append = TRUE, sep = "\n")
 
 
-
-
-
-#common_peps = common_peps[1:1000]
-#print(common_peps[1:5])
-#[1] "1"     "10"    "100"   "1000"  "10000"
-#print(dim(common_peps))
-#NULL
-
-
-
-
-
 peptide_calls = data.frame(mat.or.vec(length(uniq_sub), length(common_peps)+1))
 colnames(peptide_calls) = c("ID", common_peps)
 peptide_calls$ID = uniq_sub
@@ -245,6 +245,7 @@ print(peptide_calls[1:9,1:9])
 print(dim(peptide_calls))
 #[1]  126 1001
 
+
 # Loop over every person, and convert all of their peptide Z scores into 0's and 1's.
 print("Loop over every person, extract mins and, if z scores, convert all of their peptide Z scores into 0's and 1's.")
 print("for(i in c(1:nrow(peptide_calls))){")
@@ -257,8 +258,6 @@ for(i in c(1:nrow(peptide_calls))){
 
 	# Extract the rows containing the duplicate samples, assumes they both contain the id, and that id doesn't match another subjects in a grep (i.e IDs 100 and 1000.)
 	rlocs = grep(id, Zfiles[[mp]][,1])
-#	print("head(rlocs)")
-#	print(head(rlocs))
 
 	myZs = data.frame(t(Zfiles[[mp]][c(1,rlocs), which(Zfiles[[mp]][1,] %in% common_peps)]))
 	myZs[,c(2:3)] = sapply(myZs[,c(2:3)], as.numeric)
@@ -282,8 +281,11 @@ cat("...Complete.", file = logname, append = TRUE, sep = "\n")
 
 rm(Zfiles)
 
-print("peptide_calls[1:5,1:5]")
-print(peptide_calls[1:5,1:5])
+print("peptide_calls[1:9,1:9]")
+print(peptide_calls[1:9,1:9])
+
+cat("peptide_calls[1:20,1:12]", file = logname, append = TRUE, sep = "\n")
+cat(capture.output(print(peptide_calls[1:20,1:12])), file = logname, append = TRUE, sep = "\n")
 
 #	Create a shell file for analysis, Leaves the peptide column blank, we will repopulate this with every peptide.
 #	I still don't know what a "shell file" is in this context
@@ -293,6 +295,7 @@ colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
 datfile$ID = uniq_sub
 datfile$peptide = NA
 print("for(i in c(1:nrow(datfile))){")
+print("Prep datfile")
 for(i in c(1:nrow(datfile))){
 	print(i)
 	man_loc = which(manifest$subject== datfile$ID[i])[1]
@@ -304,27 +307,37 @@ for(i in c(1:nrow(datfile))){
 datfile$age = as.numeric(datfile$age)
 datfile$sex = as.factor(datfile$sex)
 datfile$plate = as.factor(datfile$plate)
+print(datfile$plate)
+
+
+print(head(datfile))
+cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")
+
+
+formula = "case ~ peptide + age"
+if( length(unique(datfile$sex)) > 1 )
+	formula = paste(formula, "sex", sep = " + ")
+if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
+	formula = paste(formula, "plate", sep = " + ")
+
+print(paste("formula",formula))
+cat(paste("formula",formula), file = logname, append = TRUE, sep = "\n")
 
 
 
 #----- Shell function for logistic regression analysis.
-log_reg = function(df){
+log_reg = function(df,logitmodel){
 
 	# A simple model that simply adjusts for plate/batch in the model. When the number
 	#	of plates becomes large, a mixed effects regression model should be considered.
 	# as there are likely differences in the peptide calling sensitivity between plates,
 	#	and so peptide probably has different associations with case based on plate.
 
-
-if ( opt$sex == "" ){
-	logitmodel = "case~ peptide +age + sex + plate"
-} else{
-	logitmodel = "case~ peptide +age + plate"
-}
-
 	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
+	go = summary(logit_fun)
 
-	go= summary(logit_fun)
+	cat(capture.output(print(go)), file = logname, append = TRUE, sep = "\n")
+
 	#beta = go$coefficients[2,1]
 	#se = go$coefficients[2,2]
 	#pval = go$coefficients[2,4]
@@ -340,7 +353,7 @@ if ( opt$sex == "" ){
 
 # Result File
 pvalues = data.frame(mat.or.vec(length(common_peps), 7))
-colnames(pvalues) = c("peptide", "species",  "freq_case", "freq_control", "beta", "se", "pval")
+colnames(pvalues) = c("peptide", "species", "freq_case", "freq_control", "beta", "se", "pval")
 pvalues$peptide = common_peps
 
 print("pvalues[1:5,1:5]")
@@ -358,6 +371,9 @@ cat("\nStart loop over peptide logistic regression analysis:", file = logname, a
 
 print("length(common_peps)")
 print(length(common_peps))
+
+cat("length(common_peps)", file = logname, append = TRUE, sep = "\n")
+cat(length(common_peps), file = logname, append = TRUE, sep = "\n")
 
 print("for(i in c(1:length(common_peps))){")
 for(i in c(1:length(common_peps))){
@@ -384,7 +400,7 @@ for(i in c(1:length(common_peps))){
 			pvalues$se[i] = NA
 			pvalues$pval[i] = NA
 		}else{
-			results =log_reg(datfile)
+			results = log_reg(datfile,formula)
 			pvalues$beta[i]= results[1]
 			pvalues$se[i] = results[2]
 			pvalues$pval[i] = results[3]
@@ -400,7 +416,7 @@ for(i in c(1:length(common_peps))){
 
 		pvalues$freq_case[i] = "UNK"
 		pvalues$freq_control[i] = "UNK"
-		results =log_reg(datfile)
+		results = log_reg(datfile,formula)
 		pvalues$beta[i]= results[1]
 		pvalues$se[i] = results[2]
 		pvalues$pval[i] = results[3]
