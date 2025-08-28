@@ -97,8 +97,8 @@ mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
 
-	#	This replaces spaces and other chars with dots! Irritating.
-	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"), sep = ",", header=TRUE))
+	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"),
+		sep = ",", header=TRUE), check.names = FALSE )
 
 	if( opt$keep_all_ids ){
 		posfile1 = posfile

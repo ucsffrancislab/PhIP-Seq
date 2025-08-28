@@ -96,8 +96,8 @@ mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
 
-	#	This replaces spaces and other chars with dots! Irritating.
-	virfile <- data.frame(data.table::fread(paste0(plates[i], "/", virfracfilename), sep = ",", header=TRUE))
+	virfile <- data.frame(data.table::fread(paste0(plates[i], "/", virfracfilename),
+		sep = ",", header=TRUE), check.names = FALSE )
 
 	virfiles[[i]] = virfile
 
