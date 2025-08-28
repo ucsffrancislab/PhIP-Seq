@@ -34,7 +34,7 @@ parser$add_argument("--keep_all_ids", action="store_true",
 opt <- parser$parse_args()
 
 
-Z=opt$zscore
+Z = opt$zscore
 
 library(data.table)
 
@@ -66,6 +66,7 @@ meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+print(paste("length(uniqid) :",length(uniqid)))
 
 print("Keep only the first occurrence of each sample name")
 posfile2 =  posfile1[which(posfile1$subject %in% uniqid),]
@@ -74,8 +75,10 @@ rm(posfile1)
 pvalues = data.frame(mat.or.vec(ncol(posfile2)-3, 4))
 colnames(pvalues) = c("species", "freq_case", "freq_control", "pval")
 
-cases =unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
-controls =unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
+cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
+print(paste("length(cases) :",length(cases)))
+controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
+print(paste("length(controls) :",length(controls)))
 
 df_colnames = colnames(posfile2)
 for(sp in c(1:(nrow(pvalues)))){
@@ -97,8 +100,8 @@ colnames(pvalues) = c( "species", paste0("freq_", groups_to_compare[1]), paste0(
 opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
-sbase=fs::path_ext_remove(basename(opt$sfilename))
-outfile=paste0(opt$output_dir, "/",
+sbase = fs::path_ext_remove(basename(opt$sfilename))
+outfile = paste0(opt$output_dir, "/",
 	gsub(" ","-",paste("Seropositivity_Prop_test_results", paste(groups_to_compare[1:2],collapse="-"),sbase,"Z",Z,sep="-")), ".csv")
 
 

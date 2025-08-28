@@ -172,15 +172,20 @@ Vir_frac = 0.05
 
 print("Unique samples to keep")
 uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+print(paste("length(uniqid) :",length(uniqid)))
+
 #vir_score = vir_score[which(vir_score$id %in% uniqid),]
 virfracs = virfracs[which(virfracs$id %in% uniqid),]
+print(paste("length(virfracs) :",length(virfracs)))
 
 cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
+print(paste("length(cases) :",length(cases)))
 controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
+print(paste("length(controls) :",length(controls)))
 
 print("Create a shell file for analysis")
 pvalues = data.frame(mat.or.vec(ncol(virfracs)-1, 4))
-colnames(pvalues) = c( "species", "freq_case", "freq_control", "pval")
+colnames(pvalues) = c("species", "freq_case", "freq_control", "pval")
 pvalues$species = colnames(virfracs)[-1]
 
 
