@@ -70,7 +70,10 @@ sbase=fs::path_ext_remove(basename(opt$sfile_basename))
 #	paste(date, "Multiplate_VirScan_Seropositivity_Comparison",
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirScan_Seropositivity_Comparison",
-		paste(groups_to_compare, collapse="-"),sbase,"test_results-Z",Z, "sex",opt$sex,sep="-")))
+	sbase,
+	paste(groups_to_compare, collapse="-"),
+	"Z",Z, "sex",opt$sex,
+	"test_results", sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -93,6 +96,8 @@ posfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
+
+	#	This replaces spaces and other chars with dots! Irritating.
 	posfile <- data.frame(data.table::fread(paste(plates[i],opt$sfile_basename,sep="/"), sep = ",", header=TRUE))
 
 	if( opt$keep_all_ids ){
@@ -135,9 +140,7 @@ if ( opt$sex == "" ){
 
 print(uniq_sub)
 
-
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
-
 
 # Identify the viruses that are in both files, and subset each posfile to that, with maintained order.
 common_virs = Reduce(intersect, lapply(posfiles,function(x) colnames(x)))
@@ -148,7 +151,6 @@ for(i in c(1:length(plates))){
 common_virs = common_virs[-c(1:3)]
 
 cat(paste0("\nTotal number of included viruses: ", length(common_virs)), file = logname, append = TRUE, sep = "\n")
-
 
 # Convert every virus call into a binary 0/1 call based on >1 hits (Jake already filtered for public epitopes).
 

@@ -68,9 +68,11 @@ date=format(Sys.Date(),"%Y%m%d")
 
 #	paste(date, "Multiplate_VirFrac_Seropositivity_Comparison_Z",Z_thresh,"VirFrac",Vir_frac,
 output_base = paste0(owd, "/", gsub(" ","_",
-	paste("Multiplate_VirFrac_Seropositivity_Comparison-Z",Z_thresh,"VirFrac",Vir_frac,
+	paste("Multiplate_VirFrac_Seropositivity_Comparison",
 	fs::path_ext_remove(basename(opt$zfile_basename)),
-	paste(groups_to_compare, collapse="-"),"test_results", sep="-")))
+	paste(groups_to_compare, collapse="-"),
+	"Z",Z_thresh,"VirFrac",Vir_frac,
+	"test_results", sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
@@ -93,7 +95,8 @@ virfiles = list()
 mfs = list()
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
-	#virfile = read.csv(paste0(plates[i], "/", virfracfilename), header = TRUE, sep = ",")
+
+	#	This replaces spaces and other chars with dots! Irritating.
 	virfile <- data.frame(data.table::fread(paste0(plates[i], "/", virfracfilename), sep = ",", header=TRUE))
 
 	virfiles[[i]] = virfile
