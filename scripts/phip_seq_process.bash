@@ -410,7 +410,7 @@ for threshold in ${THRESHOLDS}; do
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		echo "Creating ${f}"
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.virus_scores.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.count.Zscores.${threshold}.hits.virus_scores.csv
 		chmod -w ${f}
 	fi
 
@@ -522,7 +522,7 @@ for threshold in ${THRESHOLDS}; do
 	else
 		echo "Creating ${f}"
 		#merge_results.py --int -o ${f} ${OUTPUT}/*found_public_epitope_counts.BEFORE_scoring.test.csv
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.BEFORE_scoring.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.count.Zscores.${threshold}.hits.found_public_epitope_counts.BEFORE_scoring.csv
 		chmod -w ${f}
 	fi
 
@@ -597,7 +597,7 @@ for threshold in ${THRESHOLDS}; do
 		echo "Write-protected ${f} exists. Skipping."
 	else
 		echo "Creating ${f}"
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitope_counts.AFTER_scoring.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.count.Zscores.${threshold}.hits.found_public_epitope_counts.AFTER_scoring.csv
 		chmod -w ${f}
 	fi
 
@@ -636,7 +636,7 @@ for threshold in ${THRESHOLDS}; do
 	else
 		echo "Creating ${f}"
 		#merge_results.py --int -o ${f} ${OUTPUT}/*_scoring.seropositive.csv
-		merge_results.py --int -o ${f} ${OUTPUT}/*.${threshold}.hits.found_public_epitopes.*_scoring.seropositive.csv
+		merge_results.py --int -o ${f} ${OUTPUT}/*.count.Zscores.${threshold}.hits.found_public_epitopes.*_scoring.seropositive.csv
 		chmod -w ${f}
 	fi
 
