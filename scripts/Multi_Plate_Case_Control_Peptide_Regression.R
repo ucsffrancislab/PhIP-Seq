@@ -118,45 +118,10 @@ Zfiles = list()
 species_ids = list()
 
 for(i in c(1:length(plates))){
-
-	#	read_zfile
-
-#	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
-#	print(paste0("Reading ",Zfilename))
-#	Zfile <- data.frame(data.table::fread(Zfilename, sep = ",", header=FALSE))	#	50x faster
-#
-#	print("Zfile[1:5,1:5]")
-#	print(Zfile[1:5,1:5])
-#
-#	# If in the format of subject, type species, remove subject and type, and remove second row.
-#	if("subject" %in% Zfile[2,c(1:3)]){
-#		to_remove= which(Zfile[2,c(1:3)]== "subject")
-#		Zfile = Zfile[,-to_remove]
-#	}
-#	if("type" %in% Zfile[2,c(1:3)]){
-#		to_remove= which(Zfile[2,c(1:3)]== "type")
-#		Zfile = Zfile[,-to_remove]
-#	}
-#
-#	print("Zfile[1:5,1:5]")
-#	print(Zfile[1:5,1:5])
-#
-#	# Extract the peptide information
-#	species_id = data.frame(t(Zfile[c(1:2),]))
-#	colnames(species_id) = species_id[1,]
-#	species_id = species_id[-1,]
-#	species_ids[[i]] = species_id
-#	Zfile = Zfile[-2,]
-#	colnames(Zfile) = Zfile[1,]
-#	Zfiles[[i]] = Zfile
-#	colnames(species_ids[[i]]) = c("id", "species")
-
 	results=read_zfile(paste(plates[i], opt$zfile_basename, sep="/"))
 	species_ids[[i]] = results$species
 	Zfiles[[i]] = results$zfile
 }
-#rm(Zfile)
-#rm(species_id)
 rm(results)
 
 manifest = read_multiple_manifests(plates)

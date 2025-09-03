@@ -53,32 +53,6 @@ library(data.table)
 manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
-## Read in the Z-score file  (without transpose and remove the transpose line)
-#Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
-#print(Zfile[1:5,1:5])
-#
-## If in the format of subject, type species, remove subject and type, and remove second row.
-#if("subject" %in% Zfile[2,c(1:3)]){
-#	to_remove = which(Zfile[2,c(1:3)]== "subject")
-#	Zfile = Zfile[,-to_remove]
-#}
-##	Really should just keep the subject and drop the id column.
-#
-#
-#if("type" %in% Zfile[2,c(1:3)]){
-#	to_remove = which(Zfile[2,c(1:3)]== "type")
-#	Zfile = Zfile[,-to_remove]
-#}
-#print(Zfile[1:5,1:5])
-#
-#print("Extract the peptide information")
-#
-#species_id = data.frame(t(Zfile[c(1:2),]))
-#colnames(species_id) = species_id[1,]
-#species_id = species_id[-1,]
-#
-#Zfile = Zfile[-2,]
-
 results=read_zfile( opt$zfilename )
 species_ids[[i]] = results$species
 Zfiles[[i]] = results$zfile
