@@ -12,6 +12,8 @@
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
+scriptdir=dirname(sub("--file=", "", args[grepl("--file=", args)]))
+source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
 parser$add_argument("-s", "--sex", type="character", default="",
 	help="limit sex", metavar="sex")

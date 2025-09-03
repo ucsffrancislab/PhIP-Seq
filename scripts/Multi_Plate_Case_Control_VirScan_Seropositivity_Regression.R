@@ -13,6 +13,8 @@
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
+scriptdir=dirname(sub("--file=", "", args[grepl("--file=", args)]))
+source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
 parser$add_argument("-t", "--type", type="character", default="",
 	help="limit type", metavar="type")
@@ -92,7 +94,8 @@ for(i in c(1:length(groups_to_compare))){
 cat("\n", file = logname, append = TRUE)
 
 posfiles = list()
-mfs = list()
+#mfs = list()
+
 # Read in multiple plate seropositivity files.
 for(i in c(1:length(plates))){
 
@@ -108,25 +111,26 @@ for(i in c(1:length(plates))){
 
 	posfiles[[i]] = posfile1
 
-	mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
-	if(length(mfname)!=1){
-		print(paste0(plates[i], " needs a single manifest file!"))
-	}
-
-	# read in the manifest file
-	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
-
-	# Create a categorical variable, assign all of these the same number to indicate plate.
-	mf$plate = i
-	mfs[[i]] = mf
+#	mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
+#	if(length(mfname)!=1){
+#		print(paste0(plates[i], " needs a single manifest file!"))
+#	}
+#
+#	# read in the manifest file
+#	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))
+#
+#	# Create a categorical variable, assign all of these the same number to indicate plate.
+#	mf$plate = i
+#	mfs[[i]] = mf
 
 }# close loop over plates.
 
 
-manifest = Reduce(rbind, mfs)
-# can get rid of mfs list.
-rm(mfs)
+#manifest = Reduce(rbind, mfs)
+## can get rid of mfs list.
+#rm(mfs)
 
+manifest = read_multiple_manifests(plates)
 
 # Identify the unique subjects to include in the analyses.
 if ( opt$sex == "" ){
