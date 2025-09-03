@@ -6,7 +6,7 @@
 #		This may not be exact VirScan threshold, but I recall their thresholds were basically this.
 #	Only uses the "_B" columns, where the Public epitopes were assessed before viral scoring.
 #	Only makes calls for viruses with known public epitopes.
-#	Outputs a file "Seropositivity_Prop_test_results*" which also indicates the two groups compared.
+#	Outputs a file "Seropositivity_Prop*" which also indicates the two groups compared.
 
 
 library("argparse")
@@ -110,7 +110,7 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
 outfile = paste0(opt$output_dir, "/",
-	gsub(" ","-",paste("Seropositivity_Prop_test_results",
+	gsub(" ","-",paste("Seropositivity_Prop",
 		fs::path_ext_remove(basename(opt$sfilename)),
 		"type",opt$type,
 		paste(groups_to_compare[1:2],collapse="-"),

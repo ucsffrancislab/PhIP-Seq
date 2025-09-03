@@ -13,16 +13,17 @@ select_subjects <- function(manifest,opt) {
 		print("Sex is not set so not filtering on sex.")
 	} else {
 		print(paste0("Sex is set to ",opt$sex,". Filtering"))
-		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$sex==opt$sex )])))
+		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$sex==opt$sex )]))
 	}
 
 	if ( opt$type == "" ){
 		print("Type is not set so not filtering on type.")
 	} else {
 		print(paste0("Type is set to ",opt$type,". Filtering"))
-		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$type==opt$type )])))
+		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$type==opt$type )]))
 	}
 
+	print(paste("Length select subjects:", length(uniq_sub) ) )
 	print(uniq_sub)
 
 #	cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")

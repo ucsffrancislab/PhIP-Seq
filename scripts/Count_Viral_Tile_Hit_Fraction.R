@@ -174,7 +174,7 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 #	specified groups (from the manifest "type" column).
 #	Uses our own definition of seropositivity (Virus present if >"Vir_frac" proportion of tiles are hit at Z > "Z_thresh").
 #	I typically have used Vir_frac = 0.02 or 0.05 based on eyeballing the Viral_Frac_Hits table generated above.
-#	Outputs a file in the same test directory called "Viral_Sero_test_results*" with indicators of the groups and parameters used.
+#	Outputs a file in the same test directory called "Viral_Sero*" with indicators of the groups and parameters used.
 
 
 Vir_frac = 0.05
