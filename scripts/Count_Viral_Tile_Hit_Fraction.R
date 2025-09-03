@@ -57,8 +57,8 @@ Z = opt$zscore
 library(data.table)
 
 
-print("Read in the metadata file")
-meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
+print("Read in the manifest file")
+manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
 print("Read in the Z file")
@@ -67,7 +67,7 @@ print(Zfile[1:5,1:5])
 
 #	[1] "Comparing these groups"
 #	[1] "case"    "control"
-#	[1] "Read in the metadata file"
+#	[1] "Read in the manifest file"
 #	[1] "Read in the Z file"
 
 #	        V1           V2          V3                    V4                   V5
@@ -110,7 +110,7 @@ print("Zfile = Zfile[-2,]")
 print(Zfile[1:5,1:5])
 
 print("Unique samples to keep")
-uniqid = unique(meta$subject)
+uniqid = unique(manifest$subject)
 print(uniqid[1:5])
 
 to_keep = 1
@@ -178,16 +178,16 @@ Vir_frac = 0.05
 
 
 print("Unique samples to keep")
-uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 print(paste("length(uniqid) :",length(uniqid)))
 
 #vir_score = vir_score[which(vir_score$id %in% uniqid),]
 virfracs = virfracs[which(virfracs$id %in% uniqid),]
 print(paste("length(virfracs) :",length(virfracs)))
 
-cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
+cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
 print(paste("length(cases) :",length(cases)))
-controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
+controls = unique(manifest$subject[which(manifest$group %in% groups_to_compare[2])])
 print(paste("length(controls) :",length(controls)))
 
 print("Create a shell file for analysis")

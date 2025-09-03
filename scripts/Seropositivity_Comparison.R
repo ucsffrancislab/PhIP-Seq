@@ -65,11 +65,11 @@ if( opt$keep_all_ids ){
 }
 rm(posfile)
 
-print("Read in the metadata file")
-meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
+print("Read in the manifest file")
+manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
-uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 print(paste("length(uniqid) :",length(uniqid)))
 
 print("Keep only the first occurrence of each sample name")
@@ -79,9 +79,9 @@ rm(posfile1)
 pvalues = data.frame(mat.or.vec(ncol(posfile2)-3, 4))
 colnames(pvalues) = c("species", "freq_case", "freq_control", "pval")
 
-cases = unique(meta$subject[which(meta$group %in% groups_to_compare[1])])
+cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
 print(paste("length(cases) :",length(cases)))
-controls = unique(meta$subject[which(meta$group %in% groups_to_compare[2])])
+controls = unique(manifest$subject[which(manifest$group %in% groups_to_compare[2])])
 print(paste("length(controls) :",length(controls)))
 
 df_colnames = colnames(posfile2)

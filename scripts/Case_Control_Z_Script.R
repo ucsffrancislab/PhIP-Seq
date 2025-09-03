@@ -50,8 +50,8 @@ library(data.table)
 Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
 print(Zfile[1:5,1:5])
 
-# Read in the metadata file
-meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
+# Read in the manifest file
+manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
 # If in the format of subject, type species, remove subject and type, and remove second row.
@@ -77,7 +77,7 @@ species_id = species_id[-1,]
 Zfile = Zfile[-2,]
 
 print("Unique samples to keep")
-uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 print("length(uniqid)")
 print(length(uniqid))
 
@@ -158,7 +158,7 @@ print("datfile$ID")
 print(datfile$ID)
 
 for(i in c(1:nrow(datfile))){
-	datfile$case[i] = meta$group[which(meta$subject== datfile$ID[i])[1]]
+	datfile$case[i] = manifest$group[which(manifest$subject== datfile$ID[i])[1]]
 }
 
 
