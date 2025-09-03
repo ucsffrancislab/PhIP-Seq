@@ -151,7 +151,10 @@ for( j in c(2:ncol(virfracs))){
 outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_", paste("Viral_Frac_Hits",
 		fs::path_ext_remove(basename(opt$zfilename)),
-		"Z", Z, paste(groups_to_compare[1:2],collapse="-"), sep="-")), ".csv")
+		"type",opt$type,
+		paste(groups_to_compare[1:2],collapse="-"),
+		"Z", Z,
+		"sex",opt$sex, sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
 write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)
@@ -216,10 +219,13 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 
 
 outfile=paste0(opt$output_dir, "/",
-	gsub(" ","_", paste("Viral_Sero_test_results",
+	gsub(" ","_", paste("Viral_Sero",
 		fs::path_ext_remove(basename(opt$zfilename)),
+		"type",opt$type,
 		paste(groups_to_compare[1:2],collapse="-"),
-		"Vir_hit_frac", Vir_frac, "Z", Z, sep="-")), ".csv")
+		"Z", Z, 
+		"sex",opt$sex,
+		"Vir_hit_frac", Vir_frac, sep="-")), ".csv")
 
 print(paste0("Writing ",outfile))
 write.table(opvalues, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quote= FALSE)

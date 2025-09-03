@@ -68,14 +68,14 @@ date=format(Sys.Date(),"%Y%m%d")
 
 Z = opt$zscore
 
-sbase=fs::path_ext_remove(basename(opt$sfile_basename))
 #	paste(date, "Multiplate_VirScan_Seropositivity_Comparison",
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirScan_Seropositivity_Comparison",
-	sbase,
+	fs::path_ext_remove(basename(opt$sfile_basename)),
+	"type",opt$type,
 	paste(groups_to_compare, collapse="-"),
-	"Z",Z, "sex",opt$sex,
-	"test_results", sep="-")))
+	"Z",Z,
+	"sex",opt$sex, sep="-")))
 
 # Log the parameter choices into a logfile
 logname = paste0(output_base,'.log')
