@@ -55,11 +55,6 @@ posfile <- data.frame(data.table::fread(opt$sfilename, sep = ",", header=TRUE))
 
 print("Keep only 'Before' samples")
 
-#if( opt$keep_only_B ){
-#	posfile1 = posfile[grep("_B$", posfile$id), ]
-#}else{
-#	posfile1 = posfile
-#}
 if( opt$keep_all_ids ){
 	posfile1 = posfile
 }else{
@@ -71,9 +66,7 @@ print("Read in the manifest file")
 manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
-#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 uniq_sub = select_subjects(manifest,opt)
-#print(paste("length(uniqid) :",length(uniqid)))
 
 print("Keep only the first occurrence of each sample name")
 posfile2 =  posfile1[which(posfile1$subject %in% uniq_sub),]

@@ -80,12 +80,6 @@ Zfile = Zfile[-2,]
 
 print("Unique samples to keep")
 uniq_sub = select_subjects(manifest,opt)
-#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-#print("length(uniq_sub)")
-#print(length(uniq_sub))
-#
-#print("uniq_sub")
-#print(uniq_sub)
 
 print("dim(Zfile)")
 print(dim(Zfile))
@@ -143,9 +137,6 @@ print(head(datfile))
 
 print("dim(datfile)")
 print(dim(datfile))
-
-#print("head(uniq_sub)")
-#print(head(uniq_sub))
 
 colnames(datfile) = c("ID", "case", "peptide")
 print("head(datfile)2")

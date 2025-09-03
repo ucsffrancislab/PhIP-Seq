@@ -153,55 +153,10 @@ for(i in c(1:length(plates))){
 rm(Zfile)
 rm(species_id)
 
-
-## Read in the multiple manifest files.
-#mfs = list()
-#
-#for(i in c(1:length(plates))){
-#	# Find the manifest file for the given plate. Requires only ONE manifest file per plate folder
-#	mfname = list.files(plates[i], pattern="manifest", full.names=TRUE)
-#	if(length(mfname)!=1){
-#		print(paste0(plates[i], " needs a single manifest file!"))
-#	}
-#
-#	# read in the manifest file
-#	mf <- data.frame(data.table::fread(mfname, sep = ",", header=TRUE))	#	50x faster
-#
-#	# Create a categorical variable, assign all of these the same number to indicate plate.
-#
-#	#	The plate number is now a column in the manifest file
-#	#	Later in this script it is used in a formula and can't all the be the same
-#	#	However, it is used as the index and not the actual plate number.
-#	mf$plate = i
-#	mfs[[i]] = mf
-#}
-#
-## Create an aggregate metadata file. This requires identical column structure in the files.
-#
-#manifest = Reduce(rbind, mfs)
-## can get rid of mfs list.
-#rm(mfs)
-
 manifest = read_multiple_manifests(plates)
-
-
-
-# Identify the unique subjects to include in the analyses.
-
-#print("Selecting subjects")
-#if ( opt$sex == "" ){
-#	print("Sex is not set so not filtering on sex.")
-#	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-#} else {
-#	print(paste0("Sex is set to ",opt$sex,". Filtering"))
-#	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
-#}
-
-#print(uniq_sub)
 
 uniq_sub = select_subjects(manifest,opt)
 cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")
-
 
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
 

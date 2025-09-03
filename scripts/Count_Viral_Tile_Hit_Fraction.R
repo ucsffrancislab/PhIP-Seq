@@ -112,9 +112,8 @@ print("Zfile = Zfile[-2,]")
 print(Zfile[1:5,1:5])
 
 print("Unique samples to keep")
-#uniqid = unique(manifest$subject)
 uniq_sub = select_subjects(manifest,opt)
-#print(uniqid[1:5])
+
 
 to_keep = 1
 for(u in uniq_sub){
@@ -180,11 +179,6 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 Vir_frac = 0.05
 
 
-print("Unique samples to keep")
-#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-#print(paste("length(uniqid) :",length(uniqid)))
-
-#vir_score = vir_score[which(vir_score$id %in% uniqid),]
 virfracs = virfracs[which(virfracs$id %in% uniqid),]
 print(paste("length(virfracs) :",length(virfracs)))
 

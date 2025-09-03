@@ -24,11 +24,7 @@ select_subjects <- function(manifest,opt) {
 	}
 
 	print(paste("Length select subjects:", length(uniq_sub) ) )
-	print(uniq_sub)
-
-#	cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")
-#	cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)),
-#		file = logname, append = TRUE, sep = "\n")
+	print(paste("Unique subjects:", paste(uniq_sub, collapse=", ") ))
 
 	return(uniq_sub)
 }
