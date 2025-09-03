@@ -17,6 +17,10 @@ library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
 parser <- ArgumentParser(description=scriptname)
+parser$add_argument("-s", "--sex", type="character", default="",
+	help="limit sex", metavar="sex")
+parser$add_argument("-t", "--type", type="character", default="",
+	help="limit type", metavar="type")
 parser$add_argument("-a", "--group1", type="character", required=TRUE,
 	help="first group to compare", metavar="group")
 parser$add_argument("-b", "--group2", type="character", required=TRUE,
