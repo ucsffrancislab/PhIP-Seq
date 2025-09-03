@@ -186,7 +186,9 @@ datfile$plate = as.factor(datfile$plate)
 print(head(datfile))
 cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")
 
-formula = "case ~ virus + age"
+formula = "case ~ virus"
+if( length(unique(datfile$age)) > 1 )
+	formula = paste(formula, "age", sep = " + ")
 if( length(unique(datfile$sex)) > 1 )
 	formula = paste(formula, "sex", sep = " + ")
 if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
@@ -194,31 +196,6 @@ if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
 
 print(paste("formula",formula))
 cat(paste("formula",formula), file = logname, append = TRUE, sep = "\n")
-
-
-#----- Shell function for logistic regression analysis.
-log_reg = function(df,logitmodel){
-
-	# A simple model that simply adjusts for plate/batch in the model. When the number of plates becomes large, a mixed effects regression model should be considered.
-	# as there are likely differences in the virus calling sensitivity between plates, and so virus probably has different associations with case based on plate.
-
-	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
-
-	go= summary(logit_fun)
-
-	cat(capture.output(print(go)), file = logname, append = TRUE, sep = "\n")
-
-	#beta = go$coefficients[2,1]
-	#se = go$coefficients[2,2]
-	#pval = go$coefficients[2,4]
-	#	sometimes "Coefficients: (1 not defined because of singularities)"
-	#	and peptide doesn't exist. This would then return the age coefficients.
-	beta <- if('virus' %in% rownames(go$coefficients)) go$coefficients['virus','Estimate'] else NA
-	se <- if('virus' %in% rownames(go$coefficients)) go$coefficients['virus','Std. Error'] else NA
-	pval <- if('virus' %in% rownames(go$coefficients)) go$coefficients['virus','Pr(>|z|)'] else NA
-	return(c(beta, se, pval))
-}
-#-------
 
 
 # Result File
@@ -255,7 +232,7 @@ for(i in c(1:length(common_virs))){
 		pvalues$se[i] = NA
 		pvalues$pval[i] = NA
 	}else{
-		results =log_reg(datfile,formula)
+		results = log_reg(datfile,formula,'virus')
 		pvalues$beta[i]= results[1]
 		pvalues$se[i] = results[2]
 		pvalues$pval[i] = results[3]

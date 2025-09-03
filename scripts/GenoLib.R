@@ -2,6 +2,100 @@
 library(data.table)
 
 
+read_zfile = function(zfilename) {
+
+	print(paste("Read in the Z file",zfilename))
+
+	Zfile <- data.frame(data.table::fread(zfilename, sep = ",", header=FALSE))
+	print(Zfile[1:5,1:4])
+	#       V1                 V2        V3                  V4
+	#1       y                  x        id                  10
+	#2 subject               type   species      Vaccinia virus
+	#3  108741 ALL maternal serum    108741 -0.3633046359217093
+	#4  108741 ALL maternal serum 108741dup -0.3669457592878151
+	#5   14922       glioma serum     14922 -0.2185790682273388
+	
+	# If in the format of subject, type species, remove subject and type, and remove second row.
+	if("subject" %in% Zfile[2,c(1:3)]){
+		to_remove= which(Zfile[2,c(1:3)]== "subject")
+		Zfile = Zfile[,-to_remove]
+	}
+	if("type" %in% Zfile[2,c(1:3)]){
+		to_remove = which(Zfile[2,c(1:3)]== "type")
+		Zfile = Zfile[,-to_remove]
+	}
+	
+	print(Zfile[1:5,1:4])
+	#         V3                  V4                   V5                  V6
+	#1        id                  10                  100                1000
+	#2   species      Vaccinia virus  Human herpesvirus 3   Hepatitis B virus
+	#3    108741 -0.3633046359217093  -0.5834907519966614 -0.3633046359217093
+	#4 108741dup -0.3669457592878151  -0.5919839162855073 -0.3669457592878151
+	#5     14922 -0.2185790682273388 -0.40674341138804637 -0.2185790682273388	
+	
+	species_id = data.frame(t(Zfile[c(1:2),]))
+	print(species_id[1:3,1:2])
+	#      X1                  X2
+	#V3    id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+
+	colnames(species_id) = species_id[1,]
+	print(species_id[1:3,1:2])
+	#      id             species
+	#V3    id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+
+	species_id = species_id[-1,]
+	print(species_id[1:3,1:2])
+	#      id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+	#V6  1000   Hepatitis B virus
+
+	Zfile = Zfile[-2,]
+	print(Zfile[1:5,1:4])
+	#         V3                  V4                   V5                  V6
+	#1        id                  10                  100                1000
+	#3    108741 -0.3633046359217093  -0.5834907519966614 -0.3633046359217093
+	#4 108741dup -0.3669457592878151  -0.5919839162855073 -0.3669457592878151
+	#5     14922 -0.2185790682273388 -0.40674341138804637 -0.2185790682273388
+	#6  14922dup -0.2617924942197322  -0.4092362704232559 -0.2617924942197322
+
+	colnames(Zfile) = Zfile[1,]
+	print(Zfile[1:5,1:4])
+
+	return(list(zfile = Zfile, species = species_id))
+
+}
+
+
+log_reg = function(df,logitmodel,label){
+
+	# A simple model that simply adjusts for plate/batch in the model. When the number
+	#	of plates becomes large, a mixed effects regression model should be considered.
+	# as there are likely differences in the peptide calling sensitivity between plates,
+	#	and so peptide probably has different associations with case based on plate.
+
+	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
+	go = summary(logit_fun)
+
+	cat(capture.output(print(go)), file = logname, append = TRUE, sep = "\n")
+
+	#beta = go$coefficients[2,1]
+	#se = go$coefficients[2,2]
+	#pval = go$coefficients[2,4]
+	#	sometimes "Coefficients: (1 not defined because of singularities)"
+	#	and peptide doesn't exist. This would then return the age coefficients.
+	beta <- if(label %in% rownames(go$coefficients)) go$coefficients[label,'Estimate']   else NA
+	se <-   if(label %in% rownames(go$coefficients)) go$coefficients[label,'Std. Error'] else NA
+	pval <- if(label %in% rownames(go$coefficients)) go$coefficients[label,'Pr(>|z|)']   else NA
+
+	return(c(beta, se, pval))
+}
+
+
 
 select_subjects <- function(manifest,opt) {
 

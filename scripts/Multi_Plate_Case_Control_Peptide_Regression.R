@@ -40,8 +40,6 @@ parser$add_argument("-b", "--group2", type="character", required=TRUE,
 	help="second group to compare", metavar="group")
 parser$add_argument("-z", "--zscore", type="double", default=3.5,
 	help="zscore threshold", metavar="double")
-parser$add_argument("-t", "--type", type="character", default="",
-	help="limit type", metavar="type")
 parser$add_argument("-s", "--sex", type="character", default="",
 	help="limit sex", metavar="sex")
 parser$add_argument("-o", "--output_dir", type="character", default="./",
@@ -120,38 +118,46 @@ Zfiles = list()
 species_ids = list()
 
 for(i in c(1:length(plates))){
-	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
-	print(paste0("Reading ",Zfilename))
-	Zfile <- data.frame(data.table::fread(Zfilename, sep = ",", header=FALSE))	#	50x faster
 
-	print("Zfile[1:5,1:5]")
-	print(Zfile[1:5,1:5])
+	#	read_zfile
 
-	# If in the format of subject, type species, remove subject and type, and remove second row.
-	if("subject" %in% Zfile[2,c(1:3)]){
-		to_remove= which(Zfile[2,c(1:3)]== "subject")
-		Zfile = Zfile[,-to_remove]
-	}
-	if("type" %in% Zfile[2,c(1:3)]){
-		to_remove= which(Zfile[2,c(1:3)]== "type")
-		Zfile = Zfile[,-to_remove]
-	}
+#	Zfilename = paste(plates[i], opt$zfile_basename, sep="/")
+#	print(paste0("Reading ",Zfilename))
+#	Zfile <- data.frame(data.table::fread(Zfilename, sep = ",", header=FALSE))	#	50x faster
+#
+#	print("Zfile[1:5,1:5]")
+#	print(Zfile[1:5,1:5])
+#
+#	# If in the format of subject, type species, remove subject and type, and remove second row.
+#	if("subject" %in% Zfile[2,c(1:3)]){
+#		to_remove= which(Zfile[2,c(1:3)]== "subject")
+#		Zfile = Zfile[,-to_remove]
+#	}
+#	if("type" %in% Zfile[2,c(1:3)]){
+#		to_remove= which(Zfile[2,c(1:3)]== "type")
+#		Zfile = Zfile[,-to_remove]
+#	}
+#
+#	print("Zfile[1:5,1:5]")
+#	print(Zfile[1:5,1:5])
+#
+#	# Extract the peptide information
+#	species_id = data.frame(t(Zfile[c(1:2),]))
+#	colnames(species_id) = species_id[1,]
+#	species_id = species_id[-1,]
+#	species_ids[[i]] = species_id
+#	Zfile = Zfile[-2,]
+#	colnames(Zfile) = Zfile[1,]
+#	Zfiles[[i]] = Zfile
+#	colnames(species_ids[[i]]) = c("id", "species")
 
-	print("Zfile[1:5,1:5]")
-	print(Zfile[1:5,1:5])
-
-	# Extract the peptide information
-	species_id = data.frame(t(Zfile[c(1:2),]))
-	colnames(species_id) = species_id[1,]
-	species_id = species_id[-1,]
-	species_ids[[i]] = species_id
-	Zfile = Zfile[-2,]
-	colnames(Zfile) = Zfile[1,]
-	Zfiles[[i]] = Zfile
-	colnames(species_ids[[i]]) = c("id", "species")
+	results=read_zfile(paste(plates[i], opt$zfile_basename, sep="/"))
+	species_ids[[i]] = results$species
+	Zfiles[[i]] = results$zfile
 }
-rm(Zfile)
-rm(species_id)
+#rm(Zfile)
+#rm(species_id)
+rm(results)
 
 manifest = read_multiple_manifests(plates)
 
@@ -277,7 +283,9 @@ print(datfile$plate)
 print(head(datfile))
 cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")
 
-formula = "case ~ peptide + age"
+formula = "case ~ peptide"
+if( length(unique(datfile$age)) > 1 )
+	formula = paste(formula, "age", sep = " + ")
 if( length(unique(datfile$sex)) > 1 )
 	formula = paste(formula, "sex", sep = " + ")
 if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
@@ -286,31 +294,6 @@ if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
 print(paste("formula",formula))
 cat(paste("formula",formula), file = logname, append = TRUE, sep = "\n")
 
-
-#----- Shell function for logistic regression analysis.
-log_reg = function(df,logitmodel){
-
-	# A simple model that simply adjusts for plate/batch in the model. When the number
-	#	of plates becomes large, a mixed effects regression model should be considered.
-	# as there are likely differences in the peptide calling sensitivity between plates,
-	#	and so peptide probably has different associations with case based on plate.
-
-	logit_fun = glm(as.formula(logitmodel), data = df, family=binomial(link="logit"))
-	go = summary(logit_fun)
-
-	cat(capture.output(print(go)), file = logname, append = TRUE, sep = "\n")
-
-	#beta = go$coefficients[2,1]
-	#se = go$coefficients[2,2]
-	#pval = go$coefficients[2,4]
-	#	sometimes "Coefficients: (1 not defined because of singularities)"
-	#	and peptide doesn't exist. This would then return the age coefficients.
-	beta <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Estimate'] else NA
-	se <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Std. Error'] else NA
-	pval <- if('peptide' %in% rownames(go$coefficients)) go$coefficients['peptide','Pr(>|z|)'] else NA
-	return(c(beta, se, pval))
-}
-#-------
 
 
 # Result File
@@ -362,7 +345,7 @@ for(i in c(1:length(common_peps))){
 			pvalues$se[i] = NA
 			pvalues$pval[i] = NA
 		}else{
-			results = log_reg(datfile,formula)
+			results = log_reg(datfile,formula,'peptide')
 			pvalues$beta[i]= results[1]
 			pvalues$se[i] = results[2]
 			pvalues$pval[i] = results[3]
@@ -378,7 +361,7 @@ for(i in c(1:length(common_peps))){
 
 		pvalues$freq_case[i] = "UNK"
 		pvalues$freq_control[i] = "UNK"
-		results = log_reg(datfile,formula)
+		results = log_reg(datfile,formula,'peptide')
 		pvalues$beta[i]= results[1]
 		pvalues$se[i] = results[2]
 		pvalues$pval[i] = results[3]
