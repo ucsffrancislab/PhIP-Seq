@@ -1,9 +1,44 @@
 
 library(data.table)
 
+
+
+select_subjects <- function(manifest,opt) {
+
+	print("Selecting subjects")
+
+	uniq_sub = unique(manifest$subject[which(manifest$group %in% c(opt$group1,opt$group2))])
+
+	if ( opt$sex == "" ){
+		print("Sex is not set so not filtering on sex.")
+	} else {
+		print(paste0("Sex is set to ",opt$sex,". Filtering"))
+		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$sex==opt$sex )])))
+	}
+
+	if ( opt$type == "" ){
+		print("Type is not set so not filtering on type.")
+	} else {
+		print(paste0("Type is set to ",opt$type,". Filtering"))
+		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$type==opt$type )])))
+	}
+
+	print(uniq_sub)
+
+#	cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")
+#	cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)),
+#		file = logname, append = TRUE, sep = "\n")
+
+	return(uniq_sub)
+}
+
+
+
 # Read in the multiple manifest files.
 
 read_multiple_manifests <- function(plates) {
+	print("Reading multiple manifests")
+	print(plates)
 
 	mfs = list()
 
@@ -37,4 +72,6 @@ read_multiple_manifests <- function(plates) {
 }
 
 
+
+print("Loaded GenoLib")
 

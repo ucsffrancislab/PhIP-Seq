@@ -112,11 +112,12 @@ print("Zfile = Zfile[-2,]")
 print(Zfile[1:5,1:5])
 
 print("Unique samples to keep")
-uniqid = unique(manifest$subject)
-print(uniqid[1:5])
+#uniqid = unique(manifest$subject)
+uniq_sub = select_subjects(manifest,opt)
+#print(uniqid[1:5])
 
 to_keep = 1
-for(u in uniqid){
+for(u in uniq_sub){
 	possible_ids = grep(u, Zfile[,1])
 	mids = Zfile[possible_ids,1]
 	locs = grepl("dup", mids)
@@ -130,9 +131,9 @@ uniq_spec = unique(species_id$species)
 print(uniq_spec[1:5])
 
 print("Shell file for viral fractions")
-virfracs = data.frame(mat.or.vec(length(uniqid), length(unique(species_id$species))+1))
+virfracs = data.frame(mat.or.vec(length(uniq_sub), length(unique(species_id$species))+1))
 colnames(virfracs) = c("id", unique(species_id$species))
-virfracs$id = uniqid
+virfracs$id = uniq_sub
 
 for( j in c(2:ncol(virfracs))){
 	sp = colnames(virfracs)[j]
@@ -180,16 +181,18 @@ Vir_frac = 0.05
 
 
 print("Unique samples to keep")
-uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-print(paste("length(uniqid) :",length(uniqid)))
+#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#print(paste("length(uniqid) :",length(uniqid)))
 
 #vir_score = vir_score[which(vir_score$id %in% uniqid),]
 virfracs = virfracs[which(virfracs$id %in% uniqid),]
 print(paste("length(virfracs) :",length(virfracs)))
 
 cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
+cases = intersect(cases,uniq_sub)
 print(paste("length(cases) :",length(cases)))
 controls = unique(manifest$subject[which(manifest$group %in% groups_to_compare[2])])
+controls = intersect(controls,uniq_sub)
 print(paste("length(controls) :",length(controls)))
 
 print("Create a shell file for analysis")

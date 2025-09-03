@@ -133,16 +133,17 @@ for(i in c(1:length(plates))){
 manifest = read_multiple_manifests(plates)
 
 # Identify the unique subjects to include in the analyses.
-if ( opt$sex == "" ){
-	print("Sex is not set so not filtering on sex.")
-	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-} else {
-	print(paste0("Sex is set to ",opt$sex,". Filtering"))
-	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
-}
+#if ( opt$sex == "" ){
+#	print("Sex is not set so not filtering on sex.")
+#	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#} else {
+#	print(paste0("Sex is set to ",opt$sex,". Filtering"))
+#	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
+#}
+#
+#print(uniq_sub)
 
-print(uniq_sub)
-
+uniq_sub = select_subjects(manifest,opt)
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)), file = logname, append = TRUE, sep = "\n")
 
 # Identify the viruses that are in both files, and subset each posfile to that, with maintained order.

@@ -79,12 +79,13 @@ species_id = species_id[-1,]
 Zfile = Zfile[-2,]
 
 print("Unique samples to keep")
-uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-print("length(uniqid)")
-print(length(uniqid))
-
-print("uniqid")
-print(uniqid)
+uniq_sub = select_subjects(manifest,opt)
+#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#print("length(uniq_sub)")
+#print(length(uniq_sub))
+#
+#print("uniq_sub")
+#print(uniq_sub)
 
 print("dim(Zfile)")
 print(dim(Zfile))
@@ -99,7 +100,7 @@ print(dim(Zfile))
 #	[1] FALSE  TRUE FALSE  TRUE
 
 to_keep = 1
-for(u in uniqid){
+for(u in uniq_sub){
 
 	possible_ids = grep(paste0("^",u,"$|^",u,"dup$"), Zfile[,1])
 
@@ -143,8 +144,8 @@ print(head(datfile))
 print("dim(datfile)")
 print(dim(datfile))
 
-print("head(uniqid)")
-print(head(uniqid))
+#print("head(uniq_sub)")
+#print(head(uniq_sub))
 
 colnames(datfile) = c("ID", "case", "peptide")
 print("head(datfile)2")
@@ -152,7 +153,7 @@ print(head(datfile))
 
 
 
-datfile$ID = uniqid
+datfile$ID = uniq_sub
 print("head(datfile)3")
 print(head(datfile))
 

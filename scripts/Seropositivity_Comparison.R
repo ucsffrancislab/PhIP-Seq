@@ -71,19 +71,22 @@ print("Read in the manifest file")
 manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 print("Unique samples to keep")
-uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-print(paste("length(uniqid) :",length(uniqid)))
+#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+uniq_sub = select_subjects(manifest,opt)
+#print(paste("length(uniqid) :",length(uniqid)))
 
 print("Keep only the first occurrence of each sample name")
-posfile2 =  posfile1[which(posfile1$subject %in% uniqid),]
+posfile2 =  posfile1[which(posfile1$subject %in% uniq_sub),]
 rm(posfile1)
 
 pvalues = data.frame(mat.or.vec(ncol(posfile2)-3, 4))
 colnames(pvalues) = c("species", "freq_case", "freq_control", "pval")
 
 cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
+cases = intersect(cases,uniq_sub)
 print(paste("length(cases) :",length(cases)))
 controls = unique(manifest$subject[which(manifest$group %in% groups_to_compare[2])])
+controls = intersect(controls,uniq_sub)
 print(paste("length(controls) :",length(controls)))
 
 df_colnames = colnames(posfile2)

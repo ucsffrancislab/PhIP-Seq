@@ -184,18 +184,22 @@ rm(species_id)
 
 manifest = read_multiple_manifests(plates)
 
+
+
 # Identify the unique subjects to include in the analyses.
 
-print("Selecting subjects")
-if ( opt$sex == "" ){
-	print("Sex is not set so not filtering on sex.")
-	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
-} else {
-	print(paste0("Sex is set to ",opt$sex,". Filtering"))
-	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
-}
+#print("Selecting subjects")
+#if ( opt$sex == "" ){
+#	print("Sex is not set so not filtering on sex.")
+#	uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#} else {
+#	print(paste0("Sex is set to ",opt$sex,". Filtering"))
+#	uniq_sub = unique(manifest$subject[which( manifest$group %in% groups_to_compare & manifest$sex==opt$sex )])
+#}
 
-print(uniq_sub)
+#print(uniq_sub)
+
+uniq_sub = select_subjects(manifest,opt)
 cat(paste0("\nUnique subjects: ", paste(uniq_sub, collapse=",")), file = logname, append = TRUE, sep = "\n")
 
 

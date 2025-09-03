@@ -136,7 +136,8 @@ manifest = read_multiple_manifests(plates)
 
 # Identify the unique subjects to include in the analyses.
 
-uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+#uniq_sub = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
+uniq_sub = select_subjects(manifest,opt)
 
 cat(paste0("\nTotal number of included subjects: ", length(uniq_sub)),
 	file = logname, append = TRUE, sep = "\n")
