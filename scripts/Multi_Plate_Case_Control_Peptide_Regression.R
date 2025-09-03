@@ -48,17 +48,13 @@ parser$add_argument("-p", "--plate", type="character", required=TRUE, action="ap
 	help="plate to compare (use multiple times for each)", metavar="group")
 parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
 	help="zfile_basename [default=%(default)s]", metavar="Zscores file basename")
-
-
-
 # store_true means "int=False unless --int passed, then int=True" (store_false is the inverse)
-#parser.add_argument('--int', action='store_true', help='convert values to ints to %(prog)s (default: %(default)s)')
-parser$add_argument('--counts', action='store_true', help='values are counts not zscores to %(prog)s (default: %(default)s)')
-
-
-parser$add_argument('--ignore_plate', action='store_true', help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
-
-
+#parser.add_argument('--int', action='store_true',
+#	help='convert values to ints to %(prog)s (default: %(default)s)')
+parser$add_argument('--counts', action='store_true',
+	help='values are counts not zscores to %(prog)s (default: %(default)s)')
+parser$add_argument('--ignore_plate', action='store_true',
+	help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
 opt <- parser$parse_args()
 
 

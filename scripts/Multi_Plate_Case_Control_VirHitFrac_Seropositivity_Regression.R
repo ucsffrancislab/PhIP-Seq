@@ -35,9 +35,8 @@ parser$add_argument("-o", "--output_dir", type="character", default="./",
 	help="output dir [default=%(default)s]", metavar="directory")
 parser$add_argument("--zfile_basename", type="character", default="Zscores.csv",
 	help="zfile_basename [default=%(default)s]", metavar="Zscores file basename")
-
-parser$add_argument('--ignore_plate', action='store_true', help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
-
+parser$add_argument('--ignore_plate', action='store_true',
+	help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
 opt <- parser$parse_args()
 
 

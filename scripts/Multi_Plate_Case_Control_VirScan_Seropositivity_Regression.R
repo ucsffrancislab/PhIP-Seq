@@ -34,11 +34,8 @@ parser$add_argument("--sfile_basename", type="character", default="seropositive.
 #	help="Keep only those ids with '_B'")
 parser$add_argument("--keep_all_ids", action="store_true",
 	help="Keep all ids. Not just '_B'")
-
-
-parser$add_argument('--ignore_plate', action='store_true', help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
-
-
+parser$add_argument('--ignore_plate', action='store_true',
+	help='ignore the plate and do not include it in the formula to %(prog)s (default: %(default)s)')
 opt <- parser$parse_args()
 
 
