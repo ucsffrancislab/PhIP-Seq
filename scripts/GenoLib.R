@@ -2,6 +2,31 @@
 library(data.table)
 
 
+build_datfile = function(uniq_sub,opt){
+
+	print("Building datfile")
+
+	#datfile = data.frame(mat.or.vec(length(uniq_sub),6))
+	#colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
+	datfile = data.frame(mat.or.vec(length(uniq_sub),5))
+	colnames(datfile) = c("ID", "case", "sex", "age", "plate")
+	datfile$ID = uniq_sub
+	for(i in c(1:nrow(datfile))){
+		print(i)
+		man_loc = which(manifest$subject== datfile$ID[i])[1]
+		#datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
+		datfile$case[i] = ifelse(manifest$group[man_loc] == opt$group1, 1, 0)
+		datfile$age[i] = manifest$age[man_loc]
+		datfile$sex[i] = manifest$sex[man_loc]
+		datfile$plate[i] = manifest$plate[man_loc]
+	}
+	datfile$age = as.numeric(datfile$age)
+	datfile$sex = as.factor(datfile$sex)
+	datfile$plate = as.factor(datfile$plate)
+
+	return(datfile)
+}
+
 read_zfile = function(zfilename) {
 
 	print(paste("Read in the Z file",zfilename))

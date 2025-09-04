@@ -226,24 +226,27 @@ cat(capture.output(print(peptide_calls[1:20,1:12])), file = logname, append = TR
 #	Create a shell file for analysis, Leaves the peptide column blank, we will repopulate this with every peptide.
 #	I still don't know what a "shell file" is in this context
 
-datfile = data.frame(mat.or.vec(length(uniq_sub),6))
-colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
-datfile$ID = uniq_sub
+datfile = build_datfile(uniq_sub,opt)
 datfile$peptide = NA
-print("for(i in c(1:nrow(datfile))){")
-print("Prep datfile")
-for(i in c(1:nrow(datfile))){
-	print(i)
-	man_loc = which(manifest$subject== datfile$ID[i])[1]
-	datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
-	datfile$age[i] = manifest$age[man_loc]
-	datfile$sex[i] = manifest$sex[man_loc]
-	datfile$plate[i] = manifest$plate[man_loc]
-}
-datfile$age = as.numeric(datfile$age)
-datfile$sex = as.factor(datfile$sex)
-datfile$plate = as.factor(datfile$plate)
-print(datfile$plate)
+
+#datfile = data.frame(mat.or.vec(length(uniq_sub),6))
+#colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
+#datfile$ID = uniq_sub
+#datfile$peptide = NA
+#print("for(i in c(1:nrow(datfile))){")
+#print("Prep datfile")
+#for(i in c(1:nrow(datfile))){
+#	print(i)
+#	man_loc = which(manifest$subject== datfile$ID[i])[1]
+#	datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
+#	datfile$age[i] = manifest$age[man_loc]
+#	datfile$sex[i] = manifest$sex[man_loc]
+#	datfile$plate[i] = manifest$plate[man_loc]
+#}
+#datfile$age = as.numeric(datfile$age)
+#datfile$sex = as.factor(datfile$sex)
+#datfile$plate = as.factor(datfile$plate)
+#print(datfile$plate)
 
 print(head(datfile))
 cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")

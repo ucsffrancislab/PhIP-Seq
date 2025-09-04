@@ -163,20 +163,23 @@ rm(posfiles)
 
 # Create a shell file for analysis, Leaves the virus column blank, we will repopulate this with every peptide.
 
-datfile = data.frame(mat.or.vec(length(uniq_sub),6))
-colnames(datfile) = c("ID", "case", "virus", "sex", "age", "plate")
-datfile$ID = uniq_sub
+datfile = build_datfile(uniq_sub,opt)
 datfile$virus = NA
-for(i in c(1:nrow(datfile))){
-	man_loc = which(manifest$subject== datfile$ID[i])[1]
-	datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
-	datfile$age[i] = manifest$age[man_loc]
-	datfile$sex[i] = manifest$sex[man_loc]
-	datfile$plate[i] = manifest$plate[man_loc]
-}
-datfile$age = as.numeric(datfile$age)
-datfile$sex = as.factor(datfile$sex)
-datfile$plate = as.factor(datfile$plate)
+
+#datfile = data.frame(mat.or.vec(length(uniq_sub),6))
+#colnames(datfile) = c("ID", "case", "virus", "sex", "age", "plate")
+#datfile$ID = uniq_sub
+#datfile$virus = NA
+#for(i in c(1:nrow(datfile))){
+#	man_loc = which(manifest$subject== datfile$ID[i])[1]
+#	datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
+#	datfile$age[i] = manifest$age[man_loc]
+#	datfile$sex[i] = manifest$sex[man_loc]
+#	datfile$plate[i] = manifest$plate[man_loc]
+#}
+#datfile$age = as.numeric(datfile$age)
+#datfile$sex = as.factor(datfile$sex)
+#datfile$plate = as.factor(datfile$plate)
 
 print(head(datfile))
 cat(capture.output(print(head(datfile))), file = logname, append = TRUE, sep = "\n")
