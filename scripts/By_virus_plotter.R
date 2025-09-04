@@ -174,19 +174,27 @@ viral_plotfile = paste0(
 
 pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
+stati=0
 for(stat in cc){
-	print(paste0("for(stat in cc){ - ",stat))
+	stati=stati+1
+	#print(paste0("for(stat in cc){ - ",stat))
+	print(paste("Looping:",stat,":",stati,":",length(cc)))
 	statids = uniq_sub[which(uniq_sub %in% manifest$subject[which(manifest$group== stat)])]
 	plots = list()
 	plot_counter = 1
 	before1=Sys.time()
+	indivi=0
 	for(indiv in statids){
-		print(paste0("for(indiv in statids){ - ",indiv))
+		indivi=indivi+1
+		#print(paste0("for(indiv in statids){ - ",indiv))
+		print(paste("Looping:",indiv,":",indivi,":",length(statids)))
 		plot_df$Zscore = 0
 		print(paste0("Time : ",format(Sys.time(),"%Y%m%d%H%M%S")))
 		before2=Sys.time()
 		for(i in c(1:nrow(plot_df))){
-			print(paste0("for(i in c(1:nrow(plot_df))){ - ",i))
+			#print(paste0("for(i in c(1:nrow(plot_df))){ - ",i))
+			print(paste("Looping:",stat,":",stati,":",length(cc),"-",indiv,":",indivi,":",length(statids),"-",i,":",nrow(plot_df)))
+
 			ID = plot_df$ID[i]
 			Z = min(as.numeric(Zfile3[grep(indiv,Zfile3[,1]), which(Zfile3[1,]== ID)] ))
 			if(is.na(Z)){
