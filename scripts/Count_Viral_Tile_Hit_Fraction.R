@@ -93,7 +93,9 @@ virfracs = data.frame(mat.or.vec(length(uniq_sub), length(unique(species_id$spec
 colnames(virfracs) = c("id", unique(species_id$species))
 virfracs$id = uniq_sub
 
+print(paste("Looping",ncol(virfracs)))
 for( j in c(2:ncol(virfracs))){
+	print(paste("Looping",j,":",ncol(virfracs)))
 	sp = colnames(virfracs)[j]
 	vir_ids = species_id$id[which(species_id$species == sp)]
 	sfile = Zfile1[, c(1, which(Zfile1[1,] %in% vir_ids))]
@@ -138,7 +140,7 @@ write.table(virfracs, outfile, col.names = TRUE, sep = ",", row.names=FALSE, quo
 Vir_frac = 0.05
 
 
-virfracs = virfracs[which(virfracs$id %in% uniqid),]
+virfracs = virfracs[which(virfracs$id %in% uniq_sub),]
 print(paste("length(virfracs) :",length(virfracs)))
 
 cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
@@ -155,6 +157,7 @@ pvalues$species = colnames(virfracs)[-1]
 
 
 for(i in c(1:nrow(pvalues))){
+	print("Looping:",i,":",nrow(pvalues))
 	species = pvalues$species[i]
 	n_cases = length(cases)
 	n_control = length(controls)

@@ -148,7 +148,7 @@ print("for(i in c(1:length(plates))){")
 print("IMPORTANT: The column is 'id' NOT 'ids'")
 #	[1] "IMPORTANT: The column is 'id' NOT 'ids'"
 for(i in c(1:length(plates))){
-	print(i)
+	print("Looping",i,":",length(plates))
 	print(Zfiles[[i]][1:5,1:5])
 	Zfiles[[i]] = Zfiles[[i]][,c("id", common_peps)]
 }
@@ -187,7 +187,7 @@ print(dim(peptide_calls))
 print("Loop over every person, extract mins and, if z scores, convert all of their peptide Z scores into 0's and 1's.")
 print("for(i in c(1:nrow(peptide_calls))){")
 for(i in c(1:nrow(peptide_calls))){
-	print(i)
+	print("Looping:",i,":",nrow(peptide_calls))
 
 	id = peptide_calls$ID[i]
 	# Get plate to pull from
@@ -291,7 +291,7 @@ cat(length(common_peps), file = logname, append = TRUE, sep = "\n")
 
 print("for(i in c(1:length(common_peps))){")
 for(i in c(1:length(common_peps))){
-	print(i)
+	print("Looping:",i,":",length(common_peps))
 
 	# Pull the species assignment of the peptide (this could be more efficient but not really a heavy lookup)
 	pvalues$species[i] = species_ids[[1]]$species[which(species_ids[[1]]$id==common_peps[i])][1]
