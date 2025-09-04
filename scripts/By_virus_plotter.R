@@ -60,18 +60,6 @@ print(groups_to_compare)
 n_plots_per_page = 5
 
 
-# Read in the Z-score file  (wihtout transpose and remove the transpose line)
-
-#Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
-#Zfile = data.frame(t(Zfile))
-#Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
-#Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
-#print("head(Zfile)")
-#print(Zfile[1:5,1:5])
-
-#print("Read in the metadata file")
-#meta = read.csv( opt$manifest, sep= ",", header = TRUE)
-#meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 # ## Code to create an id_species file so Jake doesn't need to append it each time
@@ -82,35 +70,10 @@ manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 # write.table(id_species, paste(mwd, "/ID_species.csv", sep = ""), quote = FALSE, row.names = FALSE, col.names = TRUE, sep = ",")
 
 
-## If in the format of subject, type species, remove subject and type, and remove second row.
-#if("subject" %in% Zfile[2,c(1:3)]){
-#	to_remove = which(Zfile[2,c(1:3)]== "subject")
-#	Zfile = Zfile[,-to_remove]
-#}
-#
-#if("type" %in% Zfile[2,c(1:3)]){
-#	to_remove = which(Zfile[2,c(1:3)]== "type")
-#	Zfile = Zfile[,-to_remove]
-#}
-#
-#
-#print(Zfile[1:5,1:5])
-
-print("Extract the peptide information")
-
-#read.csv(paste(mwd, "/ID_species.csv", sep = ""), sep = ",", header = TRUE)
-#species_id = data.frame(t(Zfile[c(1:2),]))
-#colnames(species_id) = species_id[1,]
-#species_id = species_id[-1,]
-#
-#Zfile = Zfile[-2,]
-#
-
 results=read_zfile(opt$zfilename)
 species_id = results$species
 Zfile = results$zfile
 rm(results)
-
 
 
 print("Unique samples to keep")
