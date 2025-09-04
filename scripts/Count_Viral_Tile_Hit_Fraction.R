@@ -157,7 +157,7 @@ pvalues$species = colnames(virfracs)[-1]
 
 
 for(i in c(1:nrow(pvalues))){
-	print("Looping:",i,":",nrow(pvalues))
+	print(paste("Looping:",i,":",nrow(pvalues)))
 	species = pvalues$species[i]
 	n_cases = length(cases)
 	n_control = length(controls)

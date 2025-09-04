@@ -144,7 +144,7 @@ viral_calls$ID = uniq_sub
 
 # Loop over every person, and convert all of their peptide Z scores into 0's and 1's.
 for(i in c(1:nrow(viral_calls))){
-	print("Looping:",i,":",nrow(viral_calls))
+	print(paste("Looping:",i,":",nrow(viral_calls)))
 	id = viral_calls$ID[i]
 	# Get plate to pull from
 	mp = manifest$plate[which(manifest$subject==id)][[1]]
@@ -220,7 +220,7 @@ cat("\nStart loop over virus logistic regression analysis:",
 	file = logname, append = TRUE, sep = "\n")
 
 for(i in c(1:length(common_virs))){
-	print("Looping:",i,":",length(common_virs))
+	print(paste("Looping:",i,":",length(common_virs)))
 
 	# Extract all virus information into the new datfile.
 	datfile$virus = viral_calls[, which(colnames(viral_calls)== common_virs[i])]

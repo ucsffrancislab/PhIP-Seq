@@ -12,7 +12,7 @@ build_datfile = function(uniq_sub,opt){
 	colnames(datfile) = c("ID", "case", "sex", "age", "plate")
 	datfile$ID = uniq_sub
 	for(i in c(1:nrow(datfile))){
-		print(i)
+		print(paste("Looping:",i,":",nrow(datfile)))
 		man_loc = which(manifest$subject== datfile$ID[i])[1]
 		#datfile$case[i] = ifelse(manifest$group[man_loc] == groups_to_compare[1], 1, 0)
 		datfile$case[i] = ifelse(manifest$group[man_loc] == opt$group1, 1, 0)

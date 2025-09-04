@@ -85,7 +85,7 @@ print(paste("length(controls) :",length(controls)))
 
 df_colnames = colnames(posfile2)
 for(sp in c(1:(nrow(pvalues)))){
-	print("Looping:",sp,":",nrow(pvalues))
+	print(paste("Looping:",sp,":",nrow(pvalues)))
 	species = df_colnames[sp+3]
 	pvalues$species[sp] = species
 	n_cases = length(cases)

@@ -76,7 +76,7 @@ print(dim(Zfile))
 
 to_keep = 1
 for(u in uniq_sub){
-	print("Looping:",u,":",length(uniq_sub))
+	print(paste("Looping:",u,":",length(uniq_sub)))
 
 	possible_ids = grep(paste0("^",u,"$|^",u,"dup$"), Zfile[,1])
 
@@ -164,7 +164,7 @@ print("This loop takes quite a while. Haven't attempted to speed it up.")
 print("Pick a peptide:")
 pep_index = 1
 for(pep_index in c(1:(ncol(Zfile1)-1))){
-	print("Looping:",pep_index,":",ncol(Zfile1)-1)
+	print(paste("Looping:",pep_index,":",ncol(Zfile1)-1))
 	pepcol = pep_index+1
 	peptide = Zfile1[1,(pepcol)]
 	pvalues$peptide[pep_index] = peptide
