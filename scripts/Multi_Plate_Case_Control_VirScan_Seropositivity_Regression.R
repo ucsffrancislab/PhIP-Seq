@@ -72,8 +72,7 @@ Z = opt$zscore
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirScan_Seropositivity_Comparison",
 	fs::path_ext_remove(basename(opt$sfile_basename)),
-	"type",opt$type,
-	paste(groups_to_compare, collapse="-"),
+	opt$type, paste(groups_to_compare, collapse="-"),
 	"Z",Z,
 	"sex",opt$sex, sep="-")))
 

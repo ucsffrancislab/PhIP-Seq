@@ -86,8 +86,7 @@ date=format(Sys.Date(),"%Y%m%d")
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_Peptide_Comparison",
 		fs::path_ext_remove(basename(opt$zfile_basename)),
-		"type",opt$type,
-		paste(groups_to_compare, collapse="-"),
+		opt$type, paste(groups_to_compare, collapse="-"),
 		"Z", Z,"sex",opt$sex,sep="-")))
 
 print(output_base)

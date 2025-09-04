@@ -114,8 +114,7 @@ for( j in c(2:ncol(virfracs))){
 outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_", paste("Viral_Frac_Hits",
 		fs::path_ext_remove(basename(opt$zfilename)),
-		"type",opt$type,
-		paste(groups_to_compare[1:2],collapse="-"),
+		opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z", Z,
 		"sex",opt$sex, sep="-")), ".csv")
 
@@ -182,8 +181,7 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_", paste("Viral_Sero",
 		fs::path_ext_remove(basename(opt$zfilename)),
-		"type",opt$type,
-		paste(groups_to_compare[1:2],collapse="-"),
+		opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z", Z, 
 		"sex",opt$sex,
 		"Vir_hit_frac", Vir_frac, sep="-")), ".csv")

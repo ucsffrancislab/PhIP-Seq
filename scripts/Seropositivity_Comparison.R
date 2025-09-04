@@ -107,8 +107,7 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 outfile = paste0(opt$output_dir, "/",
 	gsub(" ","-",paste("Seropositivity_Prop",
 		fs::path_ext_remove(basename(opt$sfilename)),
-		"type",opt$type,
-		paste(groups_to_compare[1:2],collapse="-"),
+		opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z",Z,"sex",opt$sex,sep="-")), ".csv")
 
 

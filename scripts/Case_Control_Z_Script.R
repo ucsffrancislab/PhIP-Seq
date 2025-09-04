@@ -222,8 +222,7 @@ colnames(pvalues) = c("peptide", "species", paste0("freq_", groups_to_compare[1]
 outfile=paste0(opt$output_dir, "/",
 	gsub(" ","_",paste("Tile_Comparison",
 		fs::path_ext_remove(basename(opt$zfilename)),
-		"type",opt$type,
-		paste(groups_to_compare[1:2],collapse="-"),
+		opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z", Z,
 		"sex",opt$sex, sep="-")), ".csv")
 

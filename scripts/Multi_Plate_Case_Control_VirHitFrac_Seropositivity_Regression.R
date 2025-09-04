@@ -67,8 +67,7 @@ Vir_frac = opt$virfrac	#	0.05
 virfracfilename = paste0(
 	gsub(" ","_", paste("Viral_Frac_Hits",
 		fs::path_ext_remove(basename(opt$zfile_basename)),
-		"type",opt$type,
-		paste(groups_to_compare[1:2],collapse="-"),
+		opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z", Z_thresh,
 		"sex",opt$sex,
 		sep="-")), ".csv")
@@ -79,8 +78,7 @@ date=format(Sys.Date(),"%Y%m%d")
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirFrac_Seropositivity_Comparison",
 	fs::path_ext_remove(basename(opt$zfile_basename)),
-	"type",opt$type,
-	paste(groups_to_compare, collapse="-"),
+	opt$type, paste(groups_to_compare, collapse="-"),
 	"Z",Z_thresh,
 	"sex",opt$sex,
 	"VirFrac",Vir_frac, sep="-")))
