@@ -7,13 +7,24 @@
 #	Draws lines at Z = 3.5 and Z=10, and recodes any super large Z scores as Z = 15 for visualization sake.
 #	Creates a PDF "Manhattan_plots_[VIRUS]" with indication of the groups compared.
 
+options(warn = 1)
 
 library("argparse")
 args=commandArgs()
 scriptname=sub("--file=", "", args[grepl("--file=", args)])
+scriptdir=dirname(sub("--file=", "", args[grepl("--file=", args)]))
+source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
-parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE, action="append",
-	help="group to compare (use multiple times for each)", metavar="group")
+parser$add_argument("-s", "--sex", type="character", default="",
+	help="limit sex", metavar="sex")
+parser$add_argument("-t", "--type", type="character", default="",
+	help="limit type", metavar="type")
+parser$add_argument("-a", "--group1", type="character", required=TRUE,
+	help="first group to compare", metavar="group")
+parser$add_argument("-b", "--group2", type="character", required=TRUE,
+	help="second group to compare", metavar="group")
+#parser$add_argument("-g", "--groups_to_compare", type="character", required=TRUE, action="append",
+#	help="group to compare (use multiple times for each)", metavar="group")
 parser$add_argument("-v", "--virus", type="character", default=NULL, required=TRUE,
 	help="virus name", metavar="virus species")
 parser$add_argument("-m", "--manifest", type="character", default=NULL, required=TRUE,
@@ -38,7 +49,11 @@ library(data.table)
 # this can take any length of groups from the metadata file "type" column, no need to limit to 2.
 
 #groups_to_compare=opt$groups_to_compare
-groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+#groups_to_compare=unlist(strsplit(opt$groups_to_compare, split = ","))
+#print("Comparing these groups")
+#print(groups_to_compare)
+
+groups_to_compare = c(opt$group1,opt$group2)
 print("Comparing these groups")
 print(groups_to_compare)
 
@@ -50,13 +65,14 @@ n_plots_per_page = 5
 #Zfile = read.csv(paste(opt$working_dir, "Zscores.t.csv", sep = "/"), sep = ",", header=FALSE)
 #Zfile = data.frame(t(Zfile))
 #Zfile = read.csv(opt$zfilename, sep = ",", header=FALSE)
-Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
-print("head(Zfile)")
-print(Zfile[1:5,1:5])
+#Zfile <- data.frame(data.table::fread(opt$zfilename, sep = ",", header=FALSE))
+#print("head(Zfile)")
+#print(Zfile[1:5,1:5])
 
-print("Read in the metadata file")
+#print("Read in the metadata file")
 #meta = read.csv( opt$manifest, sep= ",", header = TRUE)
-meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
+#meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
+manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 # ## Code to create an id_species file so Jake doesn't need to append it each time
 # mydat = Zfile[c(1,2),-c(1:3)]
@@ -66,33 +82,42 @@ meta <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 # write.table(id_species, paste(mwd, "/ID_species.csv", sep = ""), quote = FALSE, row.names = FALSE, col.names = TRUE, sep = ",")
 
 
-# If in the format of subject, type species, remove subject and type, and remove second row.
-if("subject" %in% Zfile[2,c(1:3)]){
-	to_remove = which(Zfile[2,c(1:3)]== "subject")
-	Zfile = Zfile[,-to_remove]
-}
-
-if("type" %in% Zfile[2,c(1:3)]){
-	to_remove = which(Zfile[2,c(1:3)]== "type")
-	Zfile = Zfile[,-to_remove]
-}
-
-
-print(Zfile[1:5,1:5])
+## If in the format of subject, type species, remove subject and type, and remove second row.
+#if("subject" %in% Zfile[2,c(1:3)]){
+#	to_remove = which(Zfile[2,c(1:3)]== "subject")
+#	Zfile = Zfile[,-to_remove]
+#}
+#
+#if("type" %in% Zfile[2,c(1:3)]){
+#	to_remove = which(Zfile[2,c(1:3)]== "type")
+#	Zfile = Zfile[,-to_remove]
+#}
+#
+#
+#print(Zfile[1:5,1:5])
 
 print("Extract the peptide information")
 
 #read.csv(paste(mwd, "/ID_species.csv", sep = ""), sep = ",", header = TRUE)
-species_id = data.frame(t(Zfile[c(1:2),]))
-colnames(species_id) = species_id[1,]
-species_id = species_id[-1,]
+#species_id = data.frame(t(Zfile[c(1:2),]))
+#colnames(species_id) = species_id[1,]
+#species_id = species_id[-1,]
+#
+#Zfile = Zfile[-2,]
+#
 
-Zfile = Zfile[-2,]
+results=read_zfile(opt$zfilename)
+species_id = results$species
+Zfile = results$zfile
+rm(results)
+
+
 
 print("Unique samples to keep")
-uniqid = unique(meta$subject[which(meta$group %in% groups_to_compare)])
+uniq_sub = select_subjects(manifest,opt)
+#uniqid = unique(manifest$subject[which(manifest$group %in% groups_to_compare)])
 to_keep = 1
-for(u in uniqid){
+for(u in uniq_sub){
 	possible_ids = grep(u, Zfile[,1])
 	mids = Zfile[possible_ids,1]
 	locs = grepl("dup", mids)
@@ -151,7 +176,7 @@ pdf(viral_plotfile, width = 7, height=(2*n_plots_per_page), onefile = TRUE)
 
 for(stat in cc){
 	print(paste0("for(stat in cc){ - ",stat))
-	statids = uniqid[which(uniqid %in% meta$subject[which(meta$group== stat)])]
+	statids = uniq_sub[which(uniq_sub %in% manifest$subject[which(manifest$group== stat)])]
 	plots = list()
 	plot_counter = 1
 	before1=Sys.time()
