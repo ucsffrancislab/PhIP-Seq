@@ -8,6 +8,7 @@
 #	Only makes calls for viruses with known public epitopes.
 #	Outputs a file "Seropositivity_Prop*" which also indicates the two groups compared.
 
+options(warn = 1)
 
 library("argparse")
 args=commandArgs()

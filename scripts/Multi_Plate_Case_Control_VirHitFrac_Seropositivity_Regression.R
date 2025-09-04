@@ -11,7 +11,7 @@
 #	The output (to a user specified directory owd , is a list of viral species, ordered by ascending p-value. It includes species, frequency of virus in the first group, frequency of the virus in the second group, and the beta, standard error, and p-value from the multivariable logistic regression (NA if there is no variation in the presence of the virus overall, e.g. all 0 or all 1).
 #	The file will also output a logfile with similar naming convention, which includes the details of the plates used in the analysis, sample sizes, etc.
 
-
+options(warn = 1)
 
 library("argparse")
 args=commandArgs()

@@ -8,6 +8,7 @@
 #	Output p-values are not adjusted for any multiple testing.
 #		NA p values are produced when tile proportion is 1 in both or 0 in both.
 
+options(warn = 1)
 
 library("argparse")
 args=commandArgs()

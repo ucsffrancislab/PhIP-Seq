@@ -12,6 +12,7 @@
 #		by thresholding the proportion of tiles present (see next file).
 #	This of course comes with many caveats, like tile uniqueness/homology.
 
+options(warn = 1)
 
 library("argparse")
 args=commandArgs()
