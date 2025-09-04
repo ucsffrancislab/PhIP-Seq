@@ -54,8 +54,8 @@ manifest <- data.frame(data.table::fread(opt$manifest, sep = ",", header=TRUE))
 
 
 results=read_zfile( opt$zfilename )
-species_ids[[i]] = results$species
-Zfiles[[i]] = results$zfile
+species_id = results$species
+Zfile = results$zfile
 rm(results)
 
 print("Unique samples to keep")
