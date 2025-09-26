@@ -2,6 +2,13 @@
 
 set -x
 
+set -e	#	exit if any command fails
+set -u	#	Error on usage of unset variables
+
+#set -o pipefail	#	somehow triggers failure in some pipes with `head` in them
+
+#	TESTING THE ABOVE
+#	I'd like to have some other options to cause the script to end on error codes by some of these return an error code even on success
 
 manifest=$1
 dir=$2
@@ -21,8 +28,13 @@ for f in ${dir}/merged.*.virus_scores.csv ; do
 	#head -1 ${f} | sed -e '1s/\(,[^,]*\)_./\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
 	#	this didn't work in plate2 and mucked things up
 	#	not even sure that it was needed. id and subject are the same thing at this point!
-	head -1 ${f} | sed -e '1s/\(,[^,]*\)/\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
-	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
+#	head -1 ${f} | sed -e '1s/\(,[^,]*\)/\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
+#	What is i? What was I doing here? There is no ${i}
+#	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
+	head -1 ${f} | sed -e '1s/^id/subject/' > ${dir}/tmp1.csv
+	cat ${f} >> ${dir}/tmp1.csv
+
+#	I think that the purpose of this was to create a line for subject and a line for sample from the same line
 
 
 
@@ -162,7 +174,14 @@ for f in ${dir}/merged.*.seropositive.csv ; do
 	echo $threshold
 
 	head -1 ${f} | sed -e '1s/\(,[^,]*\)_./\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
-	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
+#	again, what is i and what was I doing here. Still no ${i} here
+#	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
+#	this does nothing
+#	sed -e '1s/\(,[^,]*\)/\1/g' ${f} >> ${dir}/tmp1.csv
+#	so just cat it
+	cat ${f} >> ${dir}/tmp1.csv
+
+
 
 	cat ${dir}/tmp1.csv | datamash transpose -t, > ${dir}/tmp2.csv
 
