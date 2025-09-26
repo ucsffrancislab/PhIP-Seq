@@ -173,7 +173,9 @@ for f in ${dir}/merged.*.seropositive.csv ; do
 	threshold=${threshold#merged.}
 	echo $threshold
 
+	#	Trim everthing after underscore. Why? Underscores only used to separate subject and replicate number on some samples.
 	head -1 ${f} | sed -e '1s/\(,[^,]*\)_./\1/g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
+
 #	again, what is i and what was I doing here. Still no ${i} here
 #	sed -e '1s/\(,[^,]*\)/\1'${i}'/g' ${f} >> ${dir}/tmp1.csv
 #	this does nothing
