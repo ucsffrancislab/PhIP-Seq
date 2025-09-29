@@ -21,6 +21,8 @@ source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
 parser$add_argument("-s", "--sex", type="character", default="",
 	help="limit sex", metavar="sex")
+parser$add_argument("--study", type="character", default="",
+	help="limit study", metavar="study")
 parser$add_argument("-t", "--type", type="character", default="",
 	help="limit type", metavar="type")
 parser$add_argument("-a", "--group1", type="character", required=TRUE,
@@ -67,7 +69,7 @@ Vir_frac = opt$virfrac	#	0.05
 virfracfilename = paste0(
 	gsub(" ","_", paste("Viral_Frac_Hits",
 		fs::path_ext_remove(basename(opt$zfile_basename)),
-		opt$type, paste(groups_to_compare[1:2],collapse="-"),
+		opt$study, opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z", Z_thresh,
 		"sex",opt$sex,
 		sep="-")), ".csv")
@@ -78,7 +80,7 @@ date=format(Sys.Date(),"%Y%m%d")
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_VirFrac_Seropositivity_Comparison",
 	fs::path_ext_remove(basename(opt$zfile_basename)),
-	opt$type, paste(groups_to_compare, collapse="-"),
+	opt$study, opt$type, paste(groups_to_compare, collapse="-"),
 	"Z",Z_thresh,
 	"sex",opt$sex,
 	"VirFrac",Vir_frac, sep="-")))

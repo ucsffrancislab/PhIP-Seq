@@ -135,6 +135,13 @@ select_subjects <- function(manifest,opt) {
 		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$sex==opt$sex )]))
 	}
 
+	if ( opt$study == "" ){
+		print("Study is not set so not filtering on study.")
+	} else {
+		print(paste0("Study is set to ",opt$study,". Filtering"))
+		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$study==opt$study )]))
+	}
+
 	if ( opt$type == "" ){
 		print("Type is not set so not filtering on type.")
 	} else {
