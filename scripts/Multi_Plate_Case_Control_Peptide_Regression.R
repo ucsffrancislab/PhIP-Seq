@@ -33,7 +33,7 @@ scriptname=sub("--file=", "", args[grepl("--file=", args)])
 scriptdir=dirname(sub("--file=", "", args[grepl("--file=", args)]))
 source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
-parser$add_argument("--study", type="character", default="",
+parser$add_argument("--study", type="character", action="append",
 	help="limit study", metavar="study")
 parser$add_argument("-t", "--type", type="character", default="",
 	help="limit type", metavar="type")
@@ -88,7 +88,7 @@ date=format(Sys.Date(),"%Y%m%d")
 output_base = paste0(owd, "/", gsub(" ","_",
 	paste("Multiplate_Peptide_Comparison",
 		fs::path_ext_remove(basename(opt$zfile_basename)),
-		opt$study, opt$type, paste(groups_to_compare, collapse="-"),
+		paste(opt$study, collapse="-"), opt$type, paste(groups_to_compare, collapse="-"),
 		"Z", Z,"sex",opt$sex,sep="-")))
 
 print(output_base)
