@@ -18,7 +18,7 @@ source(paste(scriptdir,'GenoLib.R',sep='/'))
 parser <- ArgumentParser(description=scriptname)
 parser$add_argument("-s", "--sex", type="character", default="",
 	help="limit sex", metavar="sex")
-parser$add_argument("--study", type="character", default="",
+parser$add_argument("--study", type="character", action="append",
 	help="limit study", metavar="study")
 parser$add_argument("-t", "--type", type="character", default="",
 	help="limit type", metavar="type")
@@ -109,7 +109,7 @@ opvalues = pvalues[order(pvalues$pval,decreasing = FALSE, na.last = TRUE),]
 outfile = paste0(opt$output_dir, "/",
 	gsub(" ","-",paste("Seropositivity_Prop",
 		fs::path_ext_remove(basename(opt$sfilename)),
-		opt$study, opt$type, paste(groups_to_compare[1:2],collapse="-"),
+		paste(opt$study, collapse="-"), opt$type, paste(groups_to_compare[1:2],collapse="-"),
 		"Z",Z,"sex",opt$sex,sep="-")), ".csv")
 
 
