@@ -159,6 +159,19 @@ select_subjects <- function(manifest,opt) {
 	print(paste("Length select subjects:", length(uniq_sub) ) )
 	print(paste("Unique subjects:", paste(uniq_sub, collapse=", ") ))
 
+	cases = unique(manifest$subject[which(manifest$group %in% groups_to_compare[1])])
+	cases = intersect(cases,uniq_sub)
+	print(paste("length(cases) :",length(cases)))
+
+	controls = unique(manifest$subject[which(manifest$group %in% groups_to_compare[2])])
+	controls = intersect(controls,uniq_sub)
+	print(paste("length(controls) :",length(controls)))
+
+	if( ( length(cases) == 0 ) || ( length(controls) == 0 ) ){
+		print("No cases or no controls. Quitting.")
+		quit(save = "no", status = 0, runLast = FALSE)
+	}
+
 	return(uniq_sub)
 }
 
