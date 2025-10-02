@@ -145,7 +145,7 @@ select_subjects <- function(manifest,opt) {
 	if ( length(opt$study) == 0 ){
 		print("Study is not set so not filtering on study.")
 	} else {
-		print(paste0("Study is set to ",paste(opt$study),". Filtering"))
+		print(paste0("Study is set to ",paste(opt$study,collapse=" or "),". Filtering"))
 		uniq_sub = intersect(uniq_sub,unique(manifest$subject[which( manifest$study %in% opt$study )]))
 	}
 
