@@ -17,6 +17,8 @@ Install the custom R packages available through the paper or this repository ...
 module load r
 
 R -e "install.packages(c('dplyr','data.table','magrittr','R.utils','readxl','readr','VGAM','MASS','tidyr'))"
+BiocManager::install(c('dplyr','data.table','magrittr','R.utils','readxl','readr','VGAM','MASS','tidyr','codetools','RSQLite'))
+
 R CMD INSTALL mmR_0.1.0.tar.gz 
 R CMD INSTALL virScanR_0.1.0.9000.tar.gz
 ```

@@ -19,10 +19,12 @@ build_datfile = function(uniq_sub,opt){
 		datfile$age[i] = manifest$age[man_loc]
 		datfile$sex[i] = manifest$sex[man_loc]
 		datfile$plate[i] = manifest$plate[man_loc]
+		datfile$lane[i] = manifest$lane[man_loc]
 	}
 	datfile$age = as.numeric(datfile$age)
 	datfile$sex = as.factor(datfile$sex)
 	datfile$plate = as.factor(datfile$plate)
+	datfile$lane = as.factor(datfile$lane)
 
 	return(datfile)
 }

@@ -182,6 +182,8 @@ if( length(unique(datfile$sex)) > 1 )
 	formula = paste(formula, "sex", sep = " + ")
 if( ( length(unique(datfile$plate)) > 1 ) && ( !opt$ignore_plate ) )
 	formula = paste(formula, "plate", sep = " + ")
+if( length(unique(datfile$lane)) > 1 )
+	formula = paste(formula, "lane", sep = " + ")
 
 print(paste("formula",formula))
 cat(paste("formula",formula), file = logname, append = TRUE, sep = "\n")
