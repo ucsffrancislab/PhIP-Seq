@@ -10,23 +10,61 @@ import argparse
 # import regex
 import pandas as pd
 
-def is_novel_peptide(peptide, assigned_peptides, epitope_len):
-	for assigned_peptide in assigned_peptides:
-		matcher = difflib.SequenceMatcher(None, peptide, assigned_peptide)
-		match = matcher.find_longest_match(0, len(peptide), 0, len(assigned_peptide))
-		if match.size >= epitope_len:
-			return False
-	return True
 
-# def is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
-#     for i in range(len(peptide) - epitope_len):
-#         epitope = peptide[i:i + epitope_len]
-#         fmt = r'({epitope}){{s<={max_mm}}}'.format(epitope=epitope, max_mm=max_mm)
-#         r = regex.compile(fmt)
-#         for assigned_peptide in assigned_peptides:
-#             if r.search(assigned_peptide) is not None:
-#                 return False
-#     return True
+
+#	This is WAY, WAY FASTER. Got it working just as I didn't need it anymore.
+class PeptideIndex:
+	def __init__(self, epitope_len):
+		self.epitope_len = epitope_len
+		self.kmers = set()
+
+	def add_peptide(self, peptide):
+		# Extract all substrings of length epitope_len
+		for i in range(len(peptide) - self.epitope_len + 1):
+			self.kmers.add(peptide[i:i + self.epitope_len])
+
+	def has_match(self, peptide):
+		# Check if any substring exists in our index
+		for i in range(len(peptide) - self.epitope_len + 1):
+			if peptide[i:i + self.epitope_len] in self.kmers:
+			return True
+		return False
+
+
+##	This is 3-6 times faster
+#def is_novel_peptide_fast(peptide, assigned_peptides, epitope_len):
+#	# Get all kmers from the query peptide
+#	query_kmers = {peptide[i:i + epitope_len]
+#		for i in range(len(peptide) - epitope_len + 1)}
+#
+#	# Check against all assigned peptides
+#	for assigned in assigned_peptides:
+#		for i in range(len(assigned) - epitope_len + 1):
+#			if assigned[i:i + epitope_len] in query_kmers:
+#		return False
+#	return True
+#
+##
+##	This will get progressively slower and slower and the list of assigned peptides gets longer and longer
+##
+#def is_novel_peptide(peptide, assigned_peptides, epitope_len):
+#	for assigned_peptide in assigned_peptides:
+#		matcher = difflib.SequenceMatcher(None, peptide, assigned_peptide)
+#		match = matcher.find_longest_match(0, len(peptide), 0, len(assigned_peptide))
+#		#	the actual length is irrelevant
+#		if match.size >= epitope_len:
+#			return False
+#	return True
+#
+#def is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
+#	for i in range(len(peptide) - epitope_len):
+#		epitope = peptide[i:i + epitope_len]
+#		fmt = r'({epitope}){{s<={max_mm}}}'.format(epitope=epitope, max_mm=max_mm)
+#		r = regex.compile(fmt)
+#		for assigned_peptide in assigned_peptides:
+#			if r.search(assigned_peptide) is not None:
+#				return False
+#		return True
 
 
 def calc_virus_scores(series, level, epitope_len, species_order):
@@ -53,6 +91,8 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 	#Adeno-associated virus                  0
 	#Adeno-associated virus VR-355           0
 	#Name: S148, dtype: int64
+
+	index = PeptideIndex(epitope_len)
 
 	assigned_peptides = set()
 	peptides_for_export = []
@@ -91,7 +131,7 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 		#   names=['id', 'Species', 'peptide'])
 
 		#print(virus_hits.head())
-		# id    Species            peptide                                                 
+		# id    Species            peptide
 		# 359   Influenza A virus  WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR    True
 		# 535   Influenza A virus  HGLKRGPSTEGVPESMREEYRKEQQSAVDADDSHFVNIELE                   True
 		# 553   Influenza A virus  IGNGCFEFYHKCDNECMESVRNGTYDYPKYSEESKLNREKIDGVKLESMGVYQILA    True
@@ -103,7 +143,7 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 		#peptides = virus_hits.index.get_level_values('peptide')
 
 		#print(peptides.shape)
-		# (341,) 
+		# (341,)
 
 		#print(peptides)
 		# Index(['WYGYHHQNEQGSGYAADKKSTQNAIDGITNKVNSVIEKMNTQFTAVGKEFNKLERR',
@@ -124,7 +164,7 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 		#print(len(assigned_peptides))
 
 		#print(peptides[0:2])
-		#Index(['PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP', 
+		#Index(['PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP',
 		#  'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP'], dtype='object', name='peptide')
 
 		#for peptide in peptides:
@@ -132,11 +172,17 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 			#print(virus_hit)
 			#(42, 'Human herpesvirus 5', 'TIKNTKPQCRPEDYATRLQDLRVTFHRVKPTLQREDDYSVWLDGDHVYPGLKTELH')
 			peptide=virus_hit[2]
-			if is_novel_peptide(peptide, assigned_peptides, epitope_len):
-			# if is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
+
+
+			#if is_novel_peptide(peptide, assigned_peptides, epitope_len, max_mm):
+			#if is_novel_peptide(peptide, assigned_peptides, epitope_len):
+			#if is_novel_peptide_fast(peptide, assigned_peptides, epitope_len):
+			if not index.has_match(peptide):
 				score += 1
 				assigned_peptides.add(peptide)
+				index.add_peptide(peptide)
 				peptides_for_export.append([virus_hit[0],virus_hit[1],virus_hit[2]])
+
 		#print(score)
 		#10
 		#42
@@ -144,12 +190,13 @@ def calc_virus_scores(series, level, epitope_len, species_order):
 		#2
 		#11
 		#print(assigned_peptides)
-		#{'QDLPGKSNSTATLCLGHHAVPNGTLVKTITDDQIEVTNATKLVQSSSTGRICNNPH', 'RSSSSYCRNPNNEKGTHGVKGWAFDDGNDVWMGRTISEDSRSGYETFKVIGGWSTP', 
-		# 'GPDNGAVAVLKYNGIITDTIKSWRNNIMRTQESECACVNGSCFTVMTDGPSNGQAS', 'NGMVTRFESLKIYRDSLGETVMRMGDLHYLQSRNEKWRDQLGQKFEEIRWLIEEMR', 
-		# 'NSQVYSLIRPNENPAHKSQLVWMACHSAAFEDLRLLSFIRGTKVCPRGKLSTRGVQ', 'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP', 
-		# 'SNLNDTTYQRTRALVRTGMDPRMCSLMQGSTLPRRSGAAGAAVKGVGTMVLELIRM', 'RAVGKCPRYVKQKSLLLATGMKNVPEIPKKREKRGLFGAIAGFIENGWEGLVDGWY', 
+		#{'QDLPGKSNSTATLCLGHHAVPNGTLVKTITDDQIEVTNATKLVQSSSTGRICNNPH', 'RSSSSYCRNPNNEKGTHGVKGWAFDDGNDVWMGRTISEDSRSGYETFKVIGGWSTP',
+		# 'GPDNGAVAVLKYNGIITDTIKSWRNNIMRTQESECACVNGSCFTVMTDGPSNGQAS', 'NGMVTRFESLKIYRDSLGETVMRMGDLHYLQSRNEKWRDQLGQKFEEIRWLIEEMR',
+		# 'NSQVYSLIRPNENPAHKSQLVWMACHSAAFEDLRLLSFIRGTKVCPRGKLSTRGVQ', 'QIASNENMETIDSITLELRSKYWAIRTRSGGNTNKQRASAGQISVQPTFSVQRNLP',
+		# 'SNLNDTTYQRTRALVRTGMDPRMCSLMQGSTLPRRSGAAGAAVKGVGTMVLELIRM', 'RAVGKCPRYVKQKSLLLATGMKNVPEIPKKREKRGLFGAIAGFIENGWEGLVDGWY',
 		# 'PGDTIIFEANGNLIAPWYAFALSRGFGSGIITSNASMGECDAKCQTPQGAINSSLP', 'SILNTSQRGILEDGQMYQKCCNLFEKFFPSSSYRRPVGISSMVEAMVSRARIDARI'}
 
+		#print(virus + " : " + str(len(assigned_peptides)))
 		virus_scores[virus] = score
 
 	pd.DataFrame(peptides_for_export, columns=['id', 'species', 'peptide']).sort_values(by=['id']).to_csv(
@@ -182,7 +229,7 @@ if __name__ == '__main__':
 #	parser.add_argument('--seqint', action='store_true', help='items are ints so sort like it : %(prog)s (default: %(default)s)')
 
 
-# elledge_calc_scores_nofilter.py All.count.Zscores.${sample}.csv /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv Species ${length} > tmp 
+# elledge_calc_scores_nofilter.py All.count.Zscores.${sample}.csv /francislab/data1/refs/PhIP-Seq/VIR3_clean.virus_score.csv Species ${length} > tmp
 
 	parser.add_argument("--hits", required=True)
 	parser.add_argument("--oligo_metadata", required=True)
@@ -204,7 +251,7 @@ if __name__ == '__main__':
 	hits = pd.read_csv(args.hits, index_col=0)
 	#print(hits.head())
 	#       S1
-	#id       
+	#id
 	#1   False
 	#2   False
 	#3   False
@@ -234,7 +281,7 @@ if __name__ == '__main__':
 
 	#print(hits2.head())
 	#                                                                                                                                       S148
-	#id Species               Organism                                           Entry  peptide                                                  
+	#id Species               Organism                                           Entry  peptide
 	#1  Papiine herpesvirus 2 Cercopithecine herpesvirus 16 (CeHV-16) (Herpes... A0A126 MRSLLFVVGAWVAALVTNLTPDAALASGTTTTAAAGNTSATASPGDN...  False
 	#2  Papiine herpesvirus 2 Cercopithecine herpesvirus 16 (CeHV-16) (Herpes... A0A126 TTTTAAAGNTSATASPGDNATSIDAGSTITAAAPPGHSTPWPALPTD...  False
 	#3  Papiine herpesvirus 2 Cercopithecine herpesvirus 16 (CeHV-16) (Herpes... A0A126 ITAAAPPGHSTPWPALPTDLALPLVIGGLCALTLAAMGAGALLHRCC...  False
