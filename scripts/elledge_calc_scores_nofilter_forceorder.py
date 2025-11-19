@@ -27,7 +27,7 @@ class PeptideIndex:
 		# Check if any substring exists in our index
 		for i in range(len(peptide) - self.epitope_len + 1):
 			if peptide[i:i + self.epitope_len] in self.kmers:
-			return True
+				return True
 		return False
 
 
