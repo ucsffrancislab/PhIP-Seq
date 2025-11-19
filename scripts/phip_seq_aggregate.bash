@@ -205,7 +205,7 @@ if [ -f ${dir}/All.count.Zscores.csv ] ; then
 	echo "Annotate Zscores"
 	echo
 	echo "- sorting"
-	head -1 ${dir}/All.count.Zscores.csv | sed -e '1s/dup//g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
+	head -1 ${dir}/All.count.Zscores.csv | sed -e '1s/_[12]//g' -e '1s/dup//g' -e '1s/^id/subject/' > ${dir}/tmp1.csv
 	head -1 ${dir}/All.count.Zscores.csv >> ${dir}/tmp1.csv
 	tail -q -n +2 ${dir}/All.count.Zscores.csv | sort -t, -k1,1 >> ${dir}/tmp1.csv
 	head -5 ${dir}/tmp1.csv | cut -c1-100
