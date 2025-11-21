@@ -16,8 +16,14 @@ parser = argparse.ArgumentParser(prog=os.path.basename(__file__))
 
 parser.add_argument('files', nargs='*', help='files help')
 parser.add_argument('-V','--version', action='version', version='%(prog)s 1.0')
-parser.add_argument('-i', '--input', nargs=1, type=str, default=['All.count.csv'], help='input count csv filename to %(prog)s (default: %(default)s)')
-parser.add_argument('-o', '--output', nargs=1, type=str, default=['output.csv'], help='output zscore csv filename to %(prog)s (default: %(default)s)')
+parser.add_argument('-i', '--input', type=str, default='All.count.csv', help='input count csv filename to %(prog)s (default: %(default)s)')
+parser.add_argument('-o', '--output', type=str, default='output.csv', help='output zscore csv filename to %(prog)s (default: %(default)s)')
+
+parser.add_argument('-t','--threshold_adjustment_factor', type=float, default=1, help='Tile count minimum threshold adjustment factor to %(prog)s (default: %(default)s)')
+parser.add_argument('-f','--fixed_tile_count', type=float, default=0, help='fixed_tile_count to %(prog)s (default: %(default)s)')
+
+
+#	don't use nargs=1 as it forces an array
 
 #parser.add_argument('--count_threshold', type=int, default=300, help='Tile count minimum threshold to %(prog)s (default: %(default)s)')
 
@@ -33,10 +39,11 @@ args = parser.parse_args()
 
 
 
-
+print(f"Using : {args.threshold_adjustment_factor}")
 
 print("Reading csv")
-df = pd.read_csv( args.input[0],index_col='id')
+#df = pd.read_csv( args.input[0],index_col='id')
+df = pd.read_csv( args.input, index_col='id')
 
 print("\nFirst 10x10")
 print(df.iloc[:10,:10] )
@@ -127,18 +134,22 @@ for key in sorted_keys:
 		max_input=key
 
 	input_diff = max_input - key
-	if input_diff > 1500:
-		count_threshold=50
-	elif input_diff > 1000:
-		count_threshold=75
-	elif input_diff > 500:
-		count_threshold=150
+
+	if args.fixed_tile_count > 0:
+		count_threshold = args.fixed_tile_count
 	else:
-		count_threshold=300
+		if input_diff > 1500:
+			count_threshold=50
+		elif input_diff > 1000:
+			count_threshold=75
+		elif input_diff > 500:
+			count_threshold=150
+		else:
+			count_threshold=300
 			
 	#	if( tile_count >= args.count_threshold ):
-	if( tile_count >= count_threshold ):
-		print("Tile count surpassed progressive count threshold:",count_threshold)
+	if( tile_count >= (count_threshold * args.threshold_adjustment_factor) ):
+		print("Tile count surpassed progressive count threshold:",(count_threshold * args.threshold_adjustment_factor) )
 		bin+=1
 		#print( tile_count )
 		tile_count=0
@@ -298,6 +309,7 @@ for sample in samples:
 		#print(out.loc[out['bin']==i,[sample]])
 
 
-out.to_csv( args.output[0], index_label=['id'] )
+#out.to_csv( args.output[0], index_label=['id'] )
+out.to_csv( args.output, index_label=['id'] )
 
 
