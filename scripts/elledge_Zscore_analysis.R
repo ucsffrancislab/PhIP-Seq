@@ -16,6 +16,8 @@
 
 #	and create a file like ... (where does "group" come from?)
 
+#	group may come from the binning of blanks?
+
 #	head ~/testing/Zscores_vir3.csv
 #	id,group,S148,S150,S154,S156,input
 #	1,5,-0.71,2.99,0.21,-0.78,4
@@ -92,10 +94,20 @@ convert_params1 <- virScanR::vs.set_params_convert(stat  = "Z_score",
 		returnParams = TRUE)
 print(convert_params1)
 
+
+#	 53 # > virScanR::vs.convert(data = counts[1:20,c(1:52, 80:90)], paramsList = convert_params1)$out
+#column_count = dim(counts)[2]
+#sixtytwo = counts[,c(1,(column_count-60):column_count)]
+
 datZ = virScanR::vs.convert(
-		data = counts,
-		paramsList = convert_params1
-	)
+	data = counts,
+	#data = sixtytwo,
+	paramsList = convert_params1
+)
+
+#	It returns NAs for all zscores if more than 62 columns (samples) are given
+#	No error messages or documentation to help clarify.
+#	Could dig into the code.
 
 print(datZ)
 
