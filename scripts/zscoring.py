@@ -5,6 +5,7 @@ import sys
 import numpy as np
 import pandas as pd
 from scipy import stats
+import statistics
 
 
 
@@ -19,8 +20,8 @@ parser.add_argument('-V','--version', action='version', version='%(prog)s 1.0')
 parser.add_argument('-i', '--input', type=str, default='All.count.csv', help='input count csv filename to %(prog)s (default: %(default)s)')
 parser.add_argument('-o', '--output', type=str, default='output.csv', help='output zscore csv filename to %(prog)s (default: %(default)s)')
 
-parser.add_argument('-t','--threshold_adjustment_factor', type=float, default=1, help='Tile count minimum threshold adjustment factor to %(prog)s (default: %(default)s)')
-parser.add_argument('-f','--fixed_tile_count', type=float, default=0, help='fixed_tile_count to %(prog)s (default: %(default)s)')
+#parser.add_argument('-t','--threshold_adjustment_factor', type=float, default=1, help='Tile count minimum threshold adjustment factor to %(prog)s (default: %(default)s)')
+#parser.add_argument('-f','--fixed_tile_count', type=float, default=0, help='fixed_tile_count to %(prog)s (default: %(default)s)')
 
 
 #	don't use nargs=1 as it forces an array
@@ -39,7 +40,7 @@ args = parser.parse_args()
 
 
 
-print(f"Using : {args.threshold_adjustment_factor}")
+#print(f"Using : {args.threshold_adjustment_factor}")
 
 print("Reading csv")
 #df = pd.read_csv( args.input[0],index_col='id')
@@ -129,34 +130,104 @@ tile_count=0
 bin=1
 df['bin']=0
 max_input=0
+#blank_values=[]
 for key in sorted_keys:
 	if max_input == 0:
 		max_input=key
 
+	#blank_values.append(key)	# one entry for all of the same tiles
+	#blank_values += counts[key] * [key]
+
 	input_diff = max_input - key
 
-	if args.fixed_tile_count > 0:
-		count_threshold = args.fixed_tile_count
+	if input_diff > 1500:
+		count_threshold=37
+	elif input_diff > 1000:
+		count_threshold=75
+	elif input_diff > 500:
+		count_threshold=150
 	else:
-		if input_diff > 1500:
-			count_threshold=50
-		elif input_diff > 1000:
-			count_threshold=75
-		elif input_diff > 500:
-			count_threshold=150
-		else:
-			count_threshold=300
-			
-	#	if( tile_count >= args.count_threshold ):
-	if( tile_count >= (count_threshold * args.threshold_adjustment_factor) ):
-		print("Tile count surpassed progressive count threshold:",(count_threshold * args.threshold_adjustment_factor) )
+		count_threshold=300
+
+#
+#	if input_diff > 1500:
+#		count_threshold=50
+#	elif input_diff > 1000:
+#		count_threshold=75
+#	elif input_diff > 500:
+#		count_threshold=150
+#	else:
+#		count_threshold=300
+
+
+
+#	if args.fixed_tile_count > 0:
+#		count_threshold = args.fixed_tile_count
+#	else:
+#		if input_diff > 1500:
+#			count_threshold=50
+#		elif input_diff > 1000:
+#			count_threshold=75
+#		elif input_diff > 500:
+#			count_threshold=150
+#		else:
+#			count_threshold=300
+
+#	tail -n +2 Elledge.5.grouping.csv | cut -d, -f2 | sort -n | uniq -c
+#	tail -n +2 Jake.5.grouping.csv | cut -d, -f3 | sort -n | uniq -c
+
+#    302 50 93.90308832207724
+#    302 51 184.08278145695365
+#    302 52 372.01316802710613
+#    151 53 175.7893156732892
+#    151 54 257.09298013245035
+#    151 55 737.8988962472406
+#    151 56 1145.2399116997792
+#     76 57 863.7422807017543
+#     76 58 2655.093859649123
+#     38 59 1625.6963015647227
+#     38 60 2558.99573257468
+#     37 61 5566.971471471472
+#     37 62 4367723.12012012
+
+#data = [1, 2, 3, 4, 5]
+#sample_variance = statistics.variance(data)
+#print(f"Sample Variance: {sample_variance}")
+#
+#	if len(blank_values) > 1:
+#		sample_variance = statistics.variance(blank_values)
+#
+#		if sample_variance > 1600:
+#			count_threshold=37
+#		elif sample_variance > 900:
+#			count_threshold=75
+#		elif sample_variance > 370:
+#			count_threshold=150
+#		else:
+#			count_threshold=300
+#
+#	else:
+#		count_threshold=300
+
+
+	#if( tile_count >= (count_threshold * args.threshold_adjustment_factor) ):
+	#	print("Tile count surpassed progressive count threshold:",(count_threshold * args.threshold_adjustment_factor) )
+
+	#if( tile_count >= count_threshold ):
+	if( (tile_count+counts[key]) >= count_threshold ):
+		print("Tile count surpassed progressive count threshold:", count_threshold )
 		bin+=1
 		#print( tile_count )
 		tile_count=0
-		max_input=key
+		max_input=0	#key
+		#blank_values=[]
 
 	tile_count+=counts[key]
+
 	df.loc[df['input']==key,'bin']=bin
+
+
+
 
 
 print("\nDone\n")
@@ -290,9 +361,11 @@ for sample in samples:
 		X = df.loc[df['bin']==i,[sample]].values.flatten()
 		#	or .explode()
 		#print(X)
-		m = stats.trim_mean(X, 0.05)
+		#m = stats.trim_mean(X, 0.05)
+		m = stats.trim_mean(X, 0.04)
 		print("Trimmed mean:",m)
-		std = stats.mstats.trimmed_std(X,0.05)
+		#std = stats.mstats.trimmed_std(X,0.05)
+		std = stats.mstats.trimmed_std(X,0.04)
 		print("Trimmed stddev:",std)
 
 		#out.loc[out['bin']==i,[sample]] = df.loc[df['bin']==i,[sample]].apply(zscore,args=(m,std))
