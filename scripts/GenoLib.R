@@ -9,6 +9,7 @@ build_datfile = function(uniq_sub,opt){
 	#datfile = data.frame(mat.or.vec(length(uniq_sub),6))
 	#colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
 	datfile = data.frame(mat.or.vec(length(uniq_sub),5))
+	#colnames(datfile) = c("ID", "case", "sex", "age", "plate","lane")
 	colnames(datfile) = c("ID", "case", "sex", "age", "plate")
 	datfile$ID = uniq_sub
 	for(i in c(1:nrow(datfile))){
@@ -19,15 +20,163 @@ build_datfile = function(uniq_sub,opt){
 		datfile$age[i] = manifest$age[man_loc]
 		datfile$sex[i] = manifest$sex[man_loc]
 		datfile$plate[i] = manifest$plate[man_loc]
-		datfile$lane[i] = manifest$lane[man_loc]
+#		datfile$lane[i] = manifest$lane[man_loc]
 	}
+	print(head(datfile))
 	datfile$age = as.numeric(datfile$age)
 	datfile$sex = as.factor(datfile$sex)
 	datfile$plate = as.factor(datfile$plate)
-	datfile$lane = as.factor(datfile$lane)
+#	datfile$lane = as.factor(datfile$lane)
 
 	return(datfile)
 }
+
+
+
+#	hc out.plate1/Zscores.communities.csv 
+#	subject,type,sample,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,
+#	14078-01,glioma serum,14078-01,-0.192421944640041,-0.192421944640041,6.16277794485846,-0.38350534723
+#	14078-01,glioma serum,14078-01dup,-0.3385346296506589,-0.3385346296506589,-0.3385346296506589,1.8555
+#	14118-01,glioma serum,14118-01,-0.2344245250248148,-0.2344245250248148,0.1947855720386505,-0.4337323
+#	14118-01,glioma serum,14118-01dup,-0.2039514832025599,-0.2039514832025599,-0.2039514832025599,-0.392
+#	14127-01,glioma serum,14127-01,-0.252874075802078,-0.252874075802078,1.8472645390110745,13.169828750
+
+read_zfile_communities = function(zfilename) {
+
+	print(paste("Read in the Z file",zfilename))
+
+	Zfile <- data.frame(data.table::fread(zfilename, sep = ",", header=FALSE))
+	print(Zfile[1:5,1:4])
+	#       V1                 V2        V3                  V4
+	#1       y                  x        id                  10
+	#2 subject               type   species      Vaccinia virus
+	#3  108741 ALL maternal serum    108741 -0.3633046359217093
+	#4  108741 ALL maternal serum 108741dup -0.3669457592878151
+	#5   14922       glioma serum     14922 -0.2185790682273388
+
+	#        V1           V2          V3         V4
+	#1  subject         type      sample  0.0000000
+	#2 14078-01 glioma serum    14078-01 -0.1924219
+	#3 14078-01 glioma serum 14078-01dup -0.3385346
+	#4 14118-01 glioma serum    14118-01 -0.2344245
+	#5 14118-01 glioma serum 14118-01dup -0.2039515
+	
+	# If in the format of subject, type species, remove subject and type
+	if("subject" %in% Zfile[1,c(1:3)]){
+		to_remove= which(Zfile[1,c(1:3)]== "subject")
+		Zfile = Zfile[,-to_remove]
+	}
+	if("type" %in% Zfile[1,c(1:3)]){
+		to_remove = which(Zfile[1,c(1:3)]== "type")
+		Zfile = Zfile[,-to_remove]
+	}
+	
+	print(Zfile[1:5,1:4])
+	#         V3                  V4                   V5                  V6
+	#1        id                  10                  100                1000
+	#2   species      Vaccinia virus  Human herpesvirus 3   Hepatitis B virus
+	#3    108741 -0.3633046359217093  -0.5834907519966614 -0.3633046359217093
+	#4 108741dup -0.3669457592878151  -0.5919839162855073 -0.3669457592878151
+	#5     14922 -0.2185790682273388 -0.40674341138804637 -0.2185790682273388	
+
+	#           V3         V4         V5         V6
+	#1      sample  0.0000000  1.0000000  2.0000000
+	#2    14078-01 -0.1924219 -0.1924219  6.1627779
+	#3 14078-01dup -0.3385346 -0.3385346 -0.3385346
+	#4    14118-01 -0.2344245 -0.2344245  0.1947856
+	#5 14118-01dup -0.2039515 -0.2039515 -0.2039515
+
+	
+	# not sure why they used to be integers but now are floats
+#df$col_float <- as.integer(df$col_float)
+
+# just 1 column now
+
+	#species_id = data.frame(t(Zfile[c(1:2),]))
+	#print(species_id[1:3,1:2])
+	#      X1                  X2
+	#V3    id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+	species_id = data.frame(t(Zfile[c(1),]))
+	print("species_id")
+	print(species_id[1:5,])
+	#[1] "species_id"
+	#[1] "sample" "0"      "1"      "2"      "3"     
+
+
+
+
+#	colnames(species_id) = species_id[1,]
+#	print(species_id[1:3,1:2])
+	#      id             species
+	#V3    id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+	colnames(species_id) = species_id[1,]
+	#species_id = as.data.frame(species_id)
+	print("species_id renamed")
+#	print(species_id[1:5,])
+	#print(head(species_id[1:5,]))
+	print(head(species_id))
+#print(df[, "colB", drop = FALSE])
+	#[1] "species_id renamed"
+	#   sample
+	#V3 sample
+	#V4      0
+	#V5      1
+	#V6      2
+	#V7      3
+	#V8      4
+
+	#species_id = species_id[-1,]
+	#print(species_id[1:3,1:2])
+	#      id             species
+	#V4    10      Vaccinia virus
+	#V5   100 Human herpesvirus 3
+	#V6  1000   Hepatitis B virus
+#	species_id = as.data.frame(species_id)
+	species_id = species_id[-1,]
+	species_id = as.data.frame(species_id)
+#	species_id = species_id[[-1,]]
+	print("species_id trimmed")
+#	#print(as.data.frame(species_id[1:5]))
+#	print(species_id[1:5])
+	print(head(species_id))
+	#[1] "species_id trimmed"
+	#  species_id
+	#1          0
+	#2          1
+	#3          2
+	#4          3
+	#5          4
+	#6          5
+
+#	with only 1 column it won't stay a dataframe and loses the column name. 
+#	Not sure that its a problem, but need to convert to dataframe so that the Reduce(intersect, ... command works
+
+
+#	Zfile = Zfile[-2,]
+	Zfile[1,1]='id'
+	print(Zfile[1:5,1:4])
+	#         V3                  V4                   V5                  V6
+	#1        id                  10                  100                1000
+	#3    108741 -0.3633046359217093  -0.5834907519966614 -0.3633046359217093
+	#4 108741dup -0.3669457592878151  -0.5919839162855073 -0.3669457592878151
+	#5     14922 -0.2185790682273388 -0.40674341138804637 -0.2185790682273388
+	#6  14922dup -0.2617924942197322  -0.4092362704232559 -0.2617924942197322
+
+	colnames(Zfile) = Zfile[1,]
+	print(Zfile[1:5,1:4])
+
+	return(list(zfile = Zfile, species = species_id))
+
+}
+
+
+
+
+
 
 read_zfile = function(zfilename) {
 
