@@ -96,12 +96,12 @@ print(convert_params1)
 
 
 #	 53 # > virScanR::vs.convert(data = counts[1:20,c(1:52, 80:90)], paramsList = convert_params1)$out
-#column_count = dim(counts)[2]
-#sixtytwo = counts[,c(1,(column_count-60):column_count)]
+column_count = dim(counts)[2]
+sixtytwo = counts[,c(1,(column_count-60):column_count)]
 
 datZ = virScanR::vs.convert(
-	data = counts,
-	#data = sixtytwo,
+	#data = counts,
+	data = sixtytwo,
 	paramsList = convert_params1
 )
 
