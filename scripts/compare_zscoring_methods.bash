@@ -38,30 +38,28 @@ echo "Computing Zscores"
 # elledge script output is mucked up
 
 
-#	#\rm ${OUTPUT}/All.count.Zscores.csv
-
-	elledge_Zscore_analysis.R ${OUTPUT}/All.count.csv
-	mv ${OUTPUT}/All.count.Zscores.csv ${OUTPUT}/tmp1.csv
-
-	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-3;print x,$0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
-	#awk 'BEGIN{FS=OFS=","}{x=$(NF-2);print x,$0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
-
-	head -1 ${OUTPUT}/tmp2.csv > ${OUTPUT}/All.count.Zscores.elledge.05.csv
-	tail -n +2 ${OUTPUT}/tmp2.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.elledge.05.csv
+#	\rm -f ${OUTPUT}/All.count.Zscores.csv
+#	elledge_Zscore_analysis.R ${OUTPUT}/All.count.csv
+#	mv ${OUTPUT}/All.count.Zscores.csv ${OUTPUT}/tmp1.csv
+##	awk 'BEGIN{FS=OFS=","}{x=$(NF-2);NF=NF-3;print x,$0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
+##	#awk 'BEGIN{FS=OFS=","}{x=$(NF-2);print x,$0}' ${OUTPUT}/tmp1.csv > ${OUTPUT}/tmp2.csv
+#	head -1 ${OUTPUT}/tmp1.csv > ${OUTPUT}/All.count.Zscores.elledge.with_input_and_bin.csv
+#	tail -n +2 ${OUTPUT}/tmp1.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.elledge.with_input_and_bin.csv
 
 ## only 62 columns for some reason
 #
 ##	> virScanR::vs.convert(data = counts[1:20,c(1:52, 80:90)], paramsList = convert_params1)$out
-#
-#
-#	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp3.csv
-#	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp3.csv > ${OUTPUT}/tmp4.csv
-#	mv ${OUTPUT}/tmp3.csv ${OUTPUT}/All.count.Zscores.with_input_and_bin.jake1.csv
-#
-#	head -1 ${OUTPUT}/tmp4.csv > ${OUTPUT}/All.count.Zscores.jake1.csv
-#	tail -n +2 ${OUTPUT}/tmp4.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.jake1.csv
-#
-#
+
+	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp3.csv
+	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp3.csv > ${OUTPUT}/tmp4.csv
+	mv ${OUTPUT}/tmp3.csv ${OUTPUT}/All.count.Zscores.jake.with_input_and_bin.csv
+
+	head -1 ${OUTPUT}/tmp4.csv > ${OUTPUT}/All.count.Zscores.jake1.04.test9.csv
+	tail -n +2 ${OUTPUT}/tmp4.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.jake1.04.test9.csv
+
+#	\rm -f ${OUTPUT}/tmp*.csv
+
+
 #	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp5.csv --threshold_adjustment_factor 1.17
 #	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp5.csv > ${OUTPUT}/tmp6.csv
 #	mv ${OUTPUT}/tmp5.csv ${OUTPUT}/All.count.Zscores.with_input_and_bin.jake117.csv
@@ -96,6 +94,14 @@ echo "Computing Zscores"
 #	tail -n +2 ${OUTPUT}/tmp10.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.jake300.04.csv
 #
 
+
+#	zscoring.py --input ${OUTPUT}/All.count.csv --output ${OUTPUT}/tmp3.csv
+#	awk 'BEGIN{FS=OFS=","}{NF=NF-2;print $0}' ${OUTPUT}/tmp3.csv > ${OUTPUT}/tmp4.csv
+#	mv ${OUTPUT}/tmp3.csv ${OUTPUT}/All.count.Zscores.with_input_and_bin.jake1.04.test6.csv
+#
+#	head -1 ${OUTPUT}/tmp4.csv > ${OUTPUT}/All.count.Zscores.jake1.04.test6.csv
+#	tail -n +2 ${OUTPUT}/tmp4.csv | sort -t, -k1,1 >> ${OUTPUT}/All.count.Zscores.jake1.04.test6.csv
+#
 
 
 
