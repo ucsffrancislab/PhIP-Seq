@@ -9,8 +9,8 @@ build_datfile = function(uniq_sub,opt){
 	#datfile = data.frame(mat.or.vec(length(uniq_sub),6))
 	#colnames(datfile) = c("ID", "case", "peptide", "sex", "age", "plate")
 	datfile = data.frame(mat.or.vec(length(uniq_sub),5))
-	#colnames(datfile) = c("ID", "case", "sex", "age", "plate","lane")
-	colnames(datfile) = c("ID", "case", "sex", "age", "plate")
+	colnames(datfile) = c("ID", "case", "sex", "age", "plate","lane")
+	#colnames(datfile) = c("ID", "case", "sex", "age", "plate")
 	datfile$ID = uniq_sub
 	for(i in c(1:nrow(datfile))){
 		print(paste("Looping:",i,":",nrow(datfile)))
@@ -20,13 +20,13 @@ build_datfile = function(uniq_sub,opt){
 		datfile$age[i] = manifest$age[man_loc]
 		datfile$sex[i] = manifest$sex[man_loc]
 		datfile$plate[i] = manifest$plate[man_loc]
-#		datfile$lane[i] = manifest$lane[man_loc]
+		datfile$lane[i] = manifest$lane[man_loc]
 	}
 	print(head(datfile))
 	datfile$age = as.numeric(datfile$age)
 	datfile$sex = as.factor(datfile$sex)
 	datfile$plate = as.factor(datfile$plate)
-#	datfile$lane = as.factor(datfile$lane)
+	datfile$lane = as.factor(datfile$lane)
 
 	return(datfile)
 }
