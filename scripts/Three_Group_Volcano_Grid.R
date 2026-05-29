@@ -348,12 +348,24 @@ mirror_dat <- mirror_dat[!is.na(mirror_dat$beta), ]
 xlim3    <- range(mirror_dat$beta, na.rm = TRUE)
 xlim3    <- c(-max(abs(xlim3)), max(abs(xlim3)))
 if (!all(is.finite(xlim3)) || xlim3[1] == xlim3[2]) xlim3 <- c(-1, 1)
-ylim3    <- range(mirror_dat$mirror_y, na.rm = TRUE)
-ylim3abs <- max(abs(ylim3))
-if (!is.finite(ylim3abs) || ylim3abs == 0) ylim3abs <- 1
 
-# Custom y-axis: show absolute value but label direction
-y_breaks <- pretty(c(-ylim3abs, ylim3abs), n = 8)
+# Compute y range from the actual finite mirror_y values only.
+# Use the max of each half independently so one sparse contrast
+# cannot compress the other.
+ylim3abs_up   <- max(mirror_dat$mirror_y[is.finite(mirror_dat$mirror_y) &
+                                          mirror_dat$mirror_y >= 0], na.rm = TRUE)
+ylim3abs_down <- max(abs(mirror_dat$mirror_y[is.finite(mirror_dat$mirror_y) &
+                                              mirror_dat$mirror_y <= 0]), na.rm = TRUE)
+ylim3abs <- max(ylim3abs_up, ylim3abs_down)
+if (!is.finite(ylim3abs) || ylim3abs == 0) ylim3abs <- 1
+# Add 8% headroom so the top/bottom annotation text isn't clipped
+ylim3abs_padded <- ylim3abs * 1.08
+
+print(paste("Panel 3 y-range: +/-", round(ylim3abs, 3),
+            " (padded to +/-", round(ylim3abs_padded, 3), ")"))
+
+# Custom y-axis: show absolute value, label direction
+y_breaks <- pretty(c(-ylim3abs_padded, ylim3abs_padded), n = 8)
 y_labels <- as.character(abs(y_breaks))
 
 p3 <- ggplot(mirror_dat, aes(x = beta, y = mirror_y,
@@ -373,18 +385,19 @@ p3 <- ggplot(mirror_dat, aes(x = beta, y = mirror_y,
         segment.colour = "grey50", segment.size = 0.3,
         show.legend = FALSE) +
     # group direction annotations
-    annotate("text", x = xlim3[1] * 0.95, y =  ylim3abs * 0.92,
+    annotate("text", x = xlim3[1] * 0.95, y =  ylim3abs_padded * 0.96,
              label = paste0("\u2191 ", opt$group2, " vs. ", opt$group1),
              hjust = 0, size = 3, colour = "grey30", fontface = "italic") +
-    annotate("text", x = xlim3[1] * 0.95, y = -ylim3abs * 0.92,
+    annotate("text", x = xlim3[1] * 0.95, y = -ylim3abs_padded * 0.96,
              label = paste0("\u2193 ", opt$group3, " vs. ", opt$group1),
              hjust = 0, size = 3, colour = "grey30", fontface = "italic") +
     scale_colour_manual(values = sig_colours, name = "Significant in",
                         drop = FALSE) +
     scale_x_continuous(limits = xlim3, oob = scales::squish) +
-    scale_y_continuous(limits = c(-ylim3abs, ylim3abs),
+    scale_y_continuous(limits = c(-ylim3abs_padded, ylim3abs_padded),
                        breaks = y_breaks, labels = y_labels,
-                       expand = expansion(mult = 0.05)) +
+                       oob    = scales::squish,
+                       expand = expansion(mult = 0)) +
     labs(
         title    = "Mirrored volcano",
         subtitle = paste0(opt$group2, " \u2191  |  ", opt$group3, " \u2193"),
