@@ -258,7 +258,8 @@ theme_volcano <- function(base_size = 11) {
 # ---------------------------------------------------------------------------
 
 xlim1 <- range(dat[[col_beta_g2]], na.rm = TRUE)
-xlim1 <- c(-max(abs(xlim1)), max(abs(xlim1)))  # symmetric
+xlim1 <- c(-max(abs(xlim1)), max(abs(xlim1)))
+if (!all(is.finite(xlim1)) || xlim1[1] == xlim1[2]) xlim1 <- c(-1, 1)
 
 p1 <- ggplot(dat, aes(x = .data[[col_beta_g2]],
                       y = neglog10_p_g2,
@@ -291,6 +292,7 @@ p1 <- ggplot(dat, aes(x = .data[[col_beta_g2]],
 
 xlim2 <- range(dat[[col_beta_g3]], na.rm = TRUE)
 xlim2 <- c(-max(abs(xlim2)), max(abs(xlim2)))
+if (!all(is.finite(xlim2)) || xlim2[1] == xlim2[2]) xlim2 <- c(-1, 1)
 
 p2 <- ggplot(dat, aes(x = .data[[col_beta_g3]],
                       y = neglog10_p_g3,
@@ -345,8 +347,10 @@ mirror_dat <- mirror_dat[!is.na(mirror_dat$beta), ]
 
 xlim3    <- range(mirror_dat$beta, na.rm = TRUE)
 xlim3    <- c(-max(abs(xlim3)), max(abs(xlim3)))
+if (!all(is.finite(xlim3)) || xlim3[1] == xlim3[2]) xlim3 <- c(-1, 1)
 ylim3    <- range(mirror_dat$mirror_y, na.rm = TRUE)
 ylim3abs <- max(abs(ylim3))
+if (!is.finite(ylim3abs) || ylim3abs == 0) ylim3abs <- 1
 
 # Custom y-axis: show absolute value but label direction
 y_breaks <- pretty(c(-ylim3abs, ylim3abs), n = 8)
@@ -401,13 +405,18 @@ scatter_dat <- dat[!is.na(dat[[col_beta_g2]]) & !is.na(dat[[col_beta_g3]]), ]
 
 xlim4 <- range(scatter_dat[[col_beta_g2]], na.rm = TRUE)
 xlim4 <- c(-max(abs(xlim4)), max(abs(xlim4)))
+if (!all(is.finite(xlim4)) || xlim4[1] == xlim4[2]) xlim4 <- c(-1, 1)
 ylim4 <- range(scatter_dat[[col_beta_g3]], na.rm = TRUE)
 ylim4 <- c(-max(abs(ylim4)), max(abs(ylim4)))
+if (!all(is.finite(ylim4)) || ylim4[1] == ylim4[2]) ylim4 <- c(-1, 1)
 
 # Cap neglog10 for colour scale so a handful of extreme points
-# don't compress all the others into the bottom of the palette
+# don't compress all the others into the bottom of the palette.
+# Guard against a zero-width range (e.g. all p-values == 1 after FDR),
+# which would cause seq() to fail inside ggplot's scale machinery.
 neglog10_cap <- quantile(scatter_dat$neglog10_p_min,
                          probs = 0.995, na.rm = TRUE)
+if (!is.finite(neglog10_cap) || neglog10_cap <= 0) neglog10_cap <- 1
 scatter_dat$neglog10_p_min_capped <- pmin(scatter_dat$neglog10_p_min,
                                           neglog10_cap)
 
