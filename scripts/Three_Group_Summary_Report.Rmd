@@ -75,16 +75,23 @@ col_se    <- function(x) paste0("se_",   x)
 
 # Find the most recent matching CSV in odir
 find_csv <- function(pattern) {
-  hits <- list.files(odir, pattern = pattern, full.names = TRUE)
+  hits <- list.files(odir, pattern = paste0(pattern, ".*\\.csv$"),
+                     full.names = TRUE)
+  hits <- hits[!grepl("\\.gz$|\\.bz2$|\\.zip$|\\.tgz$", hits)]
   if (length(hits) == 0) return(NULL)
   hits[order(file.info(hits)$mtime, decreasing = TRUE)][1]
 }
 
 read_result <- function(path) {
   if (is.null(path) || !file.exists(path)) return(NULL)
-  df <- data.frame(data.table::fread(path, sep = ",", header = TRUE),
-                   check.names = FALSE)
-  df
+  tryCatch(
+    data.frame(data.table::fread(path, sep = ",", header = TRUE),
+               check.names = FALSE),
+    error = function(e) {
+      warning(paste("Could not read", basename(path), ":", conditionMessage(e)))
+      NULL
+    }
+  )
 }
 
 apply_fdr <- function(df, col) {
