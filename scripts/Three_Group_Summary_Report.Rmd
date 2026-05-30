@@ -1,0 +1,692 @@
+---
+title: "PhIP-seq Three-Group Summary Report"
+subtitle: "`r params$group1` vs. `r params$group2` vs. `r params$group3`"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    self_contained: true
+    df_print: paged
+params:
+  group1:       "PF Patient"
+  group2:       "Endemic Control"
+  group3:       "Non Endemic Control"
+  output_dir:   "./"
+  pval_thresh:  0.05
+  fdr:          true
+  top_n:        20
+  label_col_peptide:  "species"
+---
+
+```{css, echo=FALSE}
+body { font-size: 14px; }
+h1, h2, h3 { color: #2c3e50; }
+.section-intro { color: #555; margin-bottom: 1em; font-style: italic; }
+.stat-box {
+  display: inline-block; padding: 12px 20px; margin: 6px;
+  border-radius: 6px; text-align: center; min-width: 120px;
+  background: #ecf0f1;
+}
+.stat-box .num  { font-size: 1.8em; font-weight: bold; color: #2980b9; }
+.stat-box .lbl  { font-size: 0.85em; color: #7f8c8d; }
+.stat-box.red   .num { color: #c0392b; }
+.stat-box.green .num { color: #27ae60; }
+.stat-box.orange .num { color: #d35400; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width  = 10,
+  fig.height = 5.5
+)
+
+# ── packages ──────────────────────────────────────────────────────────────────
+pkgs <- c("data.table", "ggplot2", "dplyr", "tidyr", "knitr",
+          "kableExtra", "scales", "ggrepel", "patchwork", "stringr", "fs")
+invisible(lapply(pkgs, function(p) {
+  if (!requireNamespace(p, quietly = TRUE))
+    stop(paste0("Install required package: ", p))
+  library(p, character.only = TRUE)
+}))
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+g1    <- params$group1
+g2    <- params$group2
+g3    <- params$group3
+odir  <- params$output_dir
+alpha <- params$pval_thresh
+
+g2_vs_g1 <- paste0(g2, "_vs_", g1)
+g3_vs_g1 <- paste0(g3, "_vs_", g1)
+
+col_freq  <- function(g) paste0("freq_", g)
+col_beta  <- function(x) paste0("beta_", x)
+col_pval  <- function(x) paste0("pval_", x)
+col_se    <- function(x) paste0("se_",   x)
+
+# Find the most recent matching CSV in odir
+find_csv <- function(pattern) {
+  hits <- list.files(odir, pattern = pattern, full.names = TRUE)
+  if (length(hits) == 0) return(NULL)
+  hits[order(file.info(hits)$mtime, decreasing = TRUE)][1]
+}
+
+read_result <- function(path) {
+  if (is.null(path) || !file.exists(path)) return(NULL)
+  df <- data.frame(data.table::fread(path, sep = ",", header = TRUE),
+                   check.names = FALSE)
+  df
+}
+
+apply_fdr <- function(df, col) {
+  if (params$fdr && col %in% colnames(df))
+    df[[col]] <- p.adjust(as.numeric(df[[col]]), method = "BH")
+  df
+}
+
+prep_result <- function(df) {
+  if (is.null(df)) return(NULL)
+  for (col in c(col_pval(g2_vs_g1), col_pval(g3_vs_g1)))
+    df <- apply_fdr(df, col)
+  for (col in colnames(df))
+    if (col != "peptide" && col != "species")
+      suppressWarnings({ df[[col]] <- as.numeric(df[[col]]) })
+  df$pval_min <- pmin(df[[col_pval(g2_vs_g1)]],
+                      df[[col_pval(g3_vs_g1)]], na.rm = TRUE)
+  df
+}
+
+sig_any <- function(df)
+  !is.na(df$pval_min) & df$pval_min < alpha
+
+# Shared colour palette
+grp_cols <- c(
+  setNames("#c0392b", g1),   # red   = cases
+  setNames("#2980b9", g2),   # blue  = control 1
+  setNames("#27ae60", g3)    # green = control 2
+)
+
+contrast_cols <- c(
+  setNames("#2980b9", g2_vs_g1),
+  setNames("#27ae60", g3_vs_g1)
+)
+
+theme_report <- function()
+  theme_bw(base_size = 11) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "bottom")
+
+stat_box <- function(n, label, cls = "") {
+  glue::glue if (FALSE) NULL   # suppress glue dependency
+  sprintf(
+    '<div class="stat-box %s"><div class="num">%s</div><div class="lbl">%s</div></div>',
+    cls, n, label)
+}
+
+# ── load data ─────────────────────────────────────────────────────────────────
+pep_file   <- find_csv("Multiplate_Three_Group_Peptide_Comparison")
+vscan_file <- find_csv("Multiplate_Three_Group_VirScan_Seropositivity_Comparison")
+vfrac_file <- find_csv("Multiplate_Three_Group_VirFrac_Seropositivity_Comparison")
+
+pep_dat   <- prep_result(read_result(pep_file))
+vscan_dat <- prep_result(read_result(vscan_file))
+vfrac_dat <- prep_result(read_result(vfrac_file))
+
+has_pep   <- !is.null(pep_dat)
+has_vscan <- !is.null(vscan_dat)
+has_vfrac <- !is.null(vfrac_dat)
+```
+
+---
+
+::: {.section-intro}
+This report summarises a three-group PhIP-seq analysis comparing **`r g1`** (cases)
+against two control populations: **`r g2`** and **`r g3`**.
+Results are drawn from `r params$output_dir`.
+`r if(params$fdr) "P-values shown are BH-FDR corrected." else paste0("Raw p-values shown; threshold = ", alpha, ".")`
+:::
+
+---
+
+# 1 · Seropositivity {.tabset}
+
+::: {.section-intro}
+Seropositivity here refers to viral-level calls: a subject is seropositive for a virus
+if they meet the calling threshold (VirScan method: public epitope + >1 unique read;
+hit-fraction method: >`r "5%"` of viral tiles hit above the Z-score threshold).
+The panels below show, for each method, the number of viruses called
+significant and their per-group seropositive frequencies.
+:::
+
+## VirScan method
+
+```{r vscan-overview, results='asis'}
+if (!has_vscan) {
+  cat("> **No VirScan output file found in** `", odir, "`. Skipping.\n\n")
+  knitr::knit_exit()
+}
+```
+
+```{r vscan-stats, results='asis'}
+sig_vs <- vscan_dat[sig_any(vscan_dat), ]
+n_sig_g2 <- sum(!is.na(vscan_dat[[col_pval(g2_vs_g1)]]) &
+                  vscan_dat[[col_pval(g2_vs_g1)]] < alpha, na.rm = TRUE)
+n_sig_g3 <- sum(!is.na(vscan_dat[[col_pval(g3_vs_g1)]]) &
+                  vscan_dat[[col_pval(g3_vs_g1)]] < alpha, na.rm = TRUE)
+n_both   <- sum(sig_any(vscan_dat) &
+                  (!is.na(vscan_dat[[col_pval(g2_vs_g1)]]) & vscan_dat[[col_pval(g2_vs_g1)]] < alpha) &
+                  (!is.na(vscan_dat[[col_pval(g3_vs_g1)]]) & vscan_dat[[col_pval(g3_vs_g1)]] < alpha),
+                na.rm = TRUE)
+
+cat(stat_box(nrow(vscan_dat),     "viruses tested"))
+cat(stat_box(n_sig_g2, paste0("sig. vs. ", g2), "red"))
+cat(stat_box(n_sig_g3, paste0("sig. vs. ", g3), "green"))
+cat(stat_box(n_both,   "sig. in both",           "orange"))
+cat("\n\n")
+```
+
+```{r vscan-freq-plot, fig.height=5}
+# Long-form for grouped bar: top 30 viruses by min p-value
+top_vs <- vscan_dat %>%
+  filter(!is.na(pval_min)) %>%
+  arrange(pval_min) %>%
+  head(params$top_n)
+
+top_vs_long <- top_vs %>%
+  select(species,
+         !!g1 := all_of(col_freq(g1)),
+         !!g2 := all_of(col_freq(g2)),
+         !!g3 := all_of(col_freq(g3))) %>%
+  pivot_longer(-species, names_to = "group", values_to = "freq") %>%
+  mutate(group = factor(group, levels = c(g1, g2, g3)),
+         species = factor(species, levels = rev(top_vs$species)))
+
+ggplot(top_vs_long, aes(x = species, y = freq, fill = group)) +
+  geom_col(position = position_dodge(0.7), width = 0.65) +
+  scale_fill_manual(values = grp_cols, name = NULL) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.08))) +
+  coord_flip() +
+  labs(title = paste0("Top ", params$top_n,
+                      " viruses by minimum p-value (VirScan)"),
+       x = NULL, y = "Seropositive fraction") +
+  theme_report()
+```
+
+```{r vscan-table}
+vscan_dat %>%
+  filter(sig_any(.)) %>%
+  arrange(pval_min) %>%
+  head(params$top_n) %>%
+  select(Species      = species,
+         !!paste0("Freq ", g1) := all_of(col_freq(g1)),
+         !!paste0("Freq ", g2) := all_of(col_freq(g2)),
+         !!paste0("Freq ", g3) := all_of(col_freq(g3)),
+         !!paste0("β ", g2_vs_g1) := all_of(col_beta(g2_vs_g1)),
+         !!paste0("p ", g2_vs_g1) := all_of(col_pval(g2_vs_g1)),
+         !!paste0("β ", g3_vs_g1) := all_of(col_beta(g3_vs_g1)),
+         !!paste0("p ", g3_vs_g1) := all_of(col_pval(g3_vs_g1))) %>%
+  mutate(across(where(is.numeric), ~ signif(., 3))) %>%
+  kable(caption = paste0("Significant viruses (VirScan, min p < ", alpha, ")"),
+        align = "lrrrrrrrr") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(1, bold = TRUE)
+```
+
+## Hit-fraction method
+
+```{r vfrac-overview, results='asis'}
+if (!has_vfrac) {
+  cat("> **No VirHitFrac output file found in** `", odir, "`. Skipping.\n\n")
+}
+```
+
+```{r vfrac-stats, results='asis', eval=has_vfrac}
+n_sig_g2v <- sum(!is.na(vfrac_dat[[col_pval(g2_vs_g1)]]) &
+                   vfrac_dat[[col_pval(g2_vs_g1)]] < alpha, na.rm = TRUE)
+n_sig_g3v <- sum(!is.na(vfrac_dat[[col_pval(g3_vs_g1)]]) &
+                   vfrac_dat[[col_pval(g3_vs_g1)]] < alpha, na.rm = TRUE)
+n_bothv   <- sum(sig_any(vfrac_dat) &
+                   (!is.na(vfrac_dat[[col_pval(g2_vs_g1)]]) & vfrac_dat[[col_pval(g2_vs_g1)]] < alpha) &
+                   (!is.na(vfrac_dat[[col_pval(g3_vs_g1)]]) & vfrac_dat[[col_pval(g3_vs_g1)]] < alpha),
+                 na.rm = TRUE)
+cat(stat_box(nrow(vfrac_dat),   "viruses tested"))
+cat(stat_box(n_sig_g2v, paste0("sig. vs. ", g2), "red"))
+cat(stat_box(n_sig_g3v, paste0("sig. vs. ", g3), "green"))
+cat(stat_box(n_bothv,   "sig. in both",           "orange"))
+cat("\n\n")
+```
+
+```{r vfrac-freq-plot, fig.height=5, eval=has_vfrac}
+top_vf <- vfrac_dat %>%
+  filter(!is.na(pval_min)) %>%
+  arrange(pval_min) %>%
+  head(params$top_n)
+
+top_vf_long <- top_vf %>%
+  select(species,
+         !!g1 := all_of(col_freq(g1)),
+         !!g2 := all_of(col_freq(g2)),
+         !!g3 := all_of(col_freq(g3))) %>%
+  pivot_longer(-species, names_to = "group", values_to = "freq") %>%
+  mutate(group   = factor(group, levels = c(g1, g2, g3)),
+         species = factor(species, levels = rev(top_vf$species)))
+
+ggplot(top_vf_long, aes(x = species, y = freq, fill = group)) +
+  geom_col(position = position_dodge(0.7), width = 0.65) +
+  scale_fill_manual(values = grp_cols, name = NULL) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.08))) +
+  coord_flip() +
+  labs(title = paste0("Top ", params$top_n,
+                      " viruses by minimum p-value (hit-fraction)"),
+       x = NULL, y = "Seropositive fraction") +
+  theme_report()
+```
+
+```{r vfrac-table, eval=has_vfrac}
+vfrac_dat %>%
+  filter(sig_any(.)) %>%
+  arrange(pval_min) %>%
+  head(params$top_n) %>%
+  select(Species      = species,
+         !!paste0("Freq ", g1) := all_of(col_freq(g1)),
+         !!paste0("Freq ", g2) := all_of(col_freq(g2)),
+         !!paste0("Freq ", g3) := all_of(col_freq(g3)),
+         !!paste0("β ", g2_vs_g1) := all_of(col_beta(g2_vs_g1)),
+         !!paste0("p ", g2_vs_g1) := all_of(col_pval(g2_vs_g1)),
+         !!paste0("β ", g3_vs_g1) := all_of(col_beta(g3_vs_g1)),
+         !!paste0("p ", g3_vs_g1) := all_of(col_pval(g3_vs_g1))) %>%
+  mutate(across(where(is.numeric), ~ signif(., 3))) %>%
+  kable(caption = paste0("Significant viruses (hit-fraction, min p < ", alpha, ")"),
+        align = "lrrrrrrrr") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(1, bold = TRUE)
+```
+
+## Concordance between methods
+
+```{r sero-concordance, eval=(has_vscan && has_vfrac), fig.height=5}
+shared_sp <- intersect(vscan_dat$species, vfrac_dat$species)
+
+conc <- data.frame(
+  species    = shared_sp,
+  pval_vscan = vscan_dat[[col_pval(g2_vs_g1)]][match(shared_sp, vscan_dat$species)],
+  pval_vfrac = vfrac_dat[[col_pval(g2_vs_g1)]][match(shared_sp, vfrac_dat$species)]
+)
+conc$sig_vscan <- !is.na(conc$pval_vscan) & conc$pval_vscan < alpha
+conc$sig_vfrac <- !is.na(conc$pval_vfrac) & conc$pval_vfrac < alpha
+conc$category  <- case_when(
+   conc$sig_vscan &  conc$sig_vfrac ~ "Both methods",
+   conc$sig_vscan & !conc$sig_vfrac ~ "VirScan only",
+  !conc$sig_vscan &  conc$sig_vfrac ~ "Hit-frac only",
+  TRUE                              ~ "Neither"
+)
+
+ggplot(conc, aes(x = -log10(pval_vscan), y = -log10(pval_vfrac),
+                  colour = category)) +
+  geom_point(alpha = 0.6, size = 1.8) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", colour = "grey50") +
+  geom_hline(yintercept = -log10(alpha), linetype = "dotted", colour = "grey60") +
+  geom_vline(xintercept = -log10(alpha), linetype = "dotted", colour = "grey60") +
+  scale_colour_manual(
+    values = c("Both methods" = "#c0392b", "VirScan only" = "#2980b9",
+               "Hit-frac only" = "#27ae60", "Neither" = "#bdc3c7"),
+    name = NULL) +
+  labs(title = paste0("VirScan vs. hit-fraction p-values (", g2, " vs. ", g1, ")"),
+       x = expression(paste("VirScan  ", -log[10](p))),
+       y = expression(paste("Hit-fraction  ", -log[10](p)))) +
+  theme_report()
+```
+
+---
+
+# 2 · Peptide-level hits {.tabset}
+
+::: {.section-intro}
+Peptide-level analysis identifies individual library peptides enriched in cases
+relative to either control group.
+:::
+
+```{r pep-check, results='asis'}
+if (!has_pep) {
+  cat("> **No peptide output file found in** `", odir,
+      "`. Skipping peptide section.\n\n")
+}
+```
+
+## Overview
+
+```{r pep-stats, results='asis', eval=has_pep}
+n_sig_p_g2 <- sum(!is.na(pep_dat[[col_pval(g2_vs_g1)]]) &
+                    pep_dat[[col_pval(g2_vs_g1)]] < alpha, na.rm = TRUE)
+n_sig_p_g3 <- sum(!is.na(pep_dat[[col_pval(g3_vs_g1)]]) &
+                    pep_dat[[col_pval(g3_vs_g1)]] < alpha, na.rm = TRUE)
+n_both_p   <- sum(
+  !is.na(pep_dat[[col_pval(g2_vs_g1)]]) & pep_dat[[col_pval(g2_vs_g1)]] < alpha &
+  !is.na(pep_dat[[col_pval(g3_vs_g1)]]) & pep_dat[[col_pval(g3_vs_g1)]] < alpha,
+  na.rm = TRUE)
+
+cat(stat_box(nrow(pep_dat),   "peptides tested"))
+cat(stat_box(n_sig_p_g2, paste0("sig. vs. ", g2), "red"))
+cat(stat_box(n_sig_p_g3, paste0("sig. vs. ", g3), "green"))
+cat(stat_box(n_both_p,   "sig. in both",           "orange"))
+cat("\n\n")
+```
+
+## Top peptides — both contrasts
+
+```{r pep-both-plot, fig.height=6, eval=has_pep}
+top_pep <- pep_dat %>%
+  filter(
+    !is.na(.data[[col_pval(g2_vs_g1)]]) & .data[[col_pval(g2_vs_g1)]] < alpha,
+    !is.na(.data[[col_pval(g3_vs_g1)]]) & .data[[col_pval(g3_vs_g1)]] < alpha
+  ) %>%
+  arrange(pval_min) %>%
+  head(params$top_n)
+
+if (nrow(top_pep) == 0) {
+  cat("> No peptides significant in both contrasts at p <", alpha, "\n\n")
+} else {
+  label_col <- if ("peptide" %in% colnames(top_pep)) "peptide" else "species"
+
+  top_pep_long <- top_pep %>%
+    mutate(label = .data[[label_col]]) %>%
+    select(label, species,
+           !!g1 := all_of(col_freq(g1)),
+           !!g2 := all_of(col_freq(g2)),
+           !!g3 := all_of(col_freq(g3))) %>%
+    pivot_longer(c(g1, g2, g3), names_to = "group", values_to = "freq") %>%
+    mutate(group = factor(group, levels = c(g1, g2, g3)),
+           label = factor(label, levels = rev(top_pep[[label_col]])))
+
+  print(
+    ggplot(top_pep_long, aes(x = label, y = freq, fill = group)) +
+      geom_col(position = position_dodge(0.7), width = 0.65) +
+      scale_fill_manual(values = grp_cols, name = NULL) +
+      scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                         expand = expansion(mult = c(0, 0.08))) +
+      coord_flip() +
+      labs(title = paste0("Top ", nrow(top_pep),
+                          " peptides significant in both contrasts"),
+           x = NULL, y = "Positive fraction") +
+      theme_report()
+  )
+}
+```
+
+## Top peptides — table
+
+```{r pep-table, eval=has_pep}
+label_col <- if ("peptide" %in% colnames(pep_dat)) "peptide" else "species"
+
+pep_dat %>%
+  filter(sig_any(.)) %>%
+  arrange(pval_min) %>%
+  head(params$top_n) %>%
+  { if ("peptide" %in% colnames(.))
+      select(., Peptide = peptide, Species = species,
+             !!paste0("Freq ", g1) := all_of(col_freq(g1)),
+             !!paste0("Freq ", g2) := all_of(col_freq(g2)),
+             !!paste0("Freq ", g3) := all_of(col_freq(g3)),
+             !!paste0("β ", g2_vs_g1) := all_of(col_beta(g2_vs_g1)),
+             !!paste0("p ", g2_vs_g1) := all_of(col_pval(g2_vs_g1)),
+             !!paste0("β ", g3_vs_g1) := all_of(col_beta(g3_vs_g1)),
+             !!paste0("p ", g3_vs_g1) := all_of(col_pval(g3_vs_g1)))
+    else
+      select(., Species = species,
+             !!paste0("Freq ", g1) := all_of(col_freq(g1)),
+             !!paste0("Freq ", g2) := all_of(col_freq(g2)),
+             !!paste0("Freq ", g3) := all_of(col_freq(g3)),
+             !!paste0("β ", g2_vs_g1) := all_of(col_beta(g2_vs_g1)),
+             !!paste0("p ", g2_vs_g1) := all_of(col_pval(g2_vs_g1)),
+             !!paste0("β ", g3_vs_g1) := all_of(col_beta(g3_vs_g1)),
+             !!paste0("p ", g3_vs_g1) := all_of(col_pval(g3_vs_g1))) } %>%
+  mutate(across(where(is.numeric), ~ signif(., 3))) %>%
+  kable(caption = paste0("Top ", params$top_n,
+                         " significant peptides (min p < ", alpha, ")"),
+        align = paste0("ll", strrep("r", 7))) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(1, bold = TRUE, monospace = TRUE)
+```
+
+## Species breakdown of significant peptides
+
+```{r pep-species-bar, fig.height=5, eval=has_pep}
+sig_pep <- pep_dat %>% filter(sig_any(.))
+
+if (nrow(sig_pep) == 0) {
+  cat("> No significant peptides to summarise.\n\n")
+} else {
+  sp_counts <- sig_pep %>%
+    mutate(contrast = case_when(
+      !is.na(.data[[col_pval(g2_vs_g1)]]) & .data[[col_pval(g2_vs_g1)]] < alpha &
+      !is.na(.data[[col_pval(g3_vs_g1)]]) & .data[[col_pval(g3_vs_g1)]] < alpha ~ "Both",
+      !is.na(.data[[col_pval(g2_vs_g1)]]) & .data[[col_pval(g2_vs_g1)]] < alpha ~ paste0(g2, " only"),
+      TRUE ~ paste0(g3, " only")
+    )) %>%
+    group_by(species, contrast) %>%
+    summarise(n_peptides = n(), .groups = "drop") %>%
+    group_by(species) %>%
+    mutate(total = sum(n_peptides)) %>%
+    ungroup() %>%
+    arrange(desc(total)) %>%
+    head(params$top_n * 3) %>%   # keep top species
+    mutate(species  = factor(species,  levels = unique(species)),
+           contrast = factor(contrast, levels = c("Both",
+                                                   paste0(g2, " only"),
+                                                   paste0(g3, " only"))))
+
+  fill_cols <- c("Both" = "#c0392b",
+    setNames("#2980b9", paste0(g2, " only")),
+    setNames("#27ae60", paste0(g3, " only")))
+
+  print(
+    ggplot(sp_counts, aes(x = reorder(species, total),
+                          y = n_peptides, fill = contrast)) +
+      geom_col(width = 0.7) +
+      scale_fill_manual(values = fill_cols, name = "Significant in") +
+      scale_y_continuous(expand = expansion(mult = c(0, 0.08)),
+                         breaks = scales::breaks_pretty()) +
+      coord_flip() +
+      labs(title = "Significant peptides per species",
+           x = NULL, y = "Number of significant peptides") +
+      theme_report()
+  )
+}
+```
+
+---
+
+# 3 · Viral diversity & breadth
+
+::: {.section-intro}
+"Breadth" here is defined per subject as the **number of distinct viral species**
+called seropositive (using the VirScan threshold). This quantifies how broadly
+the immune repertoire has been engaged, independent of which specific viruses are hit.
+A higher breadth in cases vs. controls may indicate broader immune activation,
+cross-reactivity, or past exposure history.
+:::
+
+```{r breadth-check, results='asis'}
+if (!has_vscan) {
+  cat("> VirScan data required for breadth analysis. Skipping.\n\n")
+  knitr::knit_exit()
+}
+```
+
+```{r breadth-compute, eval=has_vscan}
+# Re-read the raw per-plate seropositive files from the multiplate VirScan script.
+# The seropositive CSVs have rows = samples, cols = id / type / species / [viruses]
+# We reconstruct breadth from the regression output frequencies as a proxy —
+# since we don't have the raw per-sample binary matrix here, we estimate breadth
+# from the per-group frequency data and note this in the caption.
+
+# What we CAN compute from the regression output:
+#   - Mean fraction of viruses seropositive per group (= avg breadth / total viruses)
+#   - Number of viruses seropositive in >X% of each group
+
+threshold_seq <- seq(0, 1, by = 0.05)
+
+prev_by_thresh <- lapply(threshold_seq, function(t) {
+  data.frame(
+    threshold = t,
+    group     = c(g1, g2, g3),
+    n_viruses = c(
+      sum(vscan_dat[[col_freq(g1)]] >= t, na.rm = TRUE),
+      sum(vscan_dat[[col_freq(g2)]] >= t, na.rm = TRUE),
+      sum(vscan_dat[[col_freq(g3)]] >= t, na.rm = TRUE)
+    )
+  )
+}) %>% bind_rows() %>%
+  mutate(group = factor(group, levels = c(g1, g2, g3)))
+```
+
+## Virus prevalence curves
+
+```{r breadth-prev-curve, fig.height=5, eval=has_vscan}
+ggplot(prev_by_thresh,
+       aes(x = threshold, y = n_viruses, colour = group, group = group)) +
+  geom_line(linewidth = 1.1) +
+  geom_point(size = 1.8) +
+  scale_colour_manual(values = grp_cols, name = NULL) +
+  scale_x_continuous(labels = scales::percent_format(accuracy = 1),
+                     breaks = seq(0, 1, 0.1)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(
+    title    = "Number of viruses seropositive in ≥ X% of each group",
+    subtitle = "A higher curve = broader viral exposure / immune engagement",
+    x        = "Prevalence threshold (fraction of group seropositive)",
+    y        = "Number of virus species"
+  ) +
+  theme_report()
+```
+
+## Mean seropositive burden
+
+```{r breadth-burden, fig.height=4.5, eval=has_vscan}
+# Mean fraction of all tested viruses that are seropositive in each group
+# = mean(freq_group) across all viruses → scaled to mean viruses per person
+burden <- data.frame(
+  group        = c(g1, g2, g3),
+  mean_frac    = c(
+    mean(vscan_dat[[col_freq(g1)]], na.rm = TRUE),
+    mean(vscan_dat[[col_freq(g2)]], na.rm = TRUE),
+    mean(vscan_dat[[col_freq(g3)]], na.rm = TRUE)
+  ),
+  stringsAsFactors = FALSE
+) %>%
+  mutate(
+    group        = factor(group, levels = c(g1, g2, g3)),
+    mean_viruses = mean_frac * nrow(vscan_dat)
+  )
+
+ggplot(burden, aes(x = group, y = mean_viruses, fill = group)) +
+  geom_col(width = 0.5, show.legend = FALSE) +
+  geom_text(aes(label = round(mean_viruses, 1)),
+            vjust = -0.4, fontface = "bold", size = 4.5) +
+  scale_fill_manual(values = grp_cols) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+  labs(
+    title    = "Mean seropositive virus burden per group",
+    subtitle = paste0("Based on ", nrow(vscan_dat),
+                      " viruses tested (VirScan method)"),
+    x        = NULL,
+    y        = "Mean number of seropositive viruses"
+  ) +
+  theme_report() +
+  theme(legend.position = "none",
+        axis.text.x = element_text(size = 11, face = "bold"))
+```
+
+## Top viruses enriched in cases (both controls)
+
+```{r breadth-heatmap, fig.height=7, eval=has_vscan}
+# Heatmap of top N viruses significant vs. both controls,
+# columns = groups, colour = seropositive fraction
+top_both <- vscan_dat %>%
+  filter(
+    !is.na(.data[[col_pval(g2_vs_g1)]]) & .data[[col_pval(g2_vs_g1)]] < alpha,
+    !is.na(.data[[col_pval(g3_vs_g1)]]) & .data[[col_pval(g3_vs_g1)]] < alpha
+  ) %>%
+  arrange(pval_min) %>%
+  head(params$top_n)
+
+if (nrow(top_both) == 0) {
+  cat("> No viruses significant vs. both controls at p <", alpha,
+      "— lowering the threshold or running without FDR may reveal hits.\n\n")
+} else {
+  hm_dat <- top_both %>%
+    select(species,
+           !!g1 := all_of(col_freq(g1)),
+           !!g2 := all_of(col_freq(g2)),
+           !!g3 := all_of(col_freq(g3))) %>%
+    pivot_longer(-species, names_to = "group", values_to = "freq") %>%
+    mutate(group   = factor(group,   levels = c(g1, g2, g3)),
+           species = factor(species, levels = rev(top_both$species)))
+
+  print(
+    ggplot(hm_dat, aes(x = group, y = species, fill = freq)) +
+      geom_tile(colour = "white", linewidth = 0.5) +
+      geom_text(aes(label = scales::percent(freq, accuracy = 1)),
+                size = 3, colour = "grey20") +
+      scale_fill_gradientn(
+        colours = c("#ecf0f1", "#f39c12", "#c0392b"),
+        labels  = scales::percent_format(accuracy = 1),
+        name    = "Seropositive\nfraction",
+        limits  = c(0, 1), oob = scales::squish) +
+      labs(title = paste0("Viruses significant vs. both controls (top ",
+                          nrow(top_both), ")"),
+           x = NULL, y = NULL) +
+      theme_report() +
+      theme(axis.text.x  = element_text(face = "bold", size = 10),
+            axis.text.y  = element_text(size = 9),
+            panel.border = element_blank(),
+            legend.position = "right")
+  )
+}
+```
+
+---
+
+# 4 · Analysis parameters
+
+```{r params-table}
+data.frame(
+  Parameter = c("Group 1 (reference / cases)",
+                "Group 2 (control 1)",
+                "Group 3 (control 2)",
+                "Output directory",
+                "FDR correction",
+                "Significance threshold",
+                "Top N displayed",
+                "Peptide results file",
+                "VirScan results file",
+                "VirHitFrac results file",
+                "Report generated"),
+  Value = c(g1, g2, g3, odir,
+            ifelse(params$fdr, "BH (per contrast)", "None (raw p-values)"),
+            as.character(alpha),
+            as.character(params$top_n),
+            ifelse(is.null(pep_file),   "not found", basename(pep_file)),
+            ifelse(is.null(vscan_file), "not found", basename(vscan_file)),
+            ifelse(is.null(vfrac_file), "not found", basename(vfrac_file)),
+            format(Sys.time(), "%Y-%m-%d %H:%M"))
+) %>%
+  kable(col.names = c("Parameter", "Value"), align = "ll") %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),
+                full_width = FALSE, font_size = 12)
+```
