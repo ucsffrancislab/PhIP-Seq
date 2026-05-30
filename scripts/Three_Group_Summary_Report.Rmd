@@ -127,7 +127,6 @@ theme_report <- function()
         legend.position = "bottom")
 
 stat_box <- function(n, label, cls = "") {
-  glue::glue if (FALSE) NULL   # suppress glue dependency
   sprintf(
     '<div class="stat-box %s"><div class="num">%s</div><div class="lbl">%s</div></div>',
     cls, n, label)
