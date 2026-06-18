@@ -1,0 +1,632 @@
+---
+title: "PhIP-seq Three-Group Combined Report"
+subtitle: "Cross-condition summary across Z-score thresholds and sex strata"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    self_contained: true
+    df_print: paged
+params:
+  group1:        "PF Patient"
+  group2:        "Endemic Control"
+  group3:        "Non Endemic Control"
+  output_dir:    "./"
+  zscores:       "3.5,5,10"
+  sexes:         ",M,F"
+  pval_thresh:   0.05
+  fdr:           true
+  top_n:         20
+  per_condition_subdir: "per_condition_reports"
+---
+
+```{css, echo=FALSE}
+body { font-size: 14px; }
+h1, h2, h3 { color: #2c3e50; }
+.section-intro { color: #555; margin-bottom: 1em; font-style: italic; }
+.stat-box {
+  display: inline-block; padding: 12px 20px; margin: 6px;
+  border-radius: 6px; text-align: center; min-width: 130px;
+  background: #ecf0f1;
+}
+.stat-box .num { font-size: 1.8em; font-weight: bold; color: #2980b9; }
+.stat-box .lbl { font-size: 0.85em; color: #7f8c8d; }
+.stat-box.red   .num { color: #c0392b; }
+.stat-box.green .num { color: #27ae60; }
+.stat-box.orange .num { color: #d35400; }
+.note { background: #fff8dc; border-left: 4px solid #f39c12;
+        padding: 10px 14px; margin: 12px 0; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo    = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  fig.width  = 10,
+  fig.height = 5.5
+)
+
+pkgs <- c("data.table", "ggplot2", "dplyr", "tidyr", "knitr",
+          "kableExtra", "scales", "stringr")
+invisible(lapply(pkgs, function(p) {
+  if (!requireNamespace(p, quietly = TRUE))
+    stop(paste0("Install required package: ", p))
+  library(p, character.only = TRUE)
+}))
+
+# ── parameters ────────────────────────────────────────────────────────────────
+g1     <- params$group1
+g2     <- params$group2
+g3     <- params$group3
+odir   <- params$output_dir
+alpha  <- params$pval_thresh
+
+# Parse comma-separated lists; preserve "" for "both sexes"
+zscores <- trimws(strsplit(params$zscores, ",")[[1]])
+sexes   <- trimws(strsplit(params$sexes,   ",")[[1]])
+# strsplit drops trailing empties, so add back if the input starts/ends with ","
+if (grepl("^,", params$sexes)) sexes <- c("", sexes)
+if (grepl(",$", params$sexes)) sexes <- c(sexes, "")
+sexes <- unique(sexes)
+
+# Build the full grid of conditions
+conditions <- expand.grid(zscore = zscores, sex = sexes,
+                          stringsAsFactors = FALSE)
+conditions$label <- paste0("Z=", conditions$zscore, ", sex=",
+                            ifelse(nchar(conditions$sex) == 0,
+                                   "both", conditions$sex))
+conditions$sex_label <- ifelse(nchar(conditions$sex) == 0, "both",
+                                conditions$sex)
+
+g2_vs_g1 <- paste0(g2, "_vs_", g1)
+g3_vs_g1 <- paste0(g3, "_vs_", g1)
+col_freq <- function(g) paste0("freq_", g)
+col_pval <- function(x) paste0("pval_", x)
+col_beta <- function(x) paste0("beta_", x)
+
+# ── file finder (mirrors per-condition Rmd's strict matcher) ──────────────────
+find_csv <- function(prefix, zscore, sex) {
+  zsex_pat <- paste0("-Z-", zscore, "-sex-", sex, "(-|\\.csv$)")
+  hits <- list.files(odir, pattern = paste0(prefix, ".*", zsex_pat),
+                     full.names = TRUE)
+  hits <- hits[grepl("\\.csv$", hits) &
+               !grepl("\\.gz$|\\.bz2$|\\.zip$|\\.tgz$", hits)]
+  if (length(hits) == 0) return(NULL)
+  hits <- hits[order(file.info(hits)$mtime, decreasing = TRUE)]
+  hits[1]
+}
+
+read_one <- function(prefix, zscore, sex) {
+  path <- find_csv(prefix, zscore, sex)
+  if (is.null(path)) return(NULL)
+  df <- tryCatch(
+    data.frame(data.table::fread(path, sep = ",", header = TRUE),
+               check.names = FALSE),
+    error = function(e) NULL)
+  if (is.null(df)) return(NULL)
+  for (col in colnames(df))
+    if (!(col %in% c("peptide", "species")))
+      suppressWarnings({ df[[col]] <- as.numeric(df[[col]]) })
+  if (params$fdr) {
+    for (col in c(col_pval(g2_vs_g1), col_pval(g3_vs_g1)))
+      if (col %in% colnames(df))
+        df[[col]] <- p.adjust(df[[col]], method = "BH")
+  }
+  df$pval_min <- pmin(df[[col_pval(g2_vs_g1)]],
+                      df[[col_pval(g3_vs_g1)]], na.rm = TRUE)
+  df$file_path <- path
+  df
+}
+
+# ── load all 9×3 datasets ─────────────────────────────────────────────────────
+prefixes <- list(
+  Peptide    = "Multiplate_Three_Group_Peptide_Comparison",
+  VirScan    = "Multiplate_Three_Group_VirScan_Seropositivity_Comparison",
+  VirHitFrac = "Multiplate_Three_Group_VirFrac_Seropositivity_Comparison"
+)
+
+data_grid <- list()
+coverage <- data.frame()
+for (i in seq_len(nrow(conditions))) {
+  z <- conditions$zscore[i]; s <- conditions$sex[i]
+  for (nm in names(prefixes)) {
+    df <- read_one(prefixes[[nm]], z, s)
+    key <- paste(nm, z, s, sep = "|")
+    data_grid[[key]] <- df
+    coverage <- rbind(coverage, data.frame(
+      analysis = nm, zscore = z, sex = s,
+      sex_label = ifelse(nchar(s) == 0, "both", s),
+      label = conditions$label[i],
+      found = !is.null(df),
+      n_features = if (is.null(df)) NA_integer_ else nrow(df),
+      n_sig_g2   = if (is.null(df)) NA_integer_
+                   else sum(df[[col_pval(g2_vs_g1)]] < alpha, na.rm = TRUE),
+      n_sig_g3   = if (is.null(df)) NA_integer_
+                   else sum(df[[col_pval(g3_vs_g1)]] < alpha, na.rm = TRUE),
+      n_sig_any  = if (is.null(df)) NA_integer_
+                   else sum(df$pval_min < alpha, na.rm = TRUE),
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+# Locate per-condition reports if they were generated
+per_cond_dir <- file.path(odir, params$per_condition_subdir)
+find_per_condition_report <- function(z, s) {
+  if (!dir.exists(per_cond_dir)) return(NA_character_)
+  pat <- paste0("Three_Group_Summary_Report.*-Z-", z, "-sex-",
+                ifelse(nchar(s) == 0, "both", s), "\\.html$")
+  hits <- list.files(per_cond_dir, pattern = pat, full.names = FALSE)
+  if (length(hits) == 0) NA_character_ else hits[1]
+}
+
+# ── shared palettes / theme ───────────────────────────────────────────────────
+grp_cols <- c(setNames("#c0392b", g1),
+              setNames("#2980b9", g2),
+              setNames("#27ae60", g3))
+
+theme_report <- function()
+  theme_bw(base_size = 11) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "bottom")
+
+stat_box <- function(n, label, cls = "") {
+  sprintf(
+    '<div class="stat-box %s"><div class="num">%s</div><div class="lbl">%s</div></div>',
+    cls, format(n, big.mark = ","), label)
+}
+```
+
+::: {.section-intro}
+This report combines results from a three-group PhIP-seq analysis run across
+**`r length(zscores)` Z-score threshold(s)** (`r paste(zscores, collapse = ", ")`)
+and **`r length(sexes)` sex stratum/strata**
+(`r paste(ifelse(nchar(sexes) == 0, "both", sexes), collapse = ", ")`),
+yielding **`r nrow(conditions)`** condition combinations per analysis type.
+
+Groups compared: **`r g1`** (cases) vs. **`r g2`** and **`r g3`**.
+`r if(params$fdr) "P-values are BH-FDR corrected per condition." else paste0("Raw p-values used; threshold = ", alpha, ".")`
+
+The combined view answers: **which hits are robust across thresholding and
+stratification choices?** Features significant in one condition but not others
+are likely sensitive to those choices; features significant in many are
+the strongest candidates.
+:::
+
+---
+
+# 1 · Coverage matrix
+
+::: {.section-intro}
+Which of the `r nrow(conditions) * 3` expected result files were located in
+`r odir`? Missing files indicate runs that were not completed or used different
+naming.
+:::
+
+```{r coverage-matrix, fig.height=2.5 + 0.5 * length(zscores), fig.width=10}
+cov_long <- coverage %>%
+  mutate(
+    z_factor  = factor(zscore,    levels = zscores),
+    s_factor  = factor(sex_label, levels = ifelse(nchar(sexes) == 0, "both", sexes)),
+    fill_label = ifelse(found,
+                        paste0(n_features, " feat.\n", n_sig_any, " sig."),
+                        "MISSING")
+  )
+
+ggplot(cov_long, aes(x = s_factor, y = z_factor)) +
+  geom_tile(aes(fill = found), colour = "white", linewidth = 1) +
+  geom_text(aes(label = fill_label), size = 3, lineheight = 0.9) +
+  facet_wrap(~ analysis, nrow = 1) +
+  scale_fill_manual(values = c(`TRUE` = "#d5f5e3", `FALSE` = "#fadbd8"),
+                    labels = c("Missing", "Found"), name = NULL) +
+  scale_x_discrete(name = "Sex stratum") +
+  scale_y_discrete(name = "Z-score threshold") +
+  labs(title = "File coverage and significant feature counts") +
+  theme_report() +
+  theme(strip.background = element_rect(fill = "#34495e"),
+        strip.text = element_text(colour = "white", face = "bold"))
+```
+
+```{r coverage-summary, results='asis'}
+n_total   <- nrow(coverage)
+n_found   <- sum(coverage$found)
+n_missing <- n_total - n_found
+cat(stat_box(n_total,   "expected files"))
+cat(stat_box(n_found,   "files found",   "green"))
+cat(stat_box(n_missing, "files missing", if (n_missing > 0) "red" else "green"))
+cat("\n\n")
+if (n_missing > 0) {
+  miss <- coverage[!coverage$found,
+                    c("analysis", "zscore", "sex_label")]
+  cat('::: {.note}\n**Missing files** — the affected sections below will skip these conditions:\n\n')
+  cat(paste0("- ", miss$analysis, ": Z=", miss$zscore,
+             ", sex=", miss$sex_label, collapse = "\n"))
+  cat("\n:::\n")
+}
+```
+
+---
+
+# 2 · Significant feature counts across conditions {.tabset}
+
+::: {.section-intro}
+Number of features reaching significance in each Z × sex combination.
+Strong signal that's robust to thresholding should appear as a consistent
+gradient or plateau across the grid; signal that's only present in one cell
+is likely method-sensitive.
+:::
+
+```{r sig-heatmaps-helper, include=FALSE}
+sig_heatmap <- function(analysis_name, col, title) {
+  d <- coverage %>%
+    filter(analysis == analysis_name) %>%
+    mutate(z_factor = factor(zscore, levels = zscores),
+           s_factor = factor(sex_label,
+                             levels = ifelse(nchar(sexes) == 0, "both", sexes)))
+  ggplot(d, aes(x = s_factor, y = z_factor, fill = .data[[col]])) +
+    geom_tile(colour = "white", linewidth = 1) +
+    geom_text(aes(label = ifelse(is.na(.data[[col]]), "—",
+                                  format(.data[[col]], big.mark = ","))),
+              size = 4, fontface = "bold", colour = "grey15") +
+    scale_fill_gradientn(
+      colours = c("#ecf0f1", "#f39c12", "#c0392b"),
+      na.value = "#fadbd8", name = "n significant") +
+    labs(title = title, x = "Sex stratum", y = "Z-score threshold") +
+    theme_report()
+}
+```
+
+## Peptide
+
+```{r sig-pep, fig.height=3 + 0.5 * length(zscores)}
+sig_heatmap("Peptide", "n_sig_any",
+            "Peptides significant in at least one contrast (per condition)")
+```
+
+## VirScan
+
+```{r sig-vs, fig.height=3 + 0.5 * length(zscores)}
+sig_heatmap("VirScan", "n_sig_any",
+            "VirScan viruses significant in at least one contrast (per condition)")
+```
+
+## VirHitFrac
+
+```{r sig-vf, fig.height=3 + 0.5 * length(zscores)}
+sig_heatmap("VirHitFrac", "n_sig_any",
+            "Hit-fraction viruses significant in at least one contrast (per condition)")
+```
+
+## Summary table
+
+```{r coverage-table}
+coverage %>%
+  mutate(`Z` = zscore, `Sex` = sex_label,
+         `Found` = ifelse(found, "✓", "✗"),
+         `Features` = ifelse(is.na(n_features), "—",
+                              format(n_features, big.mark = ",")),
+         `Sig. vs g2` = ifelse(is.na(n_sig_g2), "—",
+                                 format(n_sig_g2, big.mark = ",")),
+         `Sig. vs g3` = ifelse(is.na(n_sig_g3), "—",
+                                 format(n_sig_g3, big.mark = ",")),
+         `Sig. any`   = ifelse(is.na(n_sig_any), "—",
+                                 format(n_sig_any, big.mark = ","))) %>%
+  select(Analysis = analysis, Z, Sex, Found, Features,
+         `Sig. vs g2`, `Sig. vs g3`, `Sig. any`) %>%
+  arrange(Analysis, Z, Sex) %>%
+  kable(align = "lllcrrrr") %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE, font_size = 11) %>%
+  column_spec(1, bold = TRUE)
+```
+
+---
+
+# 3 · Cross-condition robustness {.tabset}
+
+::: {.section-intro}
+For each feature (peptide / virus), in how many of the `r nrow(conditions)`
+conditions was it significant? A feature significant in many conditions is
+robust to threshold and sex choices; one significant in only one or two
+conditions is method-sensitive and should be interpreted with caution.
+
+The "n conditions" tally is more honest than a global multi-condition FDR
+correction here, since the conditions are sensitivity analyses of the same
+underlying question rather than independent tests of separate hypotheses.
+:::
+
+```{r robust-helper, include=FALSE}
+# For each analysis type, build a long table of significant features ×
+# condition, then count how many conditions each feature appears in.
+build_robustness <- function(analysis_name, id_col) {
+  rows <- list()
+  for (i in seq_len(nrow(conditions))) {
+    z <- conditions$zscore[i]; s <- conditions$sex[i]
+    key <- paste(analysis_name, z, s, sep = "|")
+    df <- data_grid[[key]]
+    if (is.null(df)) next
+    if (!(id_col %in% colnames(df))) next
+    sig <- df[!is.na(df$pval_min) & df$pval_min < alpha,
+              c(id_col, "pval_min", col_pval(g2_vs_g1), col_pval(g3_vs_g1))]
+    if (nrow(sig) == 0) next
+    sig$condition <- conditions$label[i]
+    sig$sig_g2    <- !is.na(sig[[col_pval(g2_vs_g1)]]) &
+                      sig[[col_pval(g2_vs_g1)]] < alpha
+    sig$sig_g3    <- !is.na(sig[[col_pval(g3_vs_g1)]]) &
+                      sig[[col_pval(g3_vs_g1)]] < alpha
+    rows[[length(rows) + 1]] <- sig
+  }
+  if (length(rows) == 0) return(NULL)
+  do.call(rbind, rows)
+}
+
+robustness_summary <- function(long_df, id_col) {
+  if (is.null(long_df) || nrow(long_df) == 0) return(NULL)
+  long_df %>%
+    group_by(.data[[id_col]]) %>%
+    summarise(
+      n_conditions   = n_distinct(condition),
+      n_sig_vs_g2    = sum(sig_g2),
+      n_sig_vs_g3    = sum(sig_g3),
+      n_sig_both     = sum(sig_g2 & sig_g3),
+      min_pval       = min(pval_min, na.rm = TRUE),
+      .groups        = "drop"
+    ) %>%
+    arrange(desc(n_conditions), min_pval)
+}
+
+robust_bar <- function(summary_df, title) {
+  if (is.null(summary_df) || nrow(summary_df) == 0) {
+    return(ggplot() + theme_void() +
+           labs(title = paste(title, "— no significant features")))
+  }
+  counts <- summary_df %>%
+    count(n_conditions, name = "n_features") %>%
+    arrange(n_conditions) %>%
+    mutate(robust = n_conditions >= ceiling(nrow(conditions) / 2))
+  ggplot(counts, aes(x = factor(n_conditions), y = n_features, fill = robust)) +
+    geom_col(width = 0.7) +
+    geom_text(aes(label = format(n_features, big.mark = ",")),
+              vjust = -0.4, fontface = "bold", size = 3.5) +
+    scale_fill_manual(values = c(`TRUE` = "#27ae60", `FALSE` = "#bdc3c7"),
+                      labels = c(paste0("< ", ceiling(nrow(conditions) / 2),
+                                        " conditions"),
+                                 paste0("\u2265 ", ceiling(nrow(conditions) / 2),
+                                        " conditions")),
+                      name = NULL) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.12))) +
+    labs(title    = title,
+         subtitle = paste0("Total conditions = ", nrow(conditions)),
+         x        = "Number of conditions where feature was significant",
+         y        = "Number of features") +
+    theme_report()
+}
+```
+
+## Peptide
+
+```{r robust-pep, fig.height=5}
+pep_long <- build_robustness("Peptide",
+                              if (any(sapply(data_grid, function(d)
+                                "peptide" %in% colnames(d))))
+                                "peptide" else "species")
+id_col_pep <- ifelse(any(sapply(data_grid, function(d)
+                          "peptide" %in% colnames(d))), "peptide", "species")
+pep_summary <- robustness_summary(pep_long, id_col_pep)
+robust_bar(pep_summary, "Peptide robustness")
+```
+
+```{r robust-pep-table}
+if (!is.null(pep_summary) && nrow(pep_summary) > 0) {
+  pep_summary %>%
+    head(params$top_n) %>%
+    mutate(min_pval = signif(min_pval, 3)) %>%
+    rename(Feature        = !!id_col_pep,
+           `# conditions` = n_conditions,
+           `# vs g2`      = n_sig_vs_g2,
+           `# vs g3`      = n_sig_vs_g3,
+           `# both`       = n_sig_both,
+           `min p`        = min_pval) %>%
+    kable(caption = paste0("Top ", params$top_n,
+                           " most robust peptides"),
+          align = "lrrrrr") %>%
+    kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                  full_width = FALSE, font_size = 12) %>%
+    column_spec(1, bold = TRUE, monospace = (id_col_pep == "peptide"))
+} else {
+  cat("No significant peptides in any condition.\n")
+}
+```
+
+## VirScan
+
+```{r robust-vs, fig.height=5}
+vs_long <- build_robustness("VirScan", "species")
+vs_summary <- robustness_summary(vs_long, "species")
+robust_bar(vs_summary, "VirScan virus robustness")
+```
+
+```{r robust-vs-table}
+if (!is.null(vs_summary) && nrow(vs_summary) > 0) {
+  vs_summary %>%
+    head(params$top_n) %>%
+    mutate(min_pval = signif(min_pval, 3)) %>%
+    rename(Species        = species,
+           `# conditions` = n_conditions,
+           `# vs g2`      = n_sig_vs_g2,
+           `# vs g3`      = n_sig_vs_g3,
+           `# both`       = n_sig_both,
+           `min p`        = min_pval) %>%
+    kable(caption = paste0("Top ", params$top_n,
+                           " most robust VirScan viruses"),
+          align = "lrrrrr") %>%
+    kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                  full_width = FALSE, font_size = 12) %>%
+    column_spec(1, bold = TRUE)
+} else {
+  cat("No significant VirScan viruses in any condition.\n")
+}
+```
+
+## VirHitFrac
+
+```{r robust-vf, fig.height=5}
+vf_long <- build_robustness("VirHitFrac", "species")
+vf_summary <- robustness_summary(vf_long, "species")
+robust_bar(vf_summary, "Hit-fraction virus robustness")
+```
+
+```{r robust-vf-table}
+if (!is.null(vf_summary) && nrow(vf_summary) > 0) {
+  vf_summary %>%
+    head(params$top_n) %>%
+    mutate(min_pval = signif(min_pval, 3)) %>%
+    rename(Species        = species,
+           `# conditions` = n_conditions,
+           `# vs g2`      = n_sig_vs_g2,
+           `# vs g3`      = n_sig_vs_g3,
+           `# both`       = n_sig_both,
+           `min p`        = min_pval) %>%
+    kable(caption = paste0("Top ", params$top_n,
+                           " most robust hit-fraction viruses"),
+          align = "lrrrrr") %>%
+    kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                  full_width = FALSE, font_size = 12) %>%
+    column_spec(1, bold = TRUE)
+} else {
+  cat("No significant hit-fraction viruses in any condition.\n")
+}
+```
+
+---
+
+# 4 · Method concordance across conditions
+
+::: {.section-intro}
+For features significant in at least one condition, how often does the
+result agree between the VirScan and hit-fraction calling methods? Strong
+concordance means either method would have led to the same conclusion;
+weak concordance suggests the call is sensitive to how seropositivity is
+defined.
+:::
+
+```{r method-concord, fig.height=5}
+# For each Z/sex condition, intersect VirScan and VirHitFrac significant species
+concord <- list()
+for (i in seq_len(nrow(conditions))) {
+  z <- conditions$zscore[i]; s <- conditions$sex[i]
+  vs <- data_grid[[paste("VirScan",    z, s, sep = "|")]]
+  vf <- data_grid[[paste("VirHitFrac", z, s, sep = "|")]]
+  if (is.null(vs) || is.null(vf)) next
+  vs_sig <- vs$species[!is.na(vs$pval_min) & vs$pval_min < alpha]
+  vf_sig <- vf$species[!is.na(vf$pval_min) & vf$pval_min < alpha]
+  shared <- intersect(vs_sig, vf_sig)
+  concord[[length(concord) + 1]] <- data.frame(
+    condition  = conditions$label[i],
+    zscore     = z,
+    sex_label  = ifelse(nchar(s) == 0, "both", s),
+    only_vs    = length(setdiff(vs_sig, vf_sig)),
+    only_vf    = length(setdiff(vf_sig, vs_sig)),
+    both       = length(shared)
+  )
+}
+if (length(concord) > 0) {
+  concord_df <- do.call(rbind, concord) %>%
+    pivot_longer(c(only_vs, only_vf, both),
+                 names_to = "category", values_to = "n") %>%
+    mutate(category = factor(category,
+                              levels = c("only_vs", "both", "only_vf"),
+                              labels = c("VirScan only", "Both methods",
+                                         "Hit-fraction only")))
+
+  ggplot(concord_df, aes(x = condition, y = n, fill = category)) +
+    geom_col(width = 0.7) +
+    scale_fill_manual(values = c("VirScan only"      = "#2980b9",
+                                  "Both methods"      = "#c0392b",
+                                  "Hit-fraction only" = "#27ae60"),
+                      name = NULL) +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.08))) +
+    labs(title = "Significant virus overlap: VirScan vs. hit-fraction",
+         x = NULL, y = "Number of significant viruses") +
+    theme_report() +
+    theme(axis.text.x = element_text(angle = 30, hjust = 1))
+} else {
+  cat("Not enough paired VirScan / hit-fraction data to assess concordance.\n")
+}
+```
+
+---
+
+# 5 · Per-condition reports
+
+::: {.section-intro}
+Individual reports for each Z × sex combination provide the full breakdown
+(top hits, frequency tables, method concordance, breadth analysis) for that
+specific condition.
+:::
+
+```{r per-condition-links, results='asis'}
+links <- data.frame(
+  Condition = character(0), Report = character(0),
+  stringsAsFactors = FALSE
+)
+for (i in seq_len(nrow(conditions))) {
+  z <- conditions$zscore[i]; s <- conditions$sex[i]
+  rep_name <- find_per_condition_report(z, s)
+  link <- if (is.na(rep_name)) {
+    "_(not generated)_"
+  } else {
+    sprintf('<a href="%s/%s" target="_blank">Open report</a>',
+            params$per_condition_subdir, rep_name)
+  }
+  links <- rbind(links, data.frame(
+    Condition = conditions$label[i], Report = link,
+    stringsAsFactors = FALSE))
+}
+kable(links, escape = FALSE, align = "ll") %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(1, bold = TRUE)
+```
+
+---
+
+# 6 · Analysis parameters
+
+```{r params-table}
+data.frame(
+  Parameter = c("Group 1 (cases)",
+                "Group 2 (control 1)",
+                "Group 3 (control 2)",
+                "Z-score thresholds",
+                "Sex strata",
+                "Total conditions",
+                "Output directory",
+                "Per-condition subdir",
+                "FDR correction",
+                "Significance threshold",
+                "Top N displayed",
+                "Report generated"),
+  Value = c(g1, g2, g3,
+            paste(zscores, collapse = ", "),
+            paste(ifelse(nchar(sexes) == 0, "both", sexes), collapse = ", "),
+            as.character(nrow(conditions)),
+            odir, params$per_condition_subdir,
+            ifelse(params$fdr, "BH (per contrast, per condition)",
+                   "None (raw p-values)"),
+            as.character(alpha),
+            as.character(params$top_n),
+            format(Sys.time(), "%Y-%m-%d %H:%M"))
+) %>%
+  kable(align = "ll") %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),
+                full_width = FALSE, font_size = 12)
+```
