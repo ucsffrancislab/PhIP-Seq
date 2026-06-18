@@ -1,0 +1,319 @@
+---
+title: "PhIP-seq Targeted Peptide Analysis"
+subtitle: "`r d$antigen` homology subset"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
+output:
+  html_document:
+    theme: flatly
+    highlight: tango
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+    self_contained: true
+params:
+  rds_path: ""
+---
+
+```{css, echo=FALSE}
+body { font-size: 14px; }
+h1, h2, h3 { color: #2c3e50; }
+.section-intro { color: #555; margin-bottom: 1em; font-style: italic; }
+.stat-box {
+  display: inline-block; padding: 12px 20px; margin: 6px;
+  border-radius: 6px; text-align: center; min-width: 130px;
+  background: #ecf0f1;
+}
+.stat-box .num { font-size: 1.8em; font-weight: bold; color: #2980b9; }
+.stat-box .lbl { font-size: 0.85em; color: #7f8c8d; }
+```
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  echo = FALSE, warning = FALSE, message = FALSE,
+  fig.width = 10, fig.height = 5.5
+)
+pkgs <- c("data.table", "ggplot2", "dplyr", "tidyr", "knitr",
+          "kableExtra", "scales")
+invisible(lapply(pkgs, function(p) library(p, character.only = TRUE)))
+
+d  <- readRDS(params$rds_path)
+g1 <- d$group1; g2 <- d$group2; g3 <- d$group3
+
+grp_cols <- c(setNames("#c0392b", g1),
+              setNames("#2980b9", g2),
+              setNames("#27ae60", g3))
+
+theme_report <- function()
+  theme_bw(base_size = 11) +
+  theme(panel.grid.minor = element_blank(),
+        plot.title = element_text(face = "bold", hjust = 0.5),
+        legend.position = "bottom")
+
+# Ensure comp$group is a factor with cases first
+d$comp$group <- factor(d$comp$group, levels = c(g1, g2, g3))
+
+stat_box <- function(n, lbl)
+  sprintf('<div class="stat-box"><div class="num">%s</div><div class="lbl">%s</div></div>', n, lbl)
+```
+
+::: {.section-intro}
+This report summarises a targeted analysis of **`r length(d$present_ids)`
+peptides** with homology to **`r d$antigen`**, comparing **`r g1`** (cases)
+against **`r g2`** and **`r g3`** at a Z-score threshold of **`r d$zscore`**,
+sex filter = **`r if (nchar(d$sex) == 0) "both sexes" else d$sex`**.
+
+The analysis is independent of the genome-wide regression and asks two
+questions:
+*(1) which individual peptides differ between groups within this subset,*
+and *(2) does the overall reactivity to `r d$antigen` differ between groups
+when aggregated across the subset?*
+:::
+
+```{r overview-stats, results='asis'}
+cat(stat_box(length(d$present_ids), "peptides analysed"))
+cat(stat_box(length(d$missing_ids), "peptides missing"))
+cat(stat_box(nrow(d$comp),          "subjects"))
+cat("\n\n")
+if (length(d$missing_ids) > 0) {
+  cat("\n> **Note:** ", length(d$missing_ids),
+      " peptide ID(s) from the input list were not found on all plates and were excluded: ",
+      paste(d$missing_ids, collapse = ", "), "\n", sep = "")
+}
+```
+
+---
+
+# 1 · Composite scores per subject
+
+::: {.section-intro}
+For each subject, two composite measures of overall reactivity to
+**`r d$antigen`** are computed across the `r length(d$present_ids)`-peptide
+subset:
+
+- **Count of peptides hit** — number of peptides above Z = `r d$zscore`
+- **Mean Z-score** — average reactivity across all subset peptides
+  (regardless of whether they cross the hit threshold)
+
+These ask whether *overall* reactivity to the antigen differs between groups —
+useful when individual peptides have low power on their own.
+Kruskal-Wallis tests the three groups together; pairwise Wilcoxon tests
+the case vs. each control.
+:::
+
+```{r composite-helper, include=FALSE}
+composite_plot <- function(df, ycol, ylab, title) {
+  k <- kruskal.test(df[[ycol]] ~ df$group)
+  pw <- pairwise.wilcox.test(df[[ycol]], df$group,
+                             p.adjust.method = "none", exact = FALSE)
+  # Extract two case-vs-control p-values
+  p_g2 <- tryCatch(pw$p.value[g2, g1], error = function(e) NA)
+  p_g3 <- tryCatch(pw$p.value[g3, g1], error = function(e) NA)
+
+  subtitle <- sprintf(
+    "Kruskal-Wallis p = %.3g  |  %s vs. %s: p = %.3g  |  %s vs. %s: p = %.3g",
+    k$p.value, g2, g1, p_g2, g3, g1, p_g3)
+
+  ggplot(df, aes(x = group, y = .data[[ycol]], fill = group)) +
+    geom_violin(alpha = 0.4, scale = "width", linewidth = 0.3) +
+    geom_boxplot(width = 0.15, outlier.shape = NA, alpha = 0.85,
+                 linewidth = 0.4) +
+    geom_jitter(width = 0.12, height = 0, size = 1.4, alpha = 0.6,
+                colour = "grey20") +
+    scale_fill_manual(values = grp_cols, guide = "none") +
+    labs(title = title, subtitle = subtitle, x = NULL, y = ylab) +
+    theme_report() +
+    theme(axis.text.x = element_text(size = 11, face = "bold"))
+}
+```
+
+## Number of peptides hit
+
+```{r composite-count, fig.height=5}
+composite_plot(d$comp, "n_hit",
+               paste0("Number of ", d$antigen, " peptides hit (Z > ", d$zscore, ")"),
+               paste0("Per-subject hit count over the ",
+                      length(d$present_ids), "-peptide subset"))
+```
+
+## Mean Z-score across the subset
+
+```{r composite-meanz, fig.height=5}
+composite_plot(d$comp, "mean_z",
+               paste0("Mean Z-score across ", d$antigen, " peptides"),
+               paste0("Per-subject mean Z over the ",
+                      length(d$present_ids), "-peptide subset"))
+```
+
+## Summary table
+
+```{r composite-table}
+d$comp %>%
+  group_by(group) %>%
+  summarise(
+    n               = n(),
+    `Mean # hits`   = round(mean(n_hit, na.rm = TRUE), 2),
+    `Median # hits` = round(median(n_hit, na.rm = TRUE), 2),
+    `Mean Z`        = round(mean(mean_z, na.rm = TRUE), 3),
+    `Median Z`      = round(median(mean_z, na.rm = TRUE), 3),
+    `Max Z (avg)`   = round(mean(max_z, na.rm = TRUE), 3),
+    .groups = "drop"
+  ) %>%
+  rename(Group = group) %>%
+  kable(align = "lrrrrrr") %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),
+                full_width = FALSE, font_size = 12) %>%
+  column_spec(1, bold = TRUE)
+```
+
+---
+
+# 2 · Per-peptide regression
+
+::: {.section-intro}
+Multinomial logistic regression (same model as the genome-wide analysis),
+restricted to the `r length(d$present_ids)`-peptide subset. With many fewer
+tests, the FDR burden is much lower — even modest p-values can be meaningful.
+:::
+
+## Frequency comparison
+
+```{r perpep-freq, fig.height=max(4, 0.3 * length(d$present_ids))}
+freq_long <- d$per_pep %>%
+  mutate(label = paste0(peptide, " — ", species)) %>%
+  select(label, peptide,
+         !!g1 := all_of(paste0("freq_", g1)),
+         !!g2 := all_of(paste0("freq_", g2)),
+         !!g3 := all_of(paste0("freq_", g3))) %>%
+  pivot_longer(c(g1, g2, g3), names_to = "group", values_to = "freq") %>%
+  mutate(group = factor(group, levels = c(g1, g2, g3)),
+         label = factor(label, levels = rev(unique(label))))
+
+ggplot(freq_long, aes(x = label, y = freq, fill = group)) +
+  geom_col(position = position_dodge(0.7), width = 0.65) +
+  scale_fill_manual(values = grp_cols, name = NULL) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1),
+                     expand = expansion(mult = c(0, 0.08))) +
+  coord_flip() +
+  labs(title = paste0("Per-group hit frequency (Z > ", d$zscore, ")"),
+       subtitle = paste(length(d$present_ids), d$antigen,
+                        "peptides, ordered by min p-value"),
+       x = NULL, y = "Fraction of subjects called positive") +
+  theme_report()
+```
+
+## Regression results
+
+```{r perpep-table}
+g2_vs_g1 <- paste0(g2, "_vs_", g1)
+g3_vs_g1 <- paste0(g3, "_vs_", g1)
+
+d$per_pep %>%
+  select(Peptide = peptide, Species = species,
+         !!paste0("Freq ", g1) := all_of(paste0("freq_", g1)),
+         !!paste0("Freq ", g2) := all_of(paste0("freq_", g2)),
+         !!paste0("Freq ", g3) := all_of(paste0("freq_", g3)),
+         !!paste0("β ", g2_vs_g1) := all_of(paste0("beta_", g2_vs_g1)),
+         !!paste0("p ", g2_vs_g1) := all_of(paste0("pval_", g2_vs_g1)),
+         `p (g2 FDR)`                 = pval_g2_fdr,
+         !!paste0("β ", g3_vs_g1) := all_of(paste0("beta_", g3_vs_g1)),
+         !!paste0("p ", g3_vs_g1) := all_of(paste0("pval_", g3_vs_g1)),
+         `p (g3 FDR)`                 = pval_g3_fdr) %>%
+  mutate(across(where(is.numeric), ~ signif(., 3))) %>%
+  kable(align = paste0("ll", strrep("r", 9))) %>%
+  kable_styling(bootstrap_options = c("striped","hover","condensed"),
+                full_width = FALSE, font_size = 11) %>%
+  column_spec(1, bold = TRUE, monospace = TRUE)
+```
+
+---
+
+# 3 · Per-subject Z-score heatmap
+
+::: {.section-intro}
+Each row is a subject (ordered by group), each column a `r d$antigen`-homologous
+peptide (ordered by per-peptide minimum p-value, most significant on the left).
+The colour shows the per-subject Z-score (after min-of-duplicates). This view
+shows whether group differences come from a handful of peptides hitting a
+handful of subjects vs. a broad pattern of reactivity.
+:::
+
+```{r heatmap, fig.height=max(6, min(20, 0.18 * nrow(d$comp))), fig.width=max(8, min(14, 1 + 0.18 * length(d$present_ids)))}
+# Reorder subjects by group then by composite hit count
+sub_order <- d$comp %>%
+  arrange(group, desc(n_hit)) %>%
+  pull(subject)
+
+# Reorder peptides by significance (per_pep is already sorted by pval_min)
+pep_order <- as.character(d$per_pep$peptide)
+
+zlong <- as.data.frame(d$zmat) %>%
+  tibble::rownames_to_column("subject") %>%
+  pivot_longer(-subject, names_to = "peptide", values_to = "z") %>%
+  left_join(d$comp[, c("subject", "group")], by = "subject") %>%
+  mutate(subject = factor(subject, levels = sub_order),
+         peptide = factor(peptide, levels = pep_order))
+
+# Cap Z at 99th percentile so a few extreme outliers don't compress the palette
+z_cap <- quantile(zlong$z, 0.99, na.rm = TRUE)
+if (!is.finite(z_cap) || z_cap <= 0) z_cap <- 10
+zlong$z_capped <- pmin(zlong$z, z_cap)
+
+# Row annotation strip via facet on group
+ggplot(zlong, aes(x = peptide, y = subject, fill = z_capped)) +
+  geom_tile() +
+  facet_grid(group ~ ., scales = "free_y", space = "free_y", switch = "y") +
+  scale_fill_gradientn(
+    colours = c("#2c3e50", "#ecf0f1", "#f39c12", "#c0392b"),
+    values  = scales::rescale(c(min(zlong$z, na.rm = TRUE),
+                                d$zscore,
+                                d$zscore * 1.5,
+                                z_cap)),
+    na.value = "grey90",
+    name = paste0("Z (capped @ ", round(z_cap, 1), ")")) +
+  labs(title = paste0("Per-subject Z-scores across ", d$antigen, " peptides"),
+       subtitle = "Rows = subjects, columns = peptides (ordered by min p-value)",
+       x = "Peptide ID", y = NULL) +
+  theme_report() +
+  theme(
+    axis.text.x  = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 8),
+    axis.text.y  = element_text(size = 7),
+    strip.text.y.left = element_text(angle = 0, face = "bold"),
+    strip.placement   = "outside",
+    panel.spacing.y   = unit(0.15, "lines")
+  )
+```
+
+---
+
+# 4 · Parameters and output files
+
+```{r params-table}
+data.frame(
+  Parameter = c("Antigen",
+                "Group 1 (cases)",
+                "Group 2 (control 1)",
+                "Group 3 (control 2)",
+                "Z-score threshold",
+                "Sex filter",
+                "Target peptides supplied",
+                "Target peptides analysed",
+                "Target peptides missing",
+                "Subjects analysed",
+                "Output prefix",
+                "Report generated"),
+  Value = c(d$antigen, g1, g2, g3,
+            as.character(d$zscore),
+            ifelse(nchar(d$sex) == 0, "both sexes", d$sex),
+            as.character(length(d$present_ids) + length(d$missing_ids)),
+            as.character(length(d$present_ids)),
+            as.character(length(d$missing_ids)),
+            as.character(nrow(d$comp)),
+            basename(d$output_base),
+            format(Sys.time(), "%Y-%m-%d %H:%M"))
+) %>%
+  kable(align = "ll") %>%
+  kable_styling(bootstrap_options = c("striped","condensed"),
+                full_width = FALSE, font_size = 12)
+```
