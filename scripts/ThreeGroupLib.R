@@ -39,6 +39,12 @@ build_datfile_three_group <- function(uniq_sub, manifest, opt) {
 
     print("Building three-group datfile")
 
+    # Lane is no longer used in the regression formula (it is nested within
+    # plate, so the two are collinear).  We still create the column for
+    # compatibility, but only populate it if the manifest actually has a
+    # `lane` column -- otherwise it stays NA.
+    has_lane <- "lane" %in% colnames(manifest)
+
     datfile <- data.frame(matrix(NA, nrow = length(uniq_sub),
                                  ncol = 6,
                                  dimnames = list(NULL, c("ID", "group", "sex", "age", "plate", "lane"))))
@@ -51,7 +57,10 @@ build_datfile_three_group <- function(uniq_sub, manifest, opt) {
         datfile$age[i]   <- manifest$age[man_loc]
         datfile$sex[i]   <- manifest$sex[man_loc]
         datfile$plate[i] <- manifest$plate[man_loc]
-        datfile$lane[i]  <- manifest$lane[man_loc]
+        if (has_lane) {
+            val <- manifest$lane[man_loc]
+            datfile$lane[i] <- if (length(val) == 0) NA else val
+        }
     }
 
     datfile$age   <- as.numeric(datfile$age)
