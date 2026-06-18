@@ -39,12 +39,9 @@ build_datfile_three_group <- function(uniq_sub, manifest, opt) {
 
     print("Building three-group datfile")
 
-    #datfile <- data.frame(matrix(NA, nrow = length(uniq_sub),
-    #                             ncol = 6,
-    #                             dimnames = list(NULL, c("ID", "group", "sex", "age", "plate", "lane"))))
     datfile <- data.frame(matrix(NA, nrow = length(uniq_sub),
-                                 ncol = 5,
-                                 dimnames = list(NULL, c("ID", "group", "sex", "age", "plate"))))
+                                 ncol = 6,
+                                 dimnames = list(NULL, c("ID", "group", "sex", "age", "plate", "lane"))))
     datfile$ID <- uniq_sub
 
     for (i in seq_along(uniq_sub)) {
@@ -54,13 +51,13 @@ build_datfile_three_group <- function(uniq_sub, manifest, opt) {
         datfile$age[i]   <- manifest$age[man_loc]
         datfile$sex[i]   <- manifest$sex[man_loc]
         datfile$plate[i] <- manifest$plate[man_loc]
-        #datfile$lane[i]  <- manifest$lane[man_loc]
+        datfile$lane[i]  <- manifest$lane[man_loc]
     }
 
     datfile$age   <- as.numeric(datfile$age)
     datfile$sex   <- as.factor(datfile$sex)
     datfile$plate <- as.factor(datfile$plate)
-    #datfile$lane  <- as.factor(datfile$lane)
+    datfile$lane  <- as.factor(datfile$lane)
 
     # Group is a factor; group1 is the reference level so coefficients are
     # interpreted as group2-vs-group1 and group3-vs-group1.
@@ -220,8 +217,9 @@ build_formula_three_group <- function(datfile, predictor, ignore_plate = FALSE) 
         formula <- paste(formula, "sex", sep = " + ")
     if (length(unique(datfile$plate)) > 1 && !ignore_plate)
         formula <- paste(formula, "plate", sep = " + ")
-    if (length(unique(datfile$lane)) > 1)
-        formula <- paste(formula, "lane", sep = " + ")
+    # Lane is not included: each lane contains 2 plates, so lane is nested
+    # within (and largely redundant with) the plate covariate.  Including both
+    # would risk rank-deficiency / collinearity issues.
 
     print(paste("formula", formula))
     return(formula)

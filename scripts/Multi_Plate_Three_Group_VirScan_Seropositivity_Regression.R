@@ -11,7 +11,7 @@
 #   Model
 #   -----
 #   For every virus, fit:
-#       group ~ virus [+ age] [+ sex] [+ plate] [+ lane]
+#       group ~ virus [+ age] [+ sex] [+ plate]
 #   where group is a three-level factor with group1 as the reference.
 #   This yields two sets of coefficients per virus:
 #       group2 vs. group1

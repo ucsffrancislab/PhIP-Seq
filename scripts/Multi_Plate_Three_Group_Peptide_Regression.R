@@ -10,7 +10,7 @@
 #   Model
 #   -----
 #   For every peptide, fit:
-#       group ~ peptide [+ age] [+ sex] [+ plate] [+ lane]
+#       group ~ peptide [+ age] [+ sex] [+ plate]
 #   where group is a three-level factor with group1 as the reference.
 #   This yields two sets of coefficients per peptide:
 #       group2 vs. group1  (e.g. control1 vs. case)
