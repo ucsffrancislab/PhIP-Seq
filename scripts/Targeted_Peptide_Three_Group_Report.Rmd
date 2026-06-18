@@ -1,6 +1,6 @@
 ---
 title: "PhIP-seq Targeted Peptide Analysis"
-subtitle: "`r d$antigen` homology subset"
+subtitle: "`r readRDS(params$rds_path)$antigen` homology subset"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output:
   html_document:
