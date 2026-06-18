@@ -18,6 +18,8 @@ params:
   group2:       "Endemic Control"
   group3:       "Non Endemic Control"
   output_dir:   "./"
+  zscore:       5
+  sex:          ""
   pval_thresh:  0.05
   fdr:          true
   top_n:        20
@@ -74,12 +76,32 @@ col_pval  <- function(x) paste0("pval_", x)
 col_se    <- function(x) paste0("se_",   x)
 
 # Find the most recent matching CSV in odir
-find_csv <- function(pattern) {
-  hits <- list.files(odir, pattern = paste0(pattern, ".*\\.csv$"),
-                     full.names = TRUE)
-  hits <- hits[!grepl("\\.gz$|\\.bz2$|\\.zip$|\\.tgz$", hits)]
+# Strict matcher: only returns CSVs whose filename contains the expected
+# z-score and sex tokens, preventing mixups between runs.
+#
+# The regression scripts encode these in the filename as:
+#   ...-Z-<zscore>-sex-<sex>...
+# where <sex> can be empty (both sexes).  We anchor both tokens with literal
+# separators so e.g. Z-5 won't accidentally match Z-50.
+find_csv <- function(prefix) {
+  zsex_pat <- paste0("-Z-", params$zscore, "-sex-",
+                     params$sex, "(-|\\.csv$)")
+  hits <- list.files(
+    odir,
+    pattern = paste0(prefix, ".*", zsex_pat),
+    full.names = TRUE)
+  hits <- hits[grepl("\\.csv$", hits) &
+               !grepl("\\.gz$|\\.bz2$|\\.zip$|\\.tgz$", hits)]
   if (length(hits) == 0) return(NULL)
-  hits[order(file.info(hits)$mtime, decreasing = TRUE)][1]
+  if (length(hits) > 1) {
+    # Multiple matches: prefer the most recent, but warn so the user sees it
+    warning(paste0("Multiple matches for '", prefix,
+                   "' at Z=", params$zscore, ", sex='", params$sex,
+                   "'. Using most recent:\n  ",
+                   paste(basename(hits), collapse = "\n  ")))
+    hits <- hits[order(file.info(hits)$mtime, decreasing = TRUE)]
+  }
+  hits[1]
 }
 
 read_result <- function(path) {
@@ -158,6 +180,8 @@ has_vfrac <- !is.null(vfrac_dat)
 ::: {.section-intro}
 This report summarises a three-group PhIP-seq analysis comparing **`r g1`** (cases)
 against two control populations: **`r g2`** and **`r g3`**.
+Analysis was run at **Z-score threshold = `r params$zscore`**, sex filter =
+**`r if (nchar(params$sex) == 0) "both sexes" else params$sex`**.
 Results are drawn from `r params$output_dir`.
 `r if(params$fdr) "P-values shown are BH-FDR corrected." else paste0("Raw p-values shown; threshold = ", alpha, ".")`
 :::
@@ -675,6 +699,8 @@ data.frame(
   Parameter = c("Group 1 (reference / cases)",
                 "Group 2 (control 1)",
                 "Group 3 (control 2)",
+                "Z-score threshold",
+                "Sex filter",
                 "Output directory",
                 "FDR correction",
                 "Significance threshold",
@@ -683,7 +709,10 @@ data.frame(
                 "VirScan results file",
                 "VirHitFrac results file",
                 "Report generated"),
-  Value = c(g1, g2, g3, odir,
+  Value = c(g1, g2, g3,
+            as.character(params$zscore),
+            ifelse(nchar(params$sex) == 0, "both sexes", params$sex),
+            odir,
             ifelse(params$fdr, "BH (per contrast)", "None (raw p-values)"),
             as.character(alpha),
             as.character(params$top_n),
