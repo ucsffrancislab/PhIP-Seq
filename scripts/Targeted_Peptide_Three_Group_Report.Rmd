@@ -179,8 +179,13 @@ tests, the FDR burden is much lower — even modest p-values can be meaningful.
 
 ## Frequency comparison
 
-```{r perpep-freq, fig.height=max(4, 0.3 * length(d$present_ids))}
-freq_long <- d$per_pep %>%
+```{r perpep-freq, fig.height=min(25, max(4, 0.3 * min(length(d$present_ids), 80)))}
+# Cap the number of peptides shown on the bar chart to avoid generating
+# an unrenderably tall figure.  When the subset is large, show the top 80
+# by min p-value (per_pep is already sorted by pval_min ascending).
+n_show <- min(length(d$present_ids), 80)
+freq_src <- head(d$per_pep, n_show)
+freq_long <- freq_src %>%
   mutate(label = paste0(peptide, " — ", species)) %>%
   select(label, peptide,
          !!g1 := all_of(paste0("freq_", g1)),
@@ -197,8 +202,12 @@ ggplot(freq_long, aes(x = label, y = freq, fill = group)) +
                      expand = expansion(mult = c(0, 0.08))) +
   coord_flip() +
   labs(title = paste0("Per-group hit frequency (Z > ", d$zscore, ")"),
-       subtitle = paste(length(d$present_ids), d$antigen,
-                        "peptides, ordered by min p-value"),
+       subtitle = if (n_show < length(d$present_ids))
+                    paste0("Top ", n_show, " of ", length(d$present_ids),
+                           " ", d$antigen, " peptides, ordered by min p-value")
+                  else
+                    paste(length(d$present_ids), d$antigen,
+                          "peptides, ordered by min p-value"),
        x = NULL, y = "Fraction of subjects called positive") +
   theme_report()
 ```
@@ -239,16 +248,18 @@ shows whether group differences come from a handful of peptides hitting a
 handful of subjects vs. a broad pattern of reactivity.
 :::
 
-```{r heatmap, fig.height=max(6, min(20, 0.18 * nrow(d$comp))), fig.width=max(8, min(14, 1 + 0.18 * length(d$present_ids)))}
+```{r heatmap, fig.height=max(6, min(20, 0.18 * nrow(d$comp))), fig.width=max(8, min(14, 1 + 0.18 * min(length(d$present_ids), 100)))}
 # Reorder subjects by group then by composite hit count
 sub_order <- d$comp %>%
   arrange(group, desc(n_hit)) %>%
   pull(subject)
 
-# Reorder peptides by significance (per_pep is already sorted by pval_min)
-pep_order <- as.character(d$per_pep$peptide)
+# Cap heatmap columns at 100 peptides (most significant first) for readability
+# and to keep the rendered figure within safe surface dimensions.
+n_pep_show <- min(length(d$present_ids), 100)
+pep_order  <- as.character(head(d$per_pep$peptide, n_pep_show))
 
-zlong <- as.data.frame(d$zmat) %>%
+zlong <- as.data.frame(d$zmat[, pep_order, drop = FALSE]) %>%
   tibble::rownames_to_column("subject") %>%
   pivot_longer(-subject, names_to = "peptide", values_to = "z") %>%
   left_join(d$comp[, c("subject", "group")], by = "subject") %>%
@@ -259,6 +270,12 @@ zlong <- as.data.frame(d$zmat) %>%
 z_cap <- quantile(zlong$z, 0.99, na.rm = TRUE)
 if (!is.finite(z_cap) || z_cap <= 0) z_cap <- 10
 zlong$z_capped <- pmin(zlong$z, z_cap)
+
+heatmap_subtitle <- if (n_pep_show < length(d$present_ids))
+  paste0("Showing top ", n_pep_show, " of ", length(d$present_ids),
+         " peptides (ordered by min p-value); rows = subjects")
+else
+  "Rows = subjects, columns = peptides (ordered by min p-value)"
 
 # Row annotation strip via facet on group
 ggplot(zlong, aes(x = peptide, y = subject, fill = z_capped)) +
@@ -273,7 +290,7 @@ ggplot(zlong, aes(x = peptide, y = subject, fill = z_capped)) +
     na.value = "grey90",
     name = paste0("Z (capped @ ", round(z_cap, 1), ")")) +
   labs(title = paste0("Per-subject Z-scores across ", d$antigen, " peptides"),
-       subtitle = "Rows = subjects, columns = peptides (ordered by min p-value)",
+       subtitle = heatmap_subtitle,
        x = "Peptide ID", y = NULL) +
   theme_report() +
   theme(
