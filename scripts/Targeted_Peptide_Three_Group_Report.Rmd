@@ -202,12 +202,13 @@ ggplot(freq_long, aes(x = label, y = freq, fill = group)) +
                      expand = expansion(mult = c(0, 0.08))) +
   coord_flip() +
   labs(title = paste0("Per-group hit frequency (Z > ", d$zscore, ")"),
-       subtitle = if (n_show < length(d$present_ids))
+       subtitle = if (n_show < length(d$present_ids)) {
                     paste0("Top ", n_show, " of ", length(d$present_ids),
                            " ", d$antigen, " peptides, ordered by min p-value")
-                  else
+                  } else {
                     paste(length(d$present_ids), d$antigen,
-                          "peptides, ordered by min p-value"),
+                          "peptides, ordered by min p-value")
+                  },
        x = NULL, y = "Fraction of subjects called positive") +
   theme_report()
 ```
@@ -271,11 +272,12 @@ z_cap <- quantile(zlong$z, 0.99, na.rm = TRUE)
 if (!is.finite(z_cap) || z_cap <= 0) z_cap <- 10
 zlong$z_capped <- pmin(zlong$z, z_cap)
 
-heatmap_subtitle <- if (n_pep_show < length(d$present_ids))
+heatmap_subtitle <- if (n_pep_show < length(d$present_ids)) {
   paste0("Showing top ", n_pep_show, " of ", length(d$present_ids),
          " peptides (ordered by min p-value); rows = subjects")
-else
+} else {
   "Rows = subjects, columns = peptides (ordered by min p-value)"
+}
 
 # Row annotation strip via facet on group
 ggplot(zlong, aes(x = peptide, y = subject, fill = z_capped)) +
